@@ -1,0 +1,107 @@
+{
+	"@@locale": "en",
+	"catalogDashboard": "Catalog / Dashboard",
+	"profile": "PROFILE",
+	"overallProgress": "Overall Progress",
+	"overallPerformance": "Overall Performance",
+	"topics": "TOPICS",
+	"workspace": "WORKSPACE",
+	"language": "LANGUAGE",
+	"logout": "LOGOUT",
+	"poweredBy": "Powered by eMe.world",
+	"notifications": "Notifications",
+	"newTutorials": "3 New",
+	"level": "Level 10",
+	"avgSuffix": "Avg",
+	"newTutorialTitle": "New Tutorial Available",
+	"newTutorialBody": "Mathematical Competence 2 has been unlocked.",
+	"achievementTitle": "Achievement Unlocked",
+	"achievementBody": "You completed 3 subject diagnostic tests.",
+	"time5m": "5m ago",
+	"time2h": "2h ago",
+	"tutorialsCount": "{count} tutorials",
+	"@tutorialsCount": {
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"daysToGo": "days to go",
+	"efficiency": "efficiency",
+	"moderate": "Moderate",
+	"lastUpdated": "Last updated: {date}",
+	"@lastUpdated": {
+		"placeholders": {
+			"date": {
+				"type": "String"
+			}
+		}
+	},
+	"tutorials": "Tutorials",
+	"totalTutorials": "TOTAL TUTORIALS",
+	"activeTutorials": "{count} Active Tutorials",
+	"@activeTutorials": {
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"testsPerformance": "TESTS PERFORMANCE",
+	"averageScore": "{progress}% Average Score",
+	"@averageScore": {
+		"placeholders": {
+			"progress": {
+				"type": "String"
+			}
+		}
+	},
+	"overallTopicProgress": "Overall Topic Progress",
+	"finished": "{percent}% Finished",
+	"@finished": {
+		"placeholders": {
+			"percent": {
+				"type": "String"
+			}
+		}
+	},
+	"beginner": "Beginner",
+	"competent": "Competent",
+	"expert": "Expert",
+	"topicsYouExcelAt": "Topics you excel at",
+	"averageRank": "Average Rank",
+	"nextRankUp": "Average Score",
+	"improve": "Improve",
+	"refresh": "Refresh",
+	"lastReviewed": "Last reviewed {d} days ago",
+	"@lastReviewed": {
+		"placeholders": {
+			"d": {
+				"type": "String"
+			}
+		}
+	},
+	"confidence": "Confidence",
+	"privacyPolicy": "Privacy Policy",
+	"appCompliance": "Privacy & Data",
+	"dataConsentTitle": "Data Collection Disclosure & Consent",
+	"dataConsentBody": "We value your privacy. We collect account details (email, name), chat interactions, and learning progress to provide personalized AI tutoring. All data is transmitted securely over HTTPS and stored safely. We do not sell your personal data.",
+	"acceptConsent": "Accept",
+	"declineConsent": "Decline",
+	"deleteAccount": "Delete Account",
+	"deleteAccountConfirm": "Are you sure you want to delete your account? This action is permanent and will erase your credentials, history, and profile data.",
+	"deleteData": "Delete Collected Data",
+	"deleteDataConfirm": "Are you sure you want to delete all collected learning and chat data? This cannot be undone.",
+	"aiGenerated": "AI Generated",
+	"reportAi": "Report AI Response",
+	"reportAiSuccess": "Thank you! Your report has been submitted for review.",
+	"cancel": "Cancel",
+	"confirm": "Confirm",
+	"reasonHallucination": "Hallucination / Inaccurate Information",
+	"reasonInappropriate": "Inappropriate Content",
+	"reasonOffensive": "Offensive Language",
+	"reasonOther": "Other Issue",
+	"accountManagementTitle": "Account & Data Management",
+	"accountManagementBody": "You have full control over your data. You can erase your collected data or permanently delete your account at any time."
+}
