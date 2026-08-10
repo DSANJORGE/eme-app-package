@@ -6,16 +6,28 @@ class Workspace {
   final String id;
   final String name;
   final String mediaDBRoot;
-  final String? iconAsset;
+  final String? _iconAsset;
   final Locale? locale;
 
   const Workspace({
     required this.id,
     required this.name,
     required this.mediaDBRoot,
-    this.iconAsset,
+    this._iconAsset,
     this.locale = const Locale('en'),
   });
+
+  String? get iconAsset {
+    if (_iconAsset != null && _iconAsset.isNotEmpty) {
+      return _iconAsset;
+    }
+    try {
+      final uri = Uri.parse(mediaDBRoot);
+      return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}/site/find/theme/logo.png';
+    } catch (_) {
+      return null;
+    }
+  }
 
   static final ValueNotifier<Locale> languageNotifier = ValueNotifier<Locale>(
     const Locale('en'),
@@ -154,7 +166,7 @@ class Workspace {
     'id': id,
     'name': name,
     'mediaDBRoot': mediaDBRoot,
-    if (iconAsset != null) 'iconAsset': iconAsset,
+    if (_iconAsset != null) 'iconAsset': _iconAsset,
   };
 
   @override

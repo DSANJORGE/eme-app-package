@@ -13,7 +13,6 @@ class WorkspaceService {
       id: 'minsur',
       name: 'Minsur',
       mediaDBRoot: 'https://minsur.genailabs.tech/site/mediadb',
-      iconAsset: 'assets/minsur.png',
     ),
     Workspace(
       id: 'eme',
@@ -191,8 +190,9 @@ class WorkspaceService {
     if (_activeWorkspace.id.toLowerCase() == removed.id.toLowerCase() ||
         _activeWorkspace.mediaDBRoot.toLowerCase() ==
             removed.mediaDBRoot.toLowerCase()) {
-      _activeWorkspace =
-          _workspaces.isNotEmpty ? _workspaces.first : _defaultWorkspaces.first;
+      _activeWorkspace = _workspaces.isNotEmpty
+          ? _workspaces.first
+          : _defaultWorkspaces.first;
       await prefs.setString('selected_workspace_id', _activeWorkspace.id);
       await prefs.setString(
         'selected_workspace_mediadbroot',

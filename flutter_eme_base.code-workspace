@@ -1,11 +1,14 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
 		},
 		{
-			"path": "../eme_world"
-		}
+			"path": "../eme_world",
+		},
+		{
+			"path": "../genai_labs",
+		},
 	],
-	"settings": {}
+	"settings": {},
 }

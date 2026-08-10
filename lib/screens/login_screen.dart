@@ -361,6 +361,19 @@ class _LoginScreenState extends State<LoginScreen>
                                                 image: _selectedWorkspace
                                                     .iconAsset!,
                                                 fit: BoxFit.contain,
+                                                imageErrorBuilder: (_, _, _) {
+                                                  return Text(
+                                                    _selectedWorkspace.name,
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontSize: 28,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: -0.5,
+                                                      color: Colors.white,
+                                                    ),
+                                                  );
+                                                },
                                               ),
                                             )
                                           : Text(
