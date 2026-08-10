@@ -118,8 +118,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
             setState(() {
               widget.tutorial.progress = TutorialProgress.fromJson(
                 incomingMsg.progressUpdate?.toJson() ?? {},
+                widget.tutorial.progress,
               );
             });
+            logPrint(
+              'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
+            );
             return;
           }
 

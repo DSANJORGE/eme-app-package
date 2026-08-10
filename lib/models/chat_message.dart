@@ -79,7 +79,9 @@ class AgentContextValues {
       asset: json['asset'] != null ? Asset.fromJson(json['asset']) : null,
       progressUpdate: json['progressupdate'] != null
           ? ProgressUpdate.fromJson(json['progressupdate'])
-          : null,
+          : (messageType == MessageType.progressupdate
+              ? ProgressUpdate.fromJson(json)
+              : null),
       interactive: json['interactive'] == "yes" ? true : false,
     );
   }
@@ -467,10 +469,15 @@ class ProgressUpdate {
   });
 
   factory ProgressUpdate.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
     return ProgressUpdate(
-      beginnerProgress: json['beginnerprogress'] as double,
-      competentProgress: json['competentprogress'] as double,
-      expertProgress: json['expertprogress'] as double,
+      beginnerProgress: parseDouble(json['beginnerprogress']),
+      competentProgress: parseDouble(json['competentprogress']),
+      expertProgress: parseDouble(json['expertprogress']),
     );
   }
 

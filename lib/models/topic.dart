@@ -39,13 +39,10 @@ class Topic {
       totalTutorials: (json['tutorials'] as num?)?.toInt() ?? 0,
       answersForgotten: (json['answersForgotten'] as num?)?.toDouble() ?? 0,
       forgottenPeriod: (json['forgottenPeriod'] as num?)?.toInt() ?? 0,
-      progress: json['progress'] != null
-          ? TutorialProgress.fromJson(json['progress'] as Map<String, dynamic>)
-          : TutorialProgress(
-              beginnerProgress: 0,
-              competentProgress: 0,
-              expertProgress: 0,
-            ),
+      progress: TutorialProgress.fromJson(
+        json['progress'] as Map<String, dynamic>,
+        null,
+      ),
     );
   }
 

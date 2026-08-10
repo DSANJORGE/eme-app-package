@@ -14,11 +14,23 @@ class TutorialProgress {
     required this.expertProgress,
   });
 
-  factory TutorialProgress.fromJson(Map<String, dynamic> json) {
+  factory TutorialProgress.fromJson(
+    Map<String, dynamic> json,
+    TutorialProgress? oldProgress,
+  ) {
+    double? bp = _parseDouble(json['beginnerprogress']);
+    double? cp = _parseDouble(json['competentprogress']);
+    double? ep = _parseDouble(json['expertprogress']);
+    bp ??= oldProgress?.beginnerProgress;
+    cp ??= oldProgress?.competentProgress;
+    ep ??= oldProgress?.expertProgress;
+    bp ??= 0.0;
+    cp ??= 0.0;
+    ep ??= 0.0;
     return TutorialProgress(
-      beginnerProgress: max(0, _parseDouble(json['beginnerprogress'])),
-      competentProgress: max(0, _parseDouble(json['competentprogress'])),
-      expertProgress: max(0, _parseDouble(json['expertprogress'])),
+      beginnerProgress: max(0, bp),
+      competentProgress: max(0, cp),
+      expertProgress: max(0, ep),
     );
   }
 
@@ -52,11 +64,10 @@ class TutorialProgress {
   }
 }
 
-double _parseDouble(dynamic value) {
-  if (value == null) return 0.0;
+double? _parseDouble(dynamic value) {
   if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
-  return 0.0;
+  if (value is String) return double.tryParse(value);
+  return null;
 }
 
 class Tutorial {
@@ -82,14 +93,11 @@ class Tutorial {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       topicId: json['entitytopicid'] as String? ?? '',
-      progress: json['progress'] != null
-          ? TutorialProgress.fromJson(json['progress'] as Map<String, dynamic>)
-          : TutorialProgress(
-              beginnerProgress: 0,
-              competentProgress: 0,
-              expertProgress: 0,
-            ),
-      answersForgotten: _parseDouble(json['answersforgotten']),
+      progress: TutorialProgress.fromJson(
+        json['progress'] as Map<String, dynamic>,
+        null,
+      ),
+      answersForgotten: _parseDouble(json['answersforgotten']) ?? 0.0,
       lastReviewed: json['lastreviewed'] != null
           ? DateTime.tryParse(json['lastreviewed'].toString()) ?? DateTime.now()
           : DateTime.now(),
