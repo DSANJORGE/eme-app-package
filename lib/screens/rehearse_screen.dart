@@ -259,18 +259,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
     setState(() {
       _stage = MessageStage.explainAndFollowup;
-
-      final targetId = _lastMessage!.messageId;
-      final msgIdx = _messages.indexWhere((m) => m.messageId == targetId);
-      if (msgIdx != -1) {
-        final question = _messages[msgIdx].question;
-        if (question != null) {
-          final answer = question.answer;
-          if (answer != null) {
-            answer.setSelectedOption(_tempSelectedAnswerIndex!);
-            answer.setConfidence(_tempConfidenceLevel!);
-            _messages[msgIdx].interactive = false;
-          }
+      final question = _lastMessage!.question;
+      if (question != null) {
+        final answer = question.answer;
+        if (answer != null) {
+          answer.setSelectedOption(_tempSelectedAnswerIndex!);
+          answer.setConfidence(_tempConfidenceLevel!);
+          _lastMessage!.interactive = false;
         }
       }
     });
