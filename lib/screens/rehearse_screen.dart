@@ -261,12 +261,16 @@ class _RehearseScreenState extends State<RehearseScreen> {
       _stage = MessageStage.explainAndFollowup;
       final question = _lastMessage!.question;
       if (question != null) {
-        final answer = question.answer;
-        if (answer != null) {
-          answer.setSelectedOption(_tempSelectedAnswerIndex!);
-          answer.setConfidence(_tempConfidenceLevel!);
-          _lastMessage!.interactive = false;
+        if (question.answer != null) {
+          question.answer!.setSelectedOption(_tempSelectedAnswerIndex!);
+          question.answer!.setConfidence(_tempConfidenceLevel!);
+        } else {
+          question.answer = Answer(
+            selectedOption: _tempSelectedAnswerIndex,
+            confidence: _tempConfidenceLevel,
+          );
         }
+        _lastMessage!.interactive = false;
       }
     });
 
@@ -1011,7 +1015,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
             ),
             if (message.answer?.confidence != null) ...[
               const SizedBox(height: 12),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
