@@ -86,7 +86,7 @@ class _AppEntryState extends ConsumerState<AppEntry> {
     if (authState.isLoggedIn) {
       return SelectionArea(
         child: DashboardScreen(
-          fullName: authState.fullName,
+          fullName: authState.displayName,
           onLogout: _handleLogout,
           onWorkspaceChanged: _handleWorkspaceChanged,
         ),

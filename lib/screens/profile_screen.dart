@@ -22,12 +22,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final user = AuthService.currentUser;
-    final String displayName =
-        user != null && (user.firstName.isNotEmpty || user.lastName.isNotEmpty)
-        ? '${user.firstName} ${user.lastName}'.trim()
-        : (user?.screenName.isNotEmpty == true
-              ? user!.screenName
-              : 'John Smith');
 
     final String portraitUrl = user?.assetPortrait.isNotEmpty == true
         ? user!.assetPortrait
@@ -118,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                displayName,
+                                user!.displayName,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,

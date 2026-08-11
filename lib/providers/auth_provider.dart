@@ -8,22 +8,20 @@ class AuthState {
   final String? userId;
   final User? currentUser;
 
-  const AuthState({
-    required this.isLoggedIn,
-    this.userId,
-    this.currentUser,
-  });
+  const AuthState({required this.isLoggedIn, this.userId, this.currentUser});
 
-  String get fullName => currentUser?.fullName ?? '';
+  String get displayName => currentUser!.displayName;
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier()
-      : super(AuthState(
+    : super(
+        AuthState(
           isLoggedIn: AuthService.isLoggedIn,
           userId: AuthService.userId,
           currentUser: AuthService.currentUser,
-        ));
+        ),
+      );
 
   void refresh() {
     state = AuthState(

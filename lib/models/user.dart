@@ -15,12 +15,12 @@ class User {
     required this.email,
   });
 
-  String get fullName {
+  String get displayName {
     if (screenName.isNotEmpty) return screenName;
     if (firstName.isNotEmpty && lastName.isNotEmpty) {
       return '$firstName $lastName';
     }
-    return '';
+    return 'N/A';
   }
 
   factory User.fromJson(Map<String, dynamic> json) {

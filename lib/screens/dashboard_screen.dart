@@ -71,12 +71,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final isDesktop = size.width > 900;
 
     final user = AuthService.currentUser;
-    final String displayName =
-        user != null && (user.firstName.isNotEmpty || user.lastName.isNotEmpty)
-        ? '${user.firstName} ${user.lastName}'.trim()
-        : (user?.screenName.isNotEmpty == true
-              ? user!.screenName
-              : (widget.fullName.isNotEmpty ? widget.fullName : 'John Smith'));
 
     final String portraitUrl = user?.assetPortrait.isNotEmpty == true
         ? user!.assetPortrait
@@ -85,7 +79,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.watch(localeProvider);
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(displayName, portraitUrl),
+      drawer: _buildDrawer(user!.displayName, portraitUrl),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
