@@ -46,140 +46,144 @@ class DataCollectionConsentDialog extends StatelessWidget {
         side: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF38B6FF).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.shield_outlined,
-                      color: Color(0xFF38B6FF),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.dataConsentTitle,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF38B6FF).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.shield_outlined,
+                        color: Color(0xFF38B6FF),
+                        size: 28,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.dataConsentBody,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    _buildDataPoint(
-                      icon: Icons.person_outline,
-                      title: 'Account Information',
-                      subtitle:
-                          'Name, email address, and authentication credentials.',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildDataPoint(
-                      icon: Icons.chat_bubble_outline,
-                      title: 'Interactive Chat & Learning Data',
-                      subtitle:
-                          'Prompts, responses, diagnostic test scores & progress.',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildDataPoint(
-                      icon: Icons.security,
-                      title: 'Data Protection & Encryption',
-                      subtitle: 'HTTPS transmission and secure cloud storage.',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.dataConsentTitle,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.dataConsentBody,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDataPoint(
+                        icon: Icons.person_outline,
+                        title: 'Account Information',
+                        subtitle:
+                            'Name, email address, and authentication credentials.',
                       ),
-                      onPressed: () async {
-                        await saveConsent(false);
-                        onConsentGiven();
-                      },
-                      child: Text(
-                        l10n.declineConsent,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      _buildDataPoint(
+                        icon: Icons.chat_bubble_outline,
+                        title: 'Interactive Chat & Learning Data',
+                        subtitle:
+                            'Prompts, responses, diagnostic test scores & progress.',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildDataPoint(
+                        icon: Icons.security,
+                        title: 'Data Protection & Encryption',
+                        subtitle:
+                            'HTTPS transmission and secure cloud storage.',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await saveConsent(false);
+                          onConsentGiven();
+                        },
+                        child: Text(
+                          l10n.declineConsent,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF38B6FF),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF38B6FF),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
-                      onPressed: () async {
-                        await saveConsent(true);
-                        onConsentGiven();
-                      },
-                      child: Text(
-                        l10n.acceptConsent,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                        onPressed: () async {
+                          await saveConsent(true);
+                          onConsentGiven();
+                        },
+                        child: Text(
+                          l10n.acceptConsent,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

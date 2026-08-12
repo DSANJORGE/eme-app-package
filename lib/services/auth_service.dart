@@ -10,6 +10,8 @@ class AuthService {
   static String get mediaDBRoot => WorkspaceService.currentMediaDBRoot;
 
   static String? _token;
+  static String? _refreshToken;
+  static DateTime? _tokenExpiration;
   static String? _userId;
   static User? _currentUser;
 
@@ -19,6 +21,13 @@ class AuthService {
 
     _token = prefs.getString('entermediakey_$wsId');
     _userId = prefs.getString('user_$wsId');
+    _refreshToken = prefs.getString('refresh_token_$wsId');
+    final expString = prefs.getString('token_expiration_$wsId');
+    if (expString != null) {
+      _tokenExpiration = DateTime.tryParse(expString);
+    } else {
+      _tokenExpiration = null;
+    }
 
     // Migration / fallback for legacy single key storage
     if ((_token == null || _token!.isEmpty) &&
@@ -26,10 +35,21 @@ class AuthService {
             wsId == WorkspaceService.workspaces.first.id)) {
       final legacyToken = prefs.getString('entermediakey');
       final legacyUser = prefs.getString('user');
+      final legacyRefreshToken = prefs.getString('refresh_token');
+      final legacyExpString = prefs.getString('token_expiration');
       if (legacyToken != null && legacyToken.isNotEmpty) {
         _token = legacyToken;
         _userId = legacyUser;
-        await saveCredentials(_userId ?? '', _token!);
+        _refreshToken = legacyRefreshToken;
+        if (legacyExpString != null) {
+          _tokenExpiration = DateTime.tryParse(legacyExpString);
+        }
+        await saveCredentials(
+          _userId ?? '',
+          _token!,
+          refreshToken: _refreshToken,
+          tokenExpiration: _tokenExpiration,
+        );
       }
     }
 
@@ -41,6 +61,8 @@ class AuthService {
       }
     } else {
       _token = null;
+      _refreshToken = null;
+      _tokenExpiration = null;
       _userId = null;
       _currentUser = null;
     }
@@ -58,6 +80,8 @@ class AuthService {
 
   static bool get isLoggedIn => _token != null && _token!.isNotEmpty;
   static String? get token => _token;
+  static String? get refreshToken => _refreshToken;
+  static DateTime? get tokenExpiration => _tokenExpiration;
   static String? get userId => _userId;
   static User? get currentUser => _currentUser;
 
@@ -102,18 +126,37 @@ class AuthService {
     return {'user': _userId ?? '', 'entermediakey': _token ?? ''};
   }
 
-  static Future<void> saveCredentials(String userId, String key) async {
+  static Future<void> saveCredentials(
+    String userId,
+    String key, {
+    String? refreshToken,
+    DateTime? tokenExpiration,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final wsId = WorkspaceService.activeWorkspace.id;
 
     await prefs.setString('user_$wsId', userId);
     await prefs.setString('entermediakey_$wsId', key);
+    if (refreshToken != null) {
+      await prefs.setString('refresh_token_$wsId', refreshToken);
+    }
+    if (tokenExpiration != null) {
+      await prefs.setString('token_expiration_$wsId', tokenExpiration.toIso8601String());
+    }
 
     await prefs.setString('user', userId);
     await prefs.setString('entermediakey', key);
+    if (refreshToken != null) {
+      await prefs.setString('refresh_token', refreshToken);
+    }
+    if (tokenExpiration != null) {
+      await prefs.setString('token_expiration', tokenExpiration.toIso8601String());
+    }
 
     _token = key;
     _userId = userId;
+    if (refreshToken != null) _refreshToken = refreshToken;
+    if (tokenExpiration != null) _tokenExpiration = tokenExpiration;
   }
 
   static Future<void> logout() async {
@@ -122,8 +165,12 @@ class AuthService {
 
     await prefs.remove('user_$wsId');
     await prefs.remove('entermediakey_$wsId');
+    await prefs.remove('refresh_token_$wsId');
+    await prefs.remove('token_expiration_$wsId');
 
     _token = null;
+    _refreshToken = null;
+    _tokenExpiration = null;
     _userId = null;
     _currentUser = null;
   }
@@ -174,8 +221,141 @@ class AuthService {
     return _login({'email': email, 'password': password});
   }
 
+  static Future<bool> refreshAuthToken() async {
+    if (_refreshToken == null) return false;
+
+    final url = Uri.parse('$mediaDBRoot/services/authentication/token.json');
+    final Map<String, String> headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+    final Map<String, String> body = {
+      'grant_type': 'refresh_token',
+      'refresh_token': _refreshToken!,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        
+        final key = data['access_token']?.toString() ?? '';
+        final newRefreshToken = data['refresh_token']?.toString();
+        final expiresIn = data['expires_in'] as int?;
+        DateTime? expiration;
+        if (expiresIn != null) {
+          expiration = DateTime.now().add(Duration(seconds: expiresIn));
+        }
+
+        if (key.isNotEmpty && _userId != null) {
+          await saveCredentials(
+            _userId!,
+            key,
+            refreshToken: newRefreshToken ?? _refreshToken,
+            tokenExpiration: expiration,
+          );
+          return true;
+        }
+      }
+    } catch (e) {
+      logPrint('Failed to refresh token: $e');
+    }
+    return false;
+  }
+
   static Future<bool> loginWithOtp(String email, String otp) async {
-    return _login({'email': email, 'templogincode': otp});
+    final url = Uri.parse('$mediaDBRoot/services/authentication/token.json');
+    final Map<String, String> headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+    final Map<String, String> body = {
+      'grant_type': 'otp',
+      'email': email,
+      'code': otp,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        
+        final key = data['access_token']?.toString() ?? '';
+        final refreshToken = data['refresh_token']?.toString();
+        final expiresIn = data['expires_in'] as int?;
+        DateTime? expiration;
+        if (expiresIn != null) {
+          expiration = DateTime.now().add(Duration(seconds: expiresIn));
+        }
+        final userJson = data['user'] as Map<String, dynamic>?;
+        final userId = userJson?['id']?.toString() ?? '';
+
+        if (key.isNotEmpty) {
+          await saveCredentials(
+            userId,
+            key,
+            refreshToken: refreshToken,
+            tokenExpiration: expiration,
+          );
+
+          try {
+            final workspacesUrl = Uri.parse('$mediaDBRoot/services/server/list.json');
+            final workspacesResponse = await http.get(workspacesUrl);
+
+            List<Workspace> customWorkspaces = [];
+            if (workspacesResponse.statusCode == 200) {
+              final List<dynamic> workspacesData = jsonDecode(workspacesResponse.body);
+              customWorkspaces = workspacesData.map((json) {
+                return Workspace(
+                  id: json['id'] as String,
+                  name: json['name'] as String,
+                  mediaDBRoot: json['mediaDBRoot'] as String,
+                  iconAsset: json['iconAsset'] as String?,
+                );
+              }).toList();
+            } else {
+              logPrint('Failed to load workspaces: ${workspacesResponse.statusCode}');
+            }
+
+            WorkspaceService.addWorkspaces(customWorkspaces);
+          } catch (e) {
+            logPrint('Failed to load workspaces: $e');
+          }
+
+          if (userJson != null) {
+            _currentUser = User.fromJson(userJson);
+          } else if (userId.isNotEmpty) {
+            await fetchUser();
+          }
+
+          return true;
+        } else {
+          throw Exception('Login response missing access_token');
+        }
+      } else {
+        try {
+          final Map<String, dynamic> data = json.decode(response.body);
+          final errorMsg = data['error_description']?.toString() ?? data['error']?.toString() ?? 'Authentication failed';
+          throw Exception(errorMsg);
+        } catch (_) {
+          throw Exception(
+            'Authentication failed: Server returned status code ${response.statusCode}',
+          );
+        }
+      }
+    } catch (e) {
+      throw Exception(
+        'Authentication failed: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    }
   }
 
   static Future<bool> _login(Map<String, dynamic> requestBody) async {
