@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_eme_base/utils/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/workspace.dart';
 
@@ -72,6 +73,20 @@ class WorkspaceService {
       );
       _activeWorkspace = found;
     }
+  }
+
+  static void addWorkspaces(List<Workspace> workspaces) {
+    for (final workspace in workspaces) {
+      logPrint('Adding workspace: ${workspace.id}');
+      if (!_workspaces.any(
+        (w) =>
+            w.id.toLowerCase() == workspace.id.toLowerCase() ||
+            w.mediaDBRoot.toLowerCase() == workspace.mediaDBRoot.toLowerCase(),
+      )) {
+        _workspaces.add(workspace);
+      }
+    }
+    _saveCustomWorkspaces();
   }
 
   static Workspace get activeWorkspace => _activeWorkspace;

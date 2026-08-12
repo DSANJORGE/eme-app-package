@@ -22,7 +22,8 @@ class AuthService {
 
     // Migration / fallback for legacy single key storage
     if ((_token == null || _token!.isEmpty) &&
-        (wsId == 'development' || wsId == WorkspaceService.workspaces.first.id)) {
+        (wsId == 'development' ||
+            wsId == WorkspaceService.workspaces.first.id)) {
       final legacyToken = prefs.getString('entermediakey');
       final legacyUser = prefs.getString('user');
       if (legacyToken != null && legacyToken.isNotEmpty) {
@@ -95,7 +96,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final wsId = WorkspaceService.activeWorkspace.id;
     _userId = prefs.getString('user_$wsId') ?? prefs.getString('user');
-    _token = prefs.getString('entermediakey_$wsId') ?? prefs.getString('entermediakey');
+    _token =
+        prefs.getString('entermediakey_$wsId') ??
+        prefs.getString('entermediakey');
     return {'user': _userId ?? '', 'entermediakey': _token ?? ''};
   }
 
@@ -193,10 +196,37 @@ class AuthService {
         if (responseObj != null && responseObj['status'] == 'ok') {
           final userJson = data['user'] as Map<String, dynamic>?;
           final key = data['entermediakey']?.toString() ?? '';
-          final userId = userJson?['id']?.toString() ?? responseObj['user']?.toString() ?? '';
+          final userId =
+              userJson?['id']?.toString() ??
+              responseObj['user']?.toString() ??
+              '';
 
           if (key.isNotEmpty) {
             await saveCredentials(userId, key);
+
+            try {
+              final url = Uri.parse('$mediaDBRoot/services/server/list.json');
+              final response = await http.get(url);
+
+              List<Workspace> customWorkspaces = [];
+              if (response.statusCode == 200) {
+                final List<dynamic> data = jsonDecode(response.body);
+                customWorkspaces = data.map((json) {
+                  return Workspace(
+                    id: json['id'] as String,
+                    name: json['name'] as String,
+                    mediaDBRoot: json['mediaDBRoot'] as String,
+                    iconAsset: json['iconAsset'] as String?,
+                  );
+                }).toList();
+              } else {
+                logPrint('Failed to load workspaces: ${response.statusCode}');
+              }
+
+              WorkspaceService.addWorkspaces(customWorkspaces);
+            } catch (e) {
+              logPrint('Failed to load workspaces: $e');
+            }
 
             if (userJson != null) {
               _currentUser = User.fromJson(userJson);
@@ -221,7 +251,9 @@ class AuthService {
         );
       }
     } catch (e) {
-      throw Exception('Authentication failed: ${e.toString().replaceAll('Exception: ', '')}');
+      throw Exception(
+        'Authentication failed: ${e.toString().replaceAll('Exception: ', '')}',
+      );
     }
   }
 }
