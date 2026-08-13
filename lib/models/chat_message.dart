@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_eme_base/utils/log.dart';
+
 import '../services/auth_service.dart';
 
 enum MessageType {
@@ -80,8 +82,8 @@ class AgentContextValues {
       progressUpdate: json['progressupdate'] != null
           ? ProgressUpdate.fromJson(json['progressupdate'])
           : (messageType == MessageType.progressupdate
-              ? ProgressUpdate.fromJson(json)
-              : null),
+                ? ProgressUpdate.fromJson(json)
+                : null),
       interactive: json['interactive'] == "yes" ? true : false,
     );
   }
@@ -154,7 +156,7 @@ class ChatMessage {
           decodedContext = decoded;
         }
       } catch (e) {
-        print('Error decoding agentcontextvalues: $e');
+        logPrint('Error decoding agentcontextvalues: $e');
       }
     }
     AgentContextValues agentContextValues = AgentContextValues.fromJson(
@@ -474,6 +476,7 @@ class ProgressUpdate {
       if (value is String) return double.tryParse(value) ?? 0.0;
       return 0.0;
     }
+
     return ProgressUpdate(
       beginnerProgress: parseDouble(json['beginnerprogress']),
       competentProgress: parseDouble(json['competentprogress']),

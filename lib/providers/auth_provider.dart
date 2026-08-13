@@ -10,7 +10,7 @@ class AuthState {
 
   const AuthState({required this.isLoggedIn, this.userId, this.currentUser});
 
-  String get displayName => currentUser!.displayName;
+  String get displayName => currentUser?.displayName ?? '';
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/models/workspace.dart';
+import 'package:flutter_eme_base/services/auth_service.dart';
+import 'package:flutter_eme_base/services/workspace_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openinsitute_core/openinsitute_core.dart';
 
 import 'app_config.dart';
 import 'l10n/app_localizations.dart';
@@ -13,6 +17,16 @@ class BaseApp extends ConsumerWidget {
   final AppConfig config;
 
   const BaseApp({super.key, required this.config});
+
+  static Future<void> initialize({
+    required String appSettingsPath,
+    required Workspace initialWorkspace,
+  }) async {
+    await WorkspaceService.init(initialWorkspace: initialWorkspace);
+    await AuthService.init();
+    final oi = OpenI();
+    await oi.initialize(appSettingsPath: appSettingsPath);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

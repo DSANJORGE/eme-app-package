@@ -16,9 +16,10 @@ class FetchDataException extends CustomException {
 }
 
 class BadRequestException extends CustomException {
-  BadRequestException([message]) : super(message, "Invalid Request: ");
+  BadRequestException([dynamic message]) : super(message, "Invalid Request: ");
 }
 
 class UnauthorisedException extends CustomException {
-  UnauthorisedException([message]) : super(message, "Unauthorised Request: ");
+  UnauthorisedException([dynamic message])
+      : super(message, "Unauthorised Request: ");
 }

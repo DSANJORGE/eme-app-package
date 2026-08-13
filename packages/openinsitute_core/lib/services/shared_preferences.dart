@@ -4,19 +4,19 @@ import 'package:openinsitute_core/models/em_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPref {
-  static saveEMKey(String key) async {
+  static Future<void> saveEMKey(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('entermediakey', key);
   }
 
-  static getEMKey() async {
+  static Future<String?> getEMKey() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Return String
     String? stringValue = prefs.getString('entermediakey');
     return stringValue;
   }
 
-  static saveEmUser(EmUser emUser) async {
+  static Future<void> saveEmUser(EmUser emUser) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('emUser', emUser.toJson());
   }
@@ -30,48 +30,48 @@ class SharedPref {
     return EmUser.fromJson(jsonDecode(stringValue));
   }
 
-  static saveWorkspaceKey(String key) async {
+  static Future<void> saveWorkspaceKey(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('workspacekey', key);
   }
 
-  static getWorkspaceKey() async {
+  static Future<String?> getWorkspaceKey() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Return String
     String? stringValue = prefs.getString('workspacekey');
     return stringValue;
   }
 
-  saveRecentWorkspace(int colId) async {
+  Future<void> saveRecentWorkspace(int colId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt('recent', colId);
   }
 
-  clearRecentWorkspace() async {
+  Future<void> clearRecentWorkspace() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove("recent");
   }
 
-  getRecentWorkspace() async {
+  Future<int?> getRecentWorkspace() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Return index of workspace
     int? intValue = prefs.getInt('recent');
     return intValue;
   }
 
-  setRecentEntity(String entity) async {
+  Future<void> setRecentEntity(String entity) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('recentEntity', entity);
   }
 
-  getRecentEntity() async {
+  Future<String?> getRecentEntity() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Return String
     String? stringValue = prefs.getString('recentEntity');
     return stringValue;
   }
 
-  clearRecentEntity() async {
+  Future<void> clearRecentEntity() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove("recentEntity");
   }
@@ -81,7 +81,7 @@ class SharedPref {
   //todo; bool CheckValue = prefs.containsKey('value');
   //todo; containsKey will return true if persistent storage contains the given key and false if not.
 
-  static resetValues() async {
+  static Future<void> resetValues() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Remove entermediakey
     prefs.remove("entermediakey");

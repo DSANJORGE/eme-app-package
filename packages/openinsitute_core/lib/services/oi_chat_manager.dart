@@ -21,19 +21,19 @@ class OiChatManager {
     );
     for (int i = 0; i < messages.length; i++) {
       await HiveManager.instance.saveData(messages[i].messageid,
-          messages[i].properties, chatBox + "_" + projectId);
+          messages[i].properties, "${chatBox}_$projectId");
     }
   }
 
   Future<void> saveSingleChat(
       OIChatMessage chatMessage, String projectId) async {
-    await HiveManager.instance.saveData(chatMessage.messageid,
-        chatMessage.properties, chatBox + "_" + projectId);
+    await HiveManager.instance.saveData(
+        chatMessage.messageid, chatMessage.properties, "${chatBox}_$projectId");
   }
 
   Future<List<OIChatMessage>> loadChatCache(String projectId) async {
     List<Map<String, dynamic>> cache =
-        await HiveManager.instance.getAllHits(chatBox + "_" + projectId);
+        await HiveManager.instance.getAllHits("${chatBox}_$projectId");
     List<OIChatMessage> messages = [];
     for (var e in cache) {
       messages.add(OIChatMessage.fromJson(e));
@@ -65,7 +65,7 @@ class OiChatManager {
   Future<List<OIChatMessage>> getProjectChatMessages(
       String inProjectId, int page) async {
     final Map? responded = await oi.postEntermedia(
-      oi.app!["mediadb"] +
+      oi.app["mediadb"] +
           '/services/module/librarycollection/viewmessages.json',
       getParams(page, inProjectId),
     );
@@ -79,11 +79,11 @@ class OiChatManager {
     await saveSingleChat(inMessage, projectId);
     try {
       final Map? responded = await oi.postEntermedia(
-        oi.app!["mediadb"] +
+        oi.app["mediadb"] +
             '/services/module/librarycollection/savemessage.json',
         inMessage.properties,
       );
-      log("Saved chat message: " + responded.toString());
+      log("Saved chat message: $responded");
     } catch (e) {
       debugPrint(e.toString());
     }

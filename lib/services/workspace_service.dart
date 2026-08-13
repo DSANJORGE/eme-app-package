@@ -4,37 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/workspace.dart';
 
 class WorkspaceService {
-  static List<Workspace> _defaultWorkspaces = [
-    Workspace(
-      id: 'development',
-      name: 'Development',
-      mediaDBRoot: 'http://localhost.com:8080/site/mediadb',
-    ),
-    Workspace(
-      id: 'minsur',
-      name: 'Minsur',
-      mediaDBRoot: 'https://minsur.genailabs.tech/site/mediadb',
-    ),
-    Workspace(
-      id: 'eme',
-      name: 'EME',
-      mediaDBRoot: 'https://eme.world/site/mediadb',
-    ),
-  ];
-
-  static final List<Workspace> _workspaces = List.from(_defaultWorkspaces);
+  static final List<Workspace> _workspaces = [];
 
   static List<Workspace> get workspaces => List.unmodifiable(_workspaces);
 
-  static Workspace _activeWorkspace = _defaultWorkspaces.first;
+  static late Workspace _activeWorkspace;
 
-  static Future<void> init({List<Workspace>? customWorkspaces}) async {
-    if (customWorkspaces != null && customWorkspaces.isNotEmpty) {
-      _defaultWorkspaces = customWorkspaces;
-      _workspaces.clear();
-      _workspaces.addAll(_defaultWorkspaces);
-      _activeWorkspace = _defaultWorkspaces.first;
-    }
+  static Future<void> init({required Workspace initialWorkspace}) async {
+    _workspaces.clear();
+    _workspaces.add(initialWorkspace);
+    _activeWorkspace = initialWorkspace;
 
     final prefs = await SharedPreferences.getInstance();
 
@@ -46,9 +25,7 @@ class WorkspaceService {
           final Map<String, dynamic> map = json.decode(rawJson);
           final ws = Workspace.fromJson(map);
           if (!_workspaces.any(
-            (w) =>
-                w.id.toLowerCase() == ws.id.toLowerCase() ||
-                w.mediaDBRoot.toLowerCase() == ws.mediaDBRoot.toLowerCase(),
+            (w) => w.id.toLowerCase() == ws.id.toLowerCase(),
           )) {
             _workspaces.add(ws);
           }
@@ -77,13 +54,14 @@ class WorkspaceService {
 
   static void addWorkspaces(List<Workspace> workspaces) {
     for (final workspace in workspaces) {
-      logPrint('Adding workspace: ${workspace.id}');
+      logPrint("add workspace ${workspace.id}:${workspace.mediaDBRoot}");
+
       if (!_workspaces.any(
-        (w) =>
-            w.id.toLowerCase() == workspace.id.toLowerCase() ||
-            w.mediaDBRoot.toLowerCase() == workspace.mediaDBRoot.toLowerCase(),
+        (w) => w.id.toLowerCase() == workspace.id.toLowerCase(),
       )) {
         _workspaces.add(workspace);
+      } else {
+        logPrint("workspace ${workspace.id} is already in the list");
       }
     }
     _saveCustomWorkspaces();
@@ -115,8 +93,9 @@ class WorkspaceService {
     final targetId = id?.trim().toLowerCase();
 
     for (final ws in _workspaces) {
-      if (ws.mediaDBRoot.toLowerCase() == cleanedRoot ||
-          (targetId != null && ws.id.toLowerCase() == targetId)) {
+      if (targetId != null) {
+        if (ws.id.toLowerCase() == targetId) return ws;
+      } else if (ws.mediaDBRoot.toLowerCase() == cleanedRoot) {
         return ws;
       }
     }
@@ -137,7 +116,6 @@ class WorkspaceService {
   static Future<void> _saveCustomWorkspaces() async {
     final prefs = await SharedPreferences.getInstance();
     final customList = _workspaces
-        .where((ws) => !_defaultWorkspaces.any((d) => d.id == ws.id))
         .map((ws) => json.encode(ws.toJson()))
         .toList();
     await prefs.setStringList('custom_dynamic_workspaces', customList);
@@ -145,9 +123,7 @@ class WorkspaceService {
 
   static Future<void> setActiveWorkspace(Workspace workspace) async {
     if (!_workspaces.any(
-      (w) =>
-          w.id.toLowerCase() == workspace.id.toLowerCase() ||
-          w.mediaDBRoot.toLowerCase() == workspace.mediaDBRoot.toLowerCase(),
+      (w) => w.id.toLowerCase() == workspace.id.toLowerCase(),
     )) {
       _workspaces.add(workspace);
       await _saveCustomWorkspaces();
@@ -188,9 +164,7 @@ class WorkspaceService {
   /// Removes a workspace from registered workspaces and cleans up saved credentials.
   static Future<bool> removeWorkspace(Workspace workspace) async {
     final index = _workspaces.indexWhere(
-      (w) =>
-          w.id.toLowerCase() == workspace.id.toLowerCase() ||
-          w.mediaDBRoot.toLowerCase() == workspace.mediaDBRoot.toLowerCase(),
+      (w) => w.id.toLowerCase() == workspace.id.toLowerCase(),
     );
 
     if (index == -1) return false;
@@ -202,12 +176,10 @@ class WorkspaceService {
     await prefs.remove('user_${removed.id}');
     await prefs.remove('entermediakey_${removed.id}');
 
-    if (_activeWorkspace.id.toLowerCase() == removed.id.toLowerCase() ||
-        _activeWorkspace.mediaDBRoot.toLowerCase() ==
-            removed.mediaDBRoot.toLowerCase()) {
-      _activeWorkspace = _workspaces.isNotEmpty
-          ? _workspaces.first
-          : _defaultWorkspaces.first;
+    if (_activeWorkspace.id.toLowerCase() == removed.id.toLowerCase()) {
+      if (_workspaces.isNotEmpty) {
+        _activeWorkspace = _workspaces.first;
+      }
       await prefs.setString('selected_workspace_id', _activeWorkspace.id);
       await prefs.setString(
         'selected_workspace_mediadbroot',

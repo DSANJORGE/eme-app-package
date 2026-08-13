@@ -1,5 +1,3 @@
-library flutter_eme_base;
-
 export 'app_config.dart';
 export 'base_app.dart';
 

@@ -10,80 +10,33 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:openinsitute_core/Helper/custom_exception.dart';
 import 'package:openinsitute_core/Helper/request_type.dart';
-import 'package:openinsitute_core/services/feed_manager.dart';
-import 'package:openinsitute_core/services/authentication_manager.dart';
-import 'package:openinsitute_core/services/em_data_manager.dart';
-import 'package:openinsitute_core/services/em_socket_manager.dart';
 import 'package:openinsitute_core/services/hive_manager.dart';
-import 'package:openinsitute_core/services/project_manager.dart';
 import 'package:openinsitute_core/services/oi_chat_manager.dart';
-import 'package:openinsitute_core/services/task_manager.dart';
-
-//import 'contact.dart';
 
 class OpenI {
-  Map? _settings;
-  DataManager? dataManager;
+  late final Map _settings;
   OiChatManager? chatManager;
-  EmSocketManager? socketManager;
-  ProjectManager? projectManager;
-  AuthenticationManager? authenticationManager;
-  TaskManager? taskManager;
-  FeedManager? feedManager;
 
-  Map? get app {
-    if (_settings == null) {
-      loadAppSettings();
-    }
-    String appmode = _settings!["devmode"];
-    if ("dev" == appmode) {
-      return _settings!["dev"];
-    } else {
-      return _settings!["prod"];
-    }
-  }
+  Future<void> initialize({required String appSettingsPath}) async {
+    String json = await rootBundle.loadString(appSettingsPath);
+    _settings = jsonDecode(json);
 
-  Map? get settings {
-    if (_settings == null) {
-      loadAppSettings();
-    }
-    return _settings;
-  }
-
-  DataManager get datamanager => Get.find<DataManager>();
-  EmSocketManager get emSocketManager => Get.find<EmSocketManager>();
-  ProjectManager get projectmanager => Get.find<ProjectManager>();
-  AuthenticationManager get authenticationmanager =>
-      Get.find<AuthenticationManager>();
-  TaskManager get taskmanager => Get.find<TaskManager>();
-  FeedManager get feedmanager => Get.find<FeedManager>();
-
-  Future<void> initialize() async {
-    await loadAppSettings();
     await HiveManager.instance.init();
     Get.put<OpenI>(this, permanent: true);
-    dataManager = DataManager();
-    Get.put<DataManager>(dataManager!, permanent: true);
     chatManager = OiChatManager();
     Get.put<OiChatManager>(chatManager!, permanent: true);
-    socketManager = EmSocketManager();
-    Get.put<EmSocketManager>(socketManager!, permanent: true);
-    projectManager = ProjectManager();
-    Get.put<ProjectManager>(projectManager!, permanent: true);
-    authenticationManager = AuthenticationManager();
-    Get.put<AuthenticationManager>(authenticationManager!, permanent: true);
-    taskManager = TaskManager();
-    Get.put<TaskManager>(taskManager!, permanent: true);
-    feedManager = FeedManager();
-    Get.put<FeedManager>(feedManager!, permanent: true);
   }
 
-  Future<Map?> loadAppSettings() async {
-    if (_settings == null) {
-      String json = await rootBundle.loadString("system/appsettings.json");
-      debugPrint("loaded $json");
-      _settings = jsonDecode(json);
+  Map get app {
+    String appmode = _settings["devmode"];
+    if ("dev" == appmode) {
+      return _settings["dev"];
+    } else {
+      return _settings["prod"];
     }
+  }
+
+  Map get settings {
     return _settings;
   }
 
@@ -98,11 +51,7 @@ class OpenI {
     Map<String, String> headers = <String, String>{};
     headers.addAll({"X-tokentype": "entermedia"});
     headers.addAll({"Content-type": "application/json"});
-    if (authenticationmanager.emUser != null) {
-      String tokenKey =
-          handleTokenKey(authenticationmanager.emUser!.entermediakey);
-      headers.addAll({"X-token": tokenKey});
-    }
+
     //make API post
     final response = await httpRequest(
       requestUrl: url,
@@ -112,8 +61,8 @@ class OpenI {
       customError: customError,
     );
     if (response != null && response.statusCode == 200) {
-      debugPrint("Success user info is:" + response.body);
       final String responseString = response.body;
+      debugPrint("Success user info is: $responseString");
       return json.decode(responseString);
     } else {
       return null;
@@ -128,13 +77,6 @@ class OpenI {
     Map<String, String> headers = <String, String>{};
     headers.addAll({"X-tokentype": "entermedia"});
     headers.addAll({"Content-type": "application/json"});
-    if (authenticationmanager.emUser != null) {
-      String tokenKey =
-          handleTokenKey(authenticationmanager.emUser!.entermediakey);
-      headers.addAll({"X-token": tokenKey});
-    } else {
-      throw CustomException("No token key found");
-    }
 
     final response = await httpRequest(
       requestUrl: url,
@@ -144,8 +86,8 @@ class OpenI {
       customError: customError,
     );
     if (response != null && response.statusCode == 200) {
-      debugPrint("Success user info is:" + response.body);
       final String responseString = response.body;
+      debugPrint("Success user info is: $responseString");
       return responseString;
     } else {
       return "{}";
@@ -207,7 +149,7 @@ class OpenI {
   }
 
   dynamic handleException(http.Response response) {
-    debugPrint("Response code: " + response.statusCode.toString());
+    debugPrint("Response code: ${response.statusCode}");
     switch (response.statusCode) {
       case 200:
         final http.Response responseJson = response;

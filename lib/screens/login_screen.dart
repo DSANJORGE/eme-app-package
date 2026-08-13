@@ -1298,15 +1298,15 @@ class _LoginScreenState extends State<LoginScreen>
                       WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
                         urlController.text.trim(),
                       );
-                  await AuthService.switchWorkspace(newWs);
                   if (mounted) {
                     setState(() {
                       _selectedWorkspace = newWs;
                       _isOtpStage = false;
                     });
                     widget.onWorkspaceChanged?.call();
+                    Navigator.pop(context);
                   }
-                  Navigator.pop(context);
+                  await AuthService.switchWorkspace(newWs);
                 }
               },
               style: ElevatedButton.styleFrom(

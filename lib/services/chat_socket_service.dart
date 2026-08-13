@@ -289,12 +289,6 @@ class ChatSocketService {
     if (AuthService.userId != null && AuthService.userId!.isNotEmpty) {
       return AuthService.userId;
     }
-    try {
-      if (Get.isRegistered<OpenI>()) {
-        final oi = Get.find<OpenI>();
-        return oi.authenticationmanager.emUser?.id;
-      }
-    } catch (_) {}
     return null;
   }
 
@@ -303,13 +297,11 @@ class ChatSocketService {
       if (Get.isRegistered<OpenI>()) {
         final oi = Get.find<OpenI>();
         final appMap = oi.app;
-        if (appMap != null) {
-          if (appMap['chat_socket_url'] != null) {
-            return appMap['chat_socket_url'];
-          }
-          if (appMap['base_url'] != null) {
-            return appMap['base_url'];
-          }
+        if (appMap['chat_socket_url'] != null) {
+          return appMap['chat_socket_url'];
+        }
+        if (appMap['base_url'] != null) {
+          return appMap['base_url'];
         }
       }
     } catch (_) {}
@@ -326,12 +318,6 @@ class ChatSocketService {
     if (AuthService.token != null && AuthService.token!.isNotEmpty) {
       return AuthService.token;
     }
-    try {
-      if (Get.isRegistered<OpenI>()) {
-        final oi = Get.find<OpenI>();
-        return oi.authenticationmanager.emUser?.entermediakey;
-      }
-    } catch (_) {}
     return null;
   }
 

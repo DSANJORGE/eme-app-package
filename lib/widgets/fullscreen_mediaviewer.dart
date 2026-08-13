@@ -107,8 +107,9 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
     if (widget.mediaType != null && widget.mediaType!.isNotEmpty) {
       final typeStr = widget.mediaType!.toLowerCase();
       if (typeStr.contains('image')) return DetectedMediaType.image;
-      if (typeStr.contains('audio') || typeStr.contains('sound'))
+      if (typeStr.contains('audio') || typeStr.contains('sound')) {
         return DetectedMediaType.audio;
+      }
       if (typeStr.contains('video')) return DetectedMediaType.video;
       if (typeStr.contains('pdf')) return DetectedMediaType.pdf;
     }
