@@ -322,7 +322,7 @@ class AuthService {
         'Accept': 'application/json',
         'X-tokentype': 'entermedia',
         'X-entermediakey': credentials['entermediakey']!,
-        'X- userid': credentials['user']!,
+        'X-userid': credentials['user']!,
       },
     );
 
