@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_eme_base/flutter_eme_base.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/workspace.dart';
@@ -53,6 +54,8 @@ class WorkspaceService {
   }
 
   static void addWorkspaces(List<Workspace> workspaces) {
+    if (workspaces.isEmpty) return;
+    final firstWs = workspaces.first;
     for (final workspace in workspaces) {
       logPrint("add workspace ${workspace.id}:${workspace.mediaDBRoot}");
 
@@ -65,6 +68,9 @@ class WorkspaceService {
       }
     }
     _saveCustomWorkspaces();
+    if (_activeWorkspace.id != firstWs.id) {
+      AuthService.switchWorkspace(firstWs, childOfCurrentWorkspace: true);
+    }
   }
 
   static Workspace get activeWorkspace => _activeWorkspace;

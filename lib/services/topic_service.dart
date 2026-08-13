@@ -53,13 +53,14 @@ class TopicService {
             .map((item) => Topic.fromJson(item as Map<String, dynamic>))
             .toList();
       } else {
-        throw Exception(
+        logPrint(
           'Failed to fetch topics. Server returned HTTP ${response.statusCode}',
         );
+        return [];
       }
     } catch (e) {
       logPrint('TopicService error fetching from $targetUrl');
-      rethrow;
+      return [];
     }
   }
 

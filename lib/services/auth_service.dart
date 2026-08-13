@@ -72,8 +72,35 @@ class AuthService {
     await loadSessionForActiveWorkspace();
   }
 
-  static Future<bool> switchWorkspace(Workspace workspace) async {
+  static Future<bool> switchWorkspace(
+    Workspace workspace, {
+    bool childOfCurrentWorkspace = false,
+  }) async {
+    String? currentUserId;
+    String? currentToken;
+    String? currentRefreshToken;
+    DateTime? currentTokenExpiration;
+
+    if (childOfCurrentWorkspace) {
+      currentUserId = _userId;
+      currentToken = _token;
+      currentRefreshToken = _refreshToken;
+      currentTokenExpiration = _tokenExpiration;
+    }
+
     await WorkspaceService.setActiveWorkspace(workspace);
+
+    if (childOfCurrentWorkspace &&
+        currentUserId != null &&
+        currentToken != null) {
+      await saveCredentials(
+        currentUserId,
+        currentToken,
+        refreshToken: currentRefreshToken,
+        tokenExpiration: currentTokenExpiration,
+      );
+    }
+
     await loadSessionForActiveWorkspace();
     return isLoggedIn;
   }
@@ -284,6 +311,40 @@ class AuthService {
     return false;
   }
 
+  static Future<void> loadWorkspaces() async {
+    final workspacesUrl = Uri.parse('$mediaDBRoot/services/server/list.json');
+
+    final Map<String, String> credentials = await AuthService.getCredentials();
+    final workspacesResponse = await http.get(
+      workspacesUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-tokentype': 'entermedia',
+        'X-entermediakey': credentials['entermediakey']!,
+        'X- userid': credentials['user']!,
+      },
+    );
+
+    if (workspacesResponse.statusCode == 200) {
+      final Map<String, dynamic> workspacesData = json.decode(
+        workspacesResponse.body,
+      );
+
+      final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
+
+      List<Workspace> customWorkspaces = workspacesList.map((ws) {
+        return Workspace(
+          id: ws['id'] as String,
+          name: ws['name'] as String,
+          mediaDBRoot: ws['mediadbroot'] as String,
+          iconAsset: ws['iconasset'] as String?,
+        );
+      }).toList();
+      WorkspaceService.addWorkspaces(customWorkspaces);
+    }
+  }
+
   static Future<bool> loginWithOtp(String email, String otp) async {
     final url = Uri.parse('$mediaDBRoot/services/authentication/token.json');
     final Map<String, String> headers = {
@@ -319,38 +380,7 @@ class AuthService {
             tokenExpiration: expiration,
           );
 
-          try {
-            final workspacesUrl = Uri.parse(
-              '$mediaDBRoot/services/server/list.json',
-            );
-
-            final Map<String, String> credentials =
-                await AuthService.getCredentials();
-            final workspacesResponse = await http.get(
-              workspacesUrl,
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-tokentype': 'entermedia',
-                'X-token': credentials['entermediakey']!,
-              },
-            );
-            final Map<String, dynamic> data = json.decode(
-              workspacesResponse.body,
-            );
-            final workspaceJson = data['servers'] as List<dynamic>;
-            List<Workspace> customWorkspaces = workspaceJson.map((ws) {
-              return Workspace(
-                id: ws['id'] as String,
-                name: ws['name'] as String,
-                mediaDBRoot: ws['mediadbroot'] as String,
-                iconAsset: ws['iconasset'] as String?,
-              );
-            }).toList();
-            WorkspaceService.addWorkspaces(customWorkspaces);
-          } catch (e) {
-            logPrint('Failed to load workspaces: $e');
-          }
+          await loadWorkspaces();
 
           if (userJson != null) {
             _currentUser = User.fromJson(userJson);
@@ -409,35 +439,7 @@ class AuthService {
           if (key.isNotEmpty) {
             await saveCredentials(userId, key);
 
-            try {
-              final url = Uri.parse('$mediaDBRoot/services/server/list.json');
-              final Map<String, String> credentials =
-                  await AuthService.getCredentials();
-              final workspacesResponse = await http.get(
-                url,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                  'X-tokentype': 'entermedia',
-                  'X-token': credentials['entermediakey']!,
-                },
-              );
-              final Map<String, dynamic> data = json.decode(
-                workspacesResponse.body,
-              );
-              final workspaceJson = data['servers'] as List<dynamic>;
-              List<Workspace> customWorkspaces = workspaceJson.map((ws) {
-                return Workspace(
-                  id: ws['id'] as String,
-                  name: ws['name'] as String,
-                  mediaDBRoot: ws['mediadbroot'] as String,
-                  iconAsset: ws['iconasset'] as String?,
-                );
-              }).toList();
-              WorkspaceService.addWorkspaces(customWorkspaces);
-            } catch (e) {
-              logPrint('Failed to load workspaces: $e');
-            }
+            await loadWorkspaces();
 
             if (userJson != null) {
               _currentUser = User.fromJson(userJson);
