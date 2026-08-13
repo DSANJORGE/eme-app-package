@@ -99,13 +99,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             _lastMessage = _messages.last;
           });
         }
-
-        final userId = AuthService.userId ?? _tutorChannel!.user;
-
-        await ChatSocketService().connect(
-          userId: userId,
-          channel: _tutorChannel!.id,
-        );
+        await ChatSocketService().connect(channel: _tutorChannel!.id);
         _socketSubscription?.cancel();
         _socketSubscription = ChatSocketService().messageStream.listen((
           incomingMsg,
@@ -132,7 +126,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
             _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
             _lastMessage = _messages.last;
 
-            if (_lastMessage!.messageType.isQuestion) {
+            if (_lastMessage!.messageType.isWelcome) {
+              setState(() {
+                _stage = MessageStage.ready;
+              });
+            } else if (_lastMessage!.messageType.isQuestion) {
               setState(() {
                 _tempSelectedAnswerIndex = null;
                 _tempConfidenceLevel = null;
@@ -158,6 +156,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             channel: _tutorChannel!.id,
           );
         } else {
+          logPrint('Last message: ${_lastMessage?.messageType}');
           if (_lastMessage != null) {
             if (_lastMessage!.messageType.isWelcome) {
               setState(() {
@@ -170,6 +169,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 _tempConfidenceLevel = null;
                 setState(() {
                   _stage = MessageStage.selectOption;
+                });
+              } else {
+                setState(() {
+                  _stage = MessageStage.explainAndFollowup;
                 });
               }
             } else if (_lastMessage!.messageType.isEnd) {

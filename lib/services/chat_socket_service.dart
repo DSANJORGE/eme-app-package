@@ -21,8 +21,8 @@ class ChatSocketService {
   Timer? _keepAliveTimer;
   Timer? _reconnectTimer;
 
-  String? _userId;
-  String? _channelId;
+  late String _userId;
+  late String _channelId;
   String? _sessionId;
   String? _baseUrl;
   String? _entermediakey;
@@ -48,28 +48,23 @@ class ChatSocketService {
   String? get currentChannel => _channelId;
 
   /// Connect to Entermedia WebSocket Chat
-  Future<void> connect({
-    String? userId,
-    String? channel,
-    String? baseUrl,
-    String? sessionId,
-    String? entermediakey,
-  }) async {
+  Future<void> connect({required String channel}) async {
     _isDisposed = false;
-    _userId = userId ?? _resolveUserId();
-    _channelId = channel ?? _channelId;
-    _baseUrl = baseUrl ?? _resolveBaseUrl();
-    _sessionId = sessionId ?? _generateSessionId();
-    _entermediakey = entermediakey ?? _resolveToken();
+    _channelId = channel;
+    _baseUrl = _resolveBaseUrl();
+    _sessionId = _generateSessionId();
 
-    if (_userId == null || _userId!.isEmpty) {
+    _userId = _resolveUserId();
+    _entermediakey = _resolveToken();
+
+    if (_userId.isEmpty) {
       logPrint('ChatSocketService: cannot connect without a valid userId');
       return;
     }
 
     if (_connectionState == SocketConnectionState.connected ||
         _connectionState == SocketConnectionState.connecting) {
-      if (channel != null && channel != _channelId) {
+      if (channel != _channelId) {
         switchChannel(channel);
       }
       return;
@@ -85,7 +80,7 @@ class ChatSocketService {
       final wsUri = _buildWebSocketUri(
         baseUrl: _baseUrl!,
         sessionId: _sessionId!,
-        userId: _userId!,
+        userId: _userId,
         channel: _channelId,
         entermediakey: _entermediakey,
       );
@@ -94,6 +89,8 @@ class ChatSocketService {
 
       _channel = WebSocketChannel.connect(wsUri);
       await _channel!.ready;
+
+      logPrint('ChatSocketService connected');
 
       _updateState(SocketConnectionState.connected);
       _startKeepAlive();
@@ -124,8 +121,8 @@ class ChatSocketService {
 
     final data = <String, dynamic>{
       'message': message,
-      'channel': ?targetChannel,
-      'userid': ?_userId,
+      'channel': targetChannel,
+      'userid': _userId,
       if (replyToId != null && replyToId.isNotEmpty) 'replytoid': replyToId,
       if (command != null && command.isNotEmpty) 'command': command,
       if (functionName != null && functionName.isNotEmpty)
@@ -169,16 +166,39 @@ class ChatSocketService {
   /// Handle incoming message from socket stream
   void _onMessageReceived(dynamic rawData) {
     try {
+      logPrint('ChatSocketService rawData received: $rawData');
+      String strData;
       if (rawData is String) {
-        final decoded = json.decode(rawData);
-        if (decoded is Map<String, dynamic>) {
-          _rawEventController.add(decoded);
-          final chatMessage = ChatMessage.fromJson(decoded);
-          _messageController.add(chatMessage);
-        }
+        strData = rawData;
+      } else if (rawData is List<int>) {
+        strData = utf8.decode(rawData);
+      } else {
+        return;
       }
-    } catch (e) {
-      logError('ChatSocketService error parsing incoming message');
+
+      final decoded = json.decode(strData);
+
+      void processMessage(Map<String, dynamic> data) {
+        _rawEventController.add(data);
+        final chatMessage = ChatMessage.fromJson(data);
+        _messageController.add(chatMessage);
+      }
+
+      if (decoded is Map<String, dynamic>) {
+        processMessage(decoded);
+      } else if (decoded is List) {
+        for (var item in decoded) {
+          if (item is Map<String, dynamic>) {
+            processMessage(item);
+          } else if (item is Map) {
+            processMessage(Map<String, dynamic>.from(item));
+          }
+        }
+      } else if (decoded is Map) {
+        processMessage(Map<String, dynamic>.from(decoded));
+      }
+    } catch (e, stack) {
+      logError('ChatSocketService error parsing incoming message: $e\n$stack');
     }
   }
 
@@ -190,7 +210,7 @@ class ChatSocketService {
         final keepAliveData = <String, dynamic>{
           'command': 'keepalive',
           'userid': _userId,
-          if (_channelId != null) 'channel': _channelId,
+          if (_channelId.isNotEmpty) 'channel': _channelId,
         };
         sendRaw(keepAliveData);
       } else {
@@ -234,13 +254,7 @@ class ChatSocketService {
       if (!_isDisposed &&
           _connectionState != SocketConnectionState.connected &&
           _connectionState != SocketConnectionState.connecting) {
-        connect(
-          userId: _userId,
-          channel: _channelId,
-          baseUrl: _baseUrl,
-          sessionId: _sessionId,
-          entermediakey: _entermediakey,
-        );
+        connect(channel: _channelId);
       }
     });
   }
@@ -257,13 +271,7 @@ class ChatSocketService {
     if (!reconnect) {
       _updateState(SocketConnectionState.disconnected);
     } else {
-      connect(
-        userId: _userId,
-        channel: _channelId,
-        baseUrl: _baseUrl,
-        sessionId: _sessionId,
-        entermediakey: _entermediakey,
-      );
+      connect(channel: _channelId);
     }
   }
 
@@ -285,11 +293,8 @@ class ChatSocketService {
     return rand.toString();
   }
 
-  String? _resolveUserId() {
-    if (AuthService.userId != null && AuthService.userId!.isNotEmpty) {
-      return AuthService.userId;
-    }
-    return null;
+  String _resolveUserId() {
+    return AuthService.userId!;
   }
 
   String _resolveBaseUrl() {
