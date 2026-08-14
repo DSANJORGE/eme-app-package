@@ -4,7 +4,6 @@ import 'dart:async' show Future, TimeoutException;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:dio/dio.dart';
@@ -14,29 +13,22 @@ import 'package:openinsitute_core/services/hive_manager.dart';
 import 'package:openinsitute_core/services/oi_chat_manager.dart';
 
 class OpenI {
-  late final Map _settings;
+  late final Map<String, dynamic> _settings;
   OiChatManager? chatManager;
 
-  Future<void> initialize({required String appSettingsPath}) async {
-    String json = await rootBundle.loadString(appSettingsPath);
-    _settings = jsonDecode(json);
-
+  Future<void> initialize({required Map<String, dynamic> appSettings}) async {
+    _settings = appSettings;
     await HiveManager.instance.init();
     Get.put<OpenI>(this, permanent: true);
     chatManager = OiChatManager();
     Get.put<OiChatManager>(chatManager!, permanent: true);
   }
 
-  Map get app {
-    String appmode = _settings["devmode"];
-    if ("dev" == appmode) {
-      return _settings["dev"];
-    } else {
-      return _settings["prod"];
-    }
+  Map<String, String> get app {
+    return Map<String, String>.from(_settings[_settings["mode"]]);
   }
 
-  Map get settings {
+  Map<String, dynamic> get settings {
     return _settings;
   }
 
@@ -86,7 +78,8 @@ class OpenI {
       customError: customError,
     );
     if (response != null && response.statusCode == 200) {
-      final String responseString = response.data is String ? response.data : json.encode(response.data);
+      final String responseString =
+          response.data is String ? response.data : json.encode(response.data);
       debugPrint("Success user info is: $responseString");
       return responseString;
     } else {
@@ -121,10 +114,11 @@ class OpenI {
       response = await handleException(responseJson!);
       return response;
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-         // Timeout
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        // Timeout
       } else if (e.response != null) {
-         handleException(e.response!);
+        handleException(e.response!);
       }
     } catch (_) {
       // showErrorFlushbar(

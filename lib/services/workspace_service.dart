@@ -60,11 +60,15 @@ class WorkspaceService {
       logPrint("add workspace ${workspace.id}:${workspace.mediaDBRoot}");
 
       if (!_workspaces.any(
-        (w) => w.id.toLowerCase() == workspace.id.toLowerCase(),
+        (w) =>
+            w.id.toLowerCase() == workspace.id.toLowerCase() ||
+            w.mediaDBRoot.toLowerCase() == workspace.mediaDBRoot.toLowerCase(),
       )) {
         _workspaces.add(workspace);
       } else {
-        logPrint("workspace ${workspace.id} is already in the list");
+        logPrint(
+          "workspace ${workspace.id} or ${workspace.mediaDBRoot} is already in the list",
+        );
       }
     }
     _saveCustomWorkspaces();

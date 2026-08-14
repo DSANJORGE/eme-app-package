@@ -303,20 +303,11 @@ class ChatSocketService {
         final oi = Get.find<OpenI>();
         final appMap = oi.app;
         if (appMap['chat_socket_url'] != null) {
-          return appMap['chat_socket_url'];
-        }
-        if (appMap['base_url'] != null) {
-          return appMap['base_url'];
+          return appMap['chat_socket_url']!;
         }
       }
     } catch (_) {}
-
-    if (AuthService.mediaDBRoot.isNotEmpty) {
-      final uri = Uri.parse(AuthService.mediaDBRoot);
-      return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
-    }
-
-    return 'http://localhost.com:8080';
+    throw Exception('chat_socket_url not found in app settings');
   }
 
   String? _resolveToken() {

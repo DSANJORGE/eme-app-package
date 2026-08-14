@@ -65,8 +65,7 @@ class OiChatManager {
   Future<List<OIChatMessage>> getProjectChatMessages(
       String inProjectId, int page) async {
     final Map? responded = await oi.postEntermedia(
-      oi.app["mediadb"] +
-          '/services/module/librarycollection/viewmessages.json',
+      '${oi.app["mediadb"]}/services/module/librarycollection/viewmessages.json',
       getParams(page, inProjectId),
     );
     List<OIChatMessage> messages = responded!["results"]!
@@ -79,8 +78,7 @@ class OiChatManager {
     await saveSingleChat(inMessage, projectId);
     try {
       final Map? responded = await oi.postEntermedia(
-        oi.app["mediadb"] +
-            '/services/module/librarycollection/savemessage.json',
+        '${oi.app["mediadb"]}/services/module/librarycollection/savemessage.json',
         inMessage.properties,
       );
       log("Saved chat message: $responded");

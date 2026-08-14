@@ -35,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen>
   late Workspace _selectedWorkspace;
   bool _isRegistrationStage = false;
   bool _isOtpStage = false;
-  bool _rememberMe = true;
   bool _isLoading = false;
   int _timerSeconds = 0;
   Timer? _resendTimer;
@@ -486,7 +485,8 @@ class _LoginScreenState extends State<LoginScreen>
                                       },
                                     ),
                                   ] else if (!_isOtpStage) ...[
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 4),
+
                                     // Email Address Input
                                     const Text(
                                       'Email Address',
@@ -511,50 +511,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         return null;
                                       },
                                     ),
-                                    const SizedBox(height: 12),
-
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: Checkbox(
-                                                value: _rememberMe,
-                                                activeColor: const Color(
-                                                  0xFF38B6FF,
-                                                ),
-                                                checkColor: Colors.black,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                ),
-                                                side: BorderSide(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.2),
-                                                ),
-                                                onChanged: (val) {
-                                                  setState(() {
-                                                    _rememberMe = val ?? false;
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            const Text(
-                                              'Remember session',
-                                              style: TextStyle(
-                                                color: Color(0xFF90A4AE),
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                    const SizedBox(height: 4),
                                   ] else ...[
                                     // OTP Input Stage
                                     Row(
@@ -738,18 +695,49 @@ class _LoginScreenState extends State<LoginScreen>
                                             ),
                                           ),
                                         ),
-
-                                  const SizedBox(height: 24),
-                                  Text(
-                                    textAlign: TextAlign.center,
-                                    'Powered by eMe.world',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
+                                  if (!_isOtpStage) ...[
+                                    const SizedBox(height: 16),
+                                    // Workspace Selection Menu
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          'Workspace:',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _showWorkspaceModalSheet(context);
+                                          },
+                                          child: Text(
+                                            _selectedWorkspace.name,
+                                            style: const TextStyle(
+                                              color: Color(0xFF38B6FF),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ] else ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      textAlign: TextAlign.center,
+                                      'Powered by eMe.world',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -896,6 +884,351 @@ class _LoginScreenState extends State<LoginScreen>
           errorStyle: const TextStyle(color: Color(0xFFF50057), fontSize: 11),
         ),
       ),
+    );
+  }
+
+  void _showWorkspaceModalSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final workspaces = WorkspaceService.workspaces;
+            return Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF161C24),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border(
+                  top: BorderSide(color: Colors.white12, width: 1),
+                ),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Select Workspace',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(sheetContext);
+                          await _showAddWorkspaceDialog(context);
+                        },
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 16,
+                          color: Color(0xFF38B6FF),
+                        ),
+                        label: const Text(
+                          'Add New',
+                          style: TextStyle(
+                            color: Color(0xFF38B6FF),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: workspaces.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final ws = workspaces[index];
+                        final isSelected = ws.id == _selectedWorkspace.id;
+                        final color = ws.id == 'minsur'
+                            ? const Color(0xFF0072FF)
+                            : ws.id == 'eme'
+                            ? const Color(0xFF00C853)
+                            : const Color(0xFF8A2387);
+                        final canDelete = WorkspaceService.canDeleteWorkspace(
+                          ws,
+                        );
+
+                        return Material(
+                          color: isSelected
+                              ? const Color(0xFF1E2638)
+                              : const Color(0xFF0F1319),
+                          borderRadius: BorderRadius.circular(14),
+                          clipBehavior: Clip.antiAlias,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(
+                                        0xFF38B6FF,
+                                      ).withValues(alpha: 0.4)
+                                    : Colors.white.withValues(alpha: 0.05),
+                              ),
+                            ),
+                            child: ListTile(
+                              onTap: () async {
+                                Navigator.pop(sheetContext);
+                                final isLoggedIn =
+                                    await AuthService.switchWorkspace(ws);
+                                if (isLoggedIn) {
+                                  widget.onLoginSuccess(
+                                    AuthService.currentUser?.email ??
+                                        AuthService.userId ??
+                                        '',
+                                  );
+                                } else {
+                                  setState(() {
+                                    _selectedWorkspace = ws;
+                                    _isOtpStage = false;
+                                    _otpController.clear();
+                                    _otpError = null;
+                                  });
+                                  widget.onWorkspaceChanged?.call();
+                                }
+                              },
+                              leading: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: color.withValues(alpha: 0.15),
+                                  border: Border.all(color: color, width: 1.5),
+                                ),
+                                child: Icon(
+                                  Icons.hub_rounded,
+                                  size: 16,
+                                  color: color,
+                                ),
+                              ),
+                              title: Text(
+                                ws.name,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? const Color(0xFF38B6FF)
+                                      : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                ws.mediaDBRoot,
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 11,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: canDelete
+                                  ? IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Color(0xFFF50057),
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        final confirmed =
+                                            await _showConfirmDeleteDialog(
+                                              context,
+                                              ws,
+                                            );
+                                        if (confirmed) {
+                                          await WorkspaceService.removeWorkspace(
+                                            ws,
+                                          );
+                                          await AuthService.loadSessionForActiveWorkspace();
+                                          if (mounted) {
+                                            setState(() {
+                                              _selectedWorkspace =
+                                                  WorkspaceService
+                                                      .activeWorkspace;
+                                            });
+                                            widget.onWorkspaceChanged?.call();
+                                          }
+                                          setSheetState(() {});
+                                        }
+                                      },
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _showConfirmDeleteDialog(
+    BuildContext context,
+    Workspace ws,
+  ) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161C24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
+              SizedBox(width: 8),
+              Text(
+                'Delete Workspace',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete workspace "${ws.name}" (${ws.mediaDBRoot})?',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF50057),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  Future<void> _showAddWorkspaceDialog(BuildContext context) async {
+    final urlController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161C24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.add_link_rounded, color: Color(0xFF38B6FF)),
+              SizedBox(width: 8),
+              Text(
+                'Add Custom Workspace',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Enter the MediaDB Root URL for your workspace:',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: urlController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'https://minsur.genailabs.tech/site/mediadb',
+                    hintStyle: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 12,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1319),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'Please enter a MediaDB Root URL';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final newWs =
+                      WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
+                        urlController.text.trim(),
+                      );
+                  if (mounted) {
+                    setState(() {
+                      _selectedWorkspace = newWs;
+                      _isOtpStage = false;
+                    });
+                    widget.onWorkspaceChanged?.call();
+                  }
+                  Navigator.pop(context);
+                  await AuthService.switchWorkspace(newWs);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF38B6FF),
+              ),
+              child: const Text(
+                'Add & Select',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

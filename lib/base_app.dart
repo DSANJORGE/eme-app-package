@@ -19,13 +19,13 @@ class BaseApp extends ConsumerWidget {
   const BaseApp({super.key, required this.config});
 
   static Future<void> initialize({
-    required String appSettingsPath,
+    required Map<String, dynamic> appSettings,
     required Workspace initialWorkspace,
   }) async {
     await WorkspaceService.init(initialWorkspace: initialWorkspace);
     await AuthService.init();
     final oi = OpenI();
-    await oi.initialize(appSettingsPath: appSettingsPath);
+    await oi.initialize(appSettings: appSettings);
   }
 
   @override

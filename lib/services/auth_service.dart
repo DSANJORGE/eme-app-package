@@ -147,10 +147,14 @@ class AuthService {
         try {
           final workspaceJson = data['servers'] as List<dynamic>;
           List<Workspace> customWorkspaces = workspaceJson.map((ws) {
+            final root = (ws['mediadbroot'] as String).replaceAll(
+              RegExp(r'\/$'),
+              '',
+            );
             return Workspace(
               id: ws['id'] as String,
               name: ws['name'] as String,
-              mediaDBRoot: ws['mediadbroot'] as String,
+              mediaDBRoot: root,
               iconAsset: ws['iconasset'] as String?,
             );
           }).toList();
@@ -239,6 +243,7 @@ class AuthService {
     String? lastName,
   }) async {
     final url = '$mediaDBRoot/services/authentication/sendusercode.json';
+    logPrint('Logging in at $url');
     final Map<String, dynamic> body = {'email': email};
     if (firstName != null && firstName.trim().isNotEmpty) {
       body['firstName'] = firstName.trim();
@@ -349,10 +354,14 @@ class AuthService {
       final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
 
       List<Workspace> customWorkspaces = workspacesList.map((ws) {
+        final root = (ws['mediadbroot'] as String).replaceAll(
+          RegExp(r'\/$'),
+          '',
+        );
         return Workspace(
           id: ws['id'] as String,
           name: ws['name'] as String,
-          mediaDBRoot: ws['mediadbroot'] as String,
+          mediaDBRoot: root,
           iconAsset: ws['iconasset'] as String?,
         );
       }).toList();
