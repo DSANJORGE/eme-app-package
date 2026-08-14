@@ -907,24 +907,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: () async {
-                          Navigator.pop(sheetContext);
-                          await _showAddWorkspaceDialog(context);
-                        },
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: 16,
-                          color: Color(0xFF38B6FF),
-                        ),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(
-                            color: Color(0xFF38B6FF),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      // TextButton.icon(
+                      //   onPressed: () async {
+                      //     Navigator.pop(sheetContext);
+                      //     await _showAddWorkspaceDialog(context);
+                      //   },
+                      //   icon: const Icon(
+                      //     Icons.add_circle_outline_rounded,
+                      //     size: 16,
+                      //     color: Color(0xFF38B6FF),
+                      //   ),
+                      //   label: const Text(
+                      //     'Add New',
+                      //     style: TextStyle(
+                      //       color: Color(0xFF38B6FF),
+                      //       fontWeight: FontWeight.bold,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1106,104 +1106,104 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return result ?? false;
   }
 
-  Future<void> _showAddWorkspaceDialog(BuildContext context) async {
-    final urlController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+  // Future<void> _showAddWorkspaceDialog(BuildContext context) async {
+  //   final urlController = TextEditingController();
+  //   final formKey = GlobalKey<FormState>();
 
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF161C24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.add_link_rounded, color: Color(0xFF38B6FF)),
-              SizedBox(width: 8),
-              Text(
-                'Add Custom Workspace',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ],
-          ),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Enter the MediaDB Root URL for your workspace:',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: urlController,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'https://minsur.genailabs.tech/site/mediadb',
-                    hintStyle: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 12,
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFF0F1319),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'Please enter a MediaDB Root URL';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (formKey.currentState!.validate()) {
-                  final newWs =
-                      WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
-                        urlController.text.trim(),
-                      );
-                  if (mounted) {
-                    setState(() {
-                      _activeWorkSpace = newWs.name;
-                      _loadTopics();
-                    });
-                    widget.onWorkspaceChanged?.call();
-                    Navigator.pop(context);
-                  }
-                  await AuthService.switchWorkspace(newWs);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF38B6FF),
-              ),
-              child: const Text(
-                'Add & Select',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         backgroundColor: const Color(0xFF161C24),
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(16),
+  //           side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+  //         ),
+  //         title: const Row(
+  //           children: [
+  //             Icon(Icons.add_link_rounded, color: Color(0xFF38B6FF)),
+  //             SizedBox(width: 8),
+  //             Text(
+  //               'Add Custom Workspace',
+  //               style: TextStyle(color: Colors.white, fontSize: 16),
+  //             ),
+  //           ],
+  //         ),
+  //         content: Form(
+  //           key: formKey,
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               const Text(
+  //                 'Enter the MediaDB Root URL for your workspace:',
+  //                 style: TextStyle(color: Colors.white70, fontSize: 13),
+  //               ),
+  //               const SizedBox(height: 12),
+  //               TextFormField(
+  //                 controller: urlController,
+  //                 style: const TextStyle(color: Colors.white, fontSize: 13),
+  //                 decoration: InputDecoration(
+  //                   hintText: 'https://minsur.genailabs.tech/site/mediadb',
+  //                   hintStyle: const TextStyle(
+  //                     color: Colors.white38,
+  //                     fontSize: 12,
+  //                   ),
+  //                   filled: true,
+  //                   fillColor: const Color(0xFF0F1319),
+  //                   border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(10),
+  //                     borderSide: BorderSide(
+  //                       color: Colors.white.withValues(alpha: 0.1),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 validator: (val) {
+  //                   if (val == null || val.trim().isEmpty) {
+  //                     return 'Please enter a MediaDB Root URL';
+  //                   }
+  //                   return null;
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text(
+  //               'Cancel',
+  //               style: TextStyle(color: Colors.white54),
+  //             ),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () async {
+  //               if (formKey.currentState!.validate()) {
+  //                 final newWs =
+  //                     WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
+  //                       urlController.text.trim(),
+  //                     );
+  //                 if (mounted) {
+  //                   setState(() {
+  //                     _activeWorkSpace = newWs.name;
+  //                     _loadTopics();
+  //                   });
+  //                   widget.onWorkspaceChanged?.call();
+  //                   Navigator.pop(context);
+  //                 }
+  //                 await AuthService.switchWorkspace(newWs);
+  //               }
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: const Color(0xFF38B6FF),
+  //             ),
+  //             child: const Text(
+  //               'Add & Select',
+  //               style: TextStyle(color: Colors.white),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 }

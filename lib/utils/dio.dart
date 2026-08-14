@@ -9,6 +9,10 @@ class DioUtil {
   static late Dio _dio;
   static Dio get dio => _dio;
 
+  static Future<void> clearCookies() async {
+    await _cookieJar.deleteAll();
+  }
+
   static Future<void> init() async {
     _dio = Dio(BaseOptions(validateStatus: (status) => true));
 

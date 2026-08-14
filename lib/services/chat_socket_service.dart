@@ -301,10 +301,9 @@ class ChatSocketService {
     try {
       if (Get.isRegistered<OpenI>()) {
         final oi = Get.find<OpenI>();
-        final appMap = oi.app;
-        if (appMap['chat_socket_url'] != null) {
-          return appMap['chat_socket_url']!;
-        }
+        final siteRoot = oi.settings.siteroot;
+        final scheme = oi.settings.https ? 'wss' : 'ws';
+        return '$scheme://$siteRoot/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';
       }
     } catch (_) {}
     throw Exception('chat_socket_url not found in app settings');

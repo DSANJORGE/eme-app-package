@@ -80,7 +80,7 @@ class AuthService {
 
   static Future<bool> switchWorkspace(
     Workspace workspace, {
-    bool childOfCurrentWorkspace = false,
+    bool childOfCurrentWorkspace = true,
   }) async {
     String? currentUserId;
     String? currentToken;
@@ -225,10 +225,24 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final wsId = WorkspaceService.activeWorkspace.id;
 
+    logPrint('Logging out of $wsId');
+
     await prefs.remove('user_$wsId');
     await prefs.remove('entermediakey_$wsId');
     await prefs.remove('refresh_token_$wsId');
     await prefs.remove('token_expiration_$wsId');
+
+    // Also remove global/legacy keys to prevent migration fallback from logging the user back in
+    await prefs.remove('user');
+    await prefs.remove('entermediakey');
+    await prefs.remove('refresh_token');
+    await prefs.remove('token_expiration');
+
+    try {
+      await DioUtil.clearCookies();
+    } catch (e) {
+      logPrint('Error clearing cookies: $e');
+    }
 
     _token = null;
     _refreshToken = null;
@@ -279,10 +293,6 @@ class AuthService {
     }
   }
 
-  static Future<bool> loginWithPassword(String email, String password) async {
-    return _login({'email': email, 'password': password});
-  }
-
   static Future<bool> refreshAuthToken() async {
     if (_refreshToken == null) return false;
 
@@ -303,6 +313,12 @@ class AuthService {
         final Map<String, dynamic> data = response.data is String
             ? json.decode(response.data)
             : response.data;
+
+        final userJson = data['user'] as Map<String, dynamic>?;
+        if (userJson == null) {
+          logPrint('Failed to refresh token: missing user in response');
+          return false;
+        }
 
         final key = data['access_token']?.toString() ?? '';
         final newRefreshToken = data['refresh_token']?.toString();
@@ -389,6 +405,11 @@ class AuthService {
             ? json.decode(response.data)
             : response.data;
 
+        final userJson = data['user'] as Map<String, dynamic>?;
+        if (userJson == null) {
+          throw Exception('Login response missing user');
+        }
+
         final key = data['access_token']?.toString() ?? '';
         final refreshToken = data['refresh_token']?.toString();
         final expiresIn = data['expires_in'] as int?;
@@ -396,8 +417,8 @@ class AuthService {
         if (expiresIn != null) {
           expiration = DateTime.now().add(Duration(seconds: expiresIn));
         }
-        final userJson = data['user'] as Map<String, dynamic>?;
-        final userId = userJson?['id']?.toString() ?? '';
+
+        final userId = userJson['id']?.toString() ?? '';
 
         if (key.isNotEmpty) {
           await saveCredentials(
@@ -409,11 +430,7 @@ class AuthService {
 
           await loadWorkspaces();
 
-          if (userJson != null) {
-            _currentUser = User.fromJson(userJson);
-          } else if (userId.isNotEmpty) {
-            await fetchUser();
-          }
+          _currentUser = User.fromJson(userJson);
 
           return true;
         } else {
@@ -434,64 +451,6 @@ class AuthService {
             'Authentication failed: Server returned status code ${response.statusCode}',
           );
         }
-      }
-    } catch (e) {
-      throw Exception(
-        'Authentication failed: ${e.toString().replaceAll('Exception: ', '')}',
-      );
-    }
-  }
-
-  static Future<bool> _login(Map<String, dynamic> requestBody) async {
-    final url = '$mediaDBRoot/services/authentication/login.json';
-
-    try {
-      final response = await _dio.post(
-        url,
-        options: Options(headers: {'Content-Type': 'application/json'}),
-        data: json.encode(requestBody),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-        final responseObj = data['response'] as Map<String, dynamic>?;
-
-        if (responseObj != null && responseObj['status'] == 'ok') {
-          final userJson = data['user'] as Map<String, dynamic>?;
-          final key = data['entermediakey']?.toString() ?? '';
-          final userId =
-              userJson?['id']?.toString() ??
-              responseObj['user']?.toString() ??
-              '';
-
-          if (key.isNotEmpty) {
-            await saveCredentials(userId, key);
-
-            await loadWorkspaces();
-
-            if (userJson != null) {
-              _currentUser = User.fromJson(userJson);
-            } else if (userId.isNotEmpty) {
-              await fetchUser();
-            }
-
-            return true;
-          } else {
-            throw Exception('Login response missing entermediakey');
-          }
-        } else {
-          final errorMsg =
-              data['error']?.toString() ??
-              responseObj?['message']?.toString() ??
-              'Authentication failed';
-          throw Exception(errorMsg);
-        }
-      } else {
-        throw Exception(
-          'Authentication failed: Server returned status code ${response.statusCode}',
-        );
       }
     } catch (e) {
       throw Exception(

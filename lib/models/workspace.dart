@@ -162,10 +162,14 @@ class Workspace {
     );
   }
 
+  Uri get uri => Uri.parse(mediaDBRoot);
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'mediaDBRoot': mediaDBRoot,
+    'mediadb': mediaDBRoot,
+    'siteroot': uri.origin,
+    'https': uri.scheme == 'https',
     if (_iconAsset != null) 'iconAsset': _iconAsset,
   };
 

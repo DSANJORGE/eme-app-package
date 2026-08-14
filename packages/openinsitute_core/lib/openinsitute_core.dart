@@ -12,23 +12,39 @@ import 'package:openinsitute_core/Helper/request_type.dart';
 import 'package:openinsitute_core/services/hive_manager.dart';
 import 'package:openinsitute_core/services/oi_chat_manager.dart';
 
+class AppSettings {
+  String mediadb;
+  String siteroot;
+  bool https;
+
+  AppSettings({
+    required this.mediadb,
+    required this.siteroot,
+    required this.https,
+  });
+
+  factory AppSettings.fromJSON(Map<String, dynamic> json) {
+    return AppSettings(
+      mediadb: json['mediadb'] ?? '',
+      siteroot: json['siteroot'] ?? '',
+      https: json['https'] ?? false,
+    );
+  }
+}
+
 class OpenI {
-  late final Map<String, dynamic> _settings;
+  late final AppSettings _settings;
   OiChatManager? chatManager;
 
-  Future<void> initialize({required Map<String, dynamic> appSettings}) async {
-    _settings = appSettings;
+  Future<void> initialize({required Map<String, dynamic> workspaceData}) async {
+    _settings = AppSettings.fromJSON(workspaceData);
     await HiveManager.instance.init();
     Get.put<OpenI>(this, permanent: true);
     chatManager = OiChatManager();
     Get.put<OiChatManager>(chatManager!, permanent: true);
   }
 
-  Map<String, String> get app {
-    return Map<String, String>.from(_settings[_settings["mode"]]);
-  }
-
-  Map<String, dynamic> get settings {
+  AppSettings get settings {
     return _settings;
   }
 
