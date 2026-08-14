@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:flutter_eme_base/models/chat_message.dart';
 import 'package:flutter_eme_base/services/auth_service.dart';
+import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import '../models/topic.dart';
 import '../models/tutor_channel.dart';
@@ -11,11 +12,11 @@ import '../models/tutorial.dart';
 import 'workspace_service.dart';
 
 class TopicService {
-  final http.Client _client;
+  final Dio _client;
   final String? _customMediaDBRoot;
 
-  TopicService({http.Client? client, String? mediaDBRoot})
-    : _client = client ?? http.Client(),
+  TopicService({Dio? client, String? mediaDBRoot})
+    : _client = client ?? DioUtil.dio,
       _customMediaDBRoot = mediaDBRoot;
 
   String get mediaDBRoot =>
@@ -23,24 +24,27 @@ class TopicService {
 
   Future<List<Topic>> fetchTopics({bool fallbackToMock = true}) async {
     final targetUrl = "$mediaDBRoot/services/module/entitytopic/topics.json";
-    final uri = Uri.parse(targetUrl);
 
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
       final response = await _client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
+        final decoded = (response.data is String
+            ? json.decode(response.data)
+            : response.data);
         List<dynamic> jsonList;
 
         if (decoded is Map<String, dynamic>) {
@@ -67,24 +71,27 @@ class TopicService {
   Future<List<Tutorial>> fetchTutorialsForTopic(String topicId) async {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/tutorials.json?entitytopic=$topicId";
-    final uri = Uri.parse(targetUrl);
 
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
       final response = await _client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
+        final decoded = (response.data is String
+            ? json.decode(response.data)
+            : response.data);
         List<dynamic> jsonList;
 
         if (decoded is List) {
@@ -119,24 +126,27 @@ class TopicService {
     String targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/tutorsession.json?dataid=$tutorialId";
     if (createNew) targetUrl += "&createnew=$createNew";
-    final uri = Uri.parse(targetUrl);
 
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
       final response = await _client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
+        final decoded = (response.data is String
+            ? json.decode(response.data)
+            : response.data);
         if (decoded is Map<String, dynamic>) {
           final channel = decoded['channel'];
           if (channel is Map<String, dynamic>) {
@@ -166,7 +176,6 @@ class TopicService {
   }) async {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/tutorhistory.json?channel=$channelId${fromBeforeId != null ? '&fromid=$fromBeforeId' : ''}";
-    final url = Uri.parse(targetUrl);
 
     logPrint("fetchTutorHistory $targetUrl");
 
@@ -175,17 +184,21 @@ class TopicService {
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
       final response = await _client.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
+        final decoded = (response.data is String
+            ? json.decode(response.data)
+            : response.data);
         if (decoded is Map<String, dynamic>) {
           final history = decoded['messages'] as dynamic;
           logPrint("messages ${history.length}");
@@ -240,7 +253,6 @@ class TopicService {
   }) async {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/continue.json";
-    final uri = Uri.parse(targetUrl);
 
     try {
       final Map<String, String> credentials =
@@ -254,14 +266,17 @@ class TopicService {
       body += '&context_skiploader=true';
 
       final response = await _client.post(
-        uri,
-        body: body,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        data: body,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+          contentType: Headers.formUrlEncodedContentType,
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -283,7 +298,6 @@ class TopicService {
   }) async {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/continue.json";
-    final uri = Uri.parse(targetUrl);
 
     try {
       final Map<String, String> credentials =
@@ -301,14 +315,17 @@ class TopicService {
       logPrint("Continuing with: $body");
 
       final response = await _client.post(
-        uri,
-        body: body,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        data: body,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+          contentType: Headers.formUrlEncodedContentType,
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -334,7 +351,6 @@ class TopicService {
   }) async {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/continue.json";
-    final uri = Uri.parse(targetUrl);
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
@@ -351,14 +367,17 @@ class TopicService {
       body += '&context_skiploader=true';
 
       final response = await _client.post(
-        uri,
-        body: body,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': token,
-        },
+        targetUrl,
+        data: body,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+          contentType: Headers.formUrlEncodedContentType,
+        ),
       );
 
       if (response.statusCode != 200) {

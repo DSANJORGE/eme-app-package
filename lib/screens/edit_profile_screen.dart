@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -55,32 +56,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final mediaDbRoot = AuthService.mediaDBRoot;
-      final uri = Uri.parse(
-        '$mediaDbRoot/services/authentication/usersave.json?'
-        'save=true&'
-        'userid=${AuthService.userId}&'
-        'username=${AuthService.userId}&'
-        'field=firstName&firstName.value=${Uri.encodeComponent(_firstNameController.text)}&'
-        'field=lastName&lastName.value=${Uri.encodeComponent(_lastNameController.text)}&'
-        'field=email&email.value=${Uri.encodeComponent(_emailController.text)}'
-        '${_imageFile != null ? '&field=assetportrait' : ''}',
-      );
+      final targetUrl =
+          '$mediaDbRoot/services/authentication/usersave.json?'
+          'save=true&'
+          'userid=${AuthService.userId}&'
+          'username=${AuthService.userId}&'
+          'field=firstName&firstName.value=${Uri.encodeComponent(_firstNameController.text)}&'
+          'field=lastName&lastName.value=${Uri.encodeComponent(_lastNameController.text)}&'
+          'field=email&email.value=${Uri.encodeComponent(_emailController.text)}'
+          '${_imageFile != null ? '&field=assetportrait' : ''}';
 
-      final request = http.MultipartRequest('POST', uri);
-      request.headers['X-tokentype'] = 'entermedia';
-      request.headers['X-token'] = AuthService.token ?? '';
-
+      final formData = FormData();
       if (_imageFile != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
+        formData.files.add(
+          MapEntry(
             'file.assetportrait',
-            _imageFile!.path,
+            await MultipartFile.fromFile(_imageFile!.path),
           ),
         );
       }
 
-      final response = await request.send();
-      await response.stream.bytesToString();
+      final response = await DioUtil.dio.post(
+        targetUrl,
+        data: formData,
+        options: Options(
+          headers: {
+            'X-tokentype': 'entermedia',
+            'X-token': AuthService.token ?? '',
+          },
+        ),
+      );
 
       if (response.statusCode == 200) {
         // Refresh user data

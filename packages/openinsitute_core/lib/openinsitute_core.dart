@@ -6,8 +6,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+import 'package:get/get.dart' hide Response;
+import 'package:dio/dio.dart';
 import 'package:openinsitute_core/Helper/custom_exception.dart';
 import 'package:openinsitute_core/Helper/request_type.dart';
 import 'package:openinsitute_core/services/hive_manager.dart';
@@ -55,15 +55,15 @@ class OpenI {
     //make API post
     final response = await httpRequest(
       requestUrl: url,
-      body: json.encode(jsonBody),
+      body: jsonBody,
       headers: headers,
       requestType: RequestType.post,
       customError: customError,
     );
     if (response != null && response.statusCode == 200) {
-      final String responseString = response.body;
-      debugPrint("Success user info is: $responseString");
-      return json.decode(responseString);
+      final data = response.data;
+      debugPrint("Success user info is: $data");
+      return data is Map ? data : json.decode(data);
     } else {
       return null;
     }
@@ -80,13 +80,13 @@ class OpenI {
 
     final response = await httpRequest(
       requestUrl: url,
-      body: json.encode(jsonBody),
+      body: jsonBody,
       headers: headers,
       requestType: requestType,
       customError: customError,
     );
     if (response != null && response.statusCode == 200) {
-      final String responseString = response.body;
+      final String responseString = response.data is String ? response.data : json.encode(response.data);
       debugPrint("Success user info is: $responseString");
       return responseString;
     } else {
@@ -94,7 +94,7 @@ class OpenI {
     }
   }
 
-  Future<http.Response?> httpRequest({
+  Future<Response?> httpRequest({
     required String requestUrl,
     required dynamic body,
     required Map<String, String> headers,
@@ -103,74 +103,55 @@ class OpenI {
   }) async {
     String url = requestUrl;
     debugPrint(url);
-    http.Response response;
+    Response response;
+    final dio = Dio();
     try {
-      http.Response? responseJson;
+      Response? responseJson;
+      final options = Options(headers: headers);
       if (requestType == RequestType.put) {
-        responseJson = await http.put(
-          Uri.parse(url),
-          body: body,
-          headers: headers,
-        );
+        responseJson = await dio.put(url, data: body, options: options);
       } else if (requestType == RequestType.post) {
-        responseJson = await http.post(
-          Uri.parse(url),
-          body: body,
-          headers: headers,
-        );
+        responseJson = await dio.post(url, data: body, options: options);
       } else if (requestType == RequestType.get) {
-        responseJson = await http.get(
-          Uri.parse(url),
-          headers: headers,
-        );
+        responseJson = await dio.get(url, options: options);
       } else if (requestType == RequestType.delete) {
-        responseJson = await http.delete(
-          Uri.parse(url),
-          headers: headers,
-          body: body,
-        );
+        responseJson = await dio.delete(url, data: body, options: options);
       }
-      debugPrint('${responseJson!.statusCode}');
-      response = await handleException(responseJson);
+      debugPrint('${responseJson?.statusCode}');
+      response = await handleException(responseJson!);
       return response;
-    } on BadRequestException catch (_) {
-      // showErrorFlushbar( "Bad request! Please try again later.");
-    } on UnauthorisedException catch (_) {
-      //showErrorFlushbar( "Unauthorized user. Please try again.");
-    } on TimeoutException catch (_) {
-      //showErrorFlushbar(context, "Request timed out. Please try again!");
-    } on SocketException catch (_) {
-      // showErrorFlushbar(context, "Unable to connect to server. Please try again!");
-    } on HttpException catch (_) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+         // Timeout
+      } else if (e.response != null) {
+         handleException(e.response!);
+      }
+    } catch (_) {
       // showErrorFlushbar(
-      //  context, customError != null ? customError : "Error occurred while communication with server. Please try again after some time.");
     }
     return null;
   }
 
-  dynamic handleException(http.Response response) {
+  dynamic handleException(Response response) {
     debugPrint("Response code: ${response.statusCode}");
     switch (response.statusCode) {
       case 200:
-        final http.Response responseJson = response;
-        return responseJson;
       case 201:
-        final http.Response responseJson = response;
-        return responseJson;
+        return response;
       case 302:
         break;
       case 400:
-        throw BadRequestException(response.body.toString());
+        throw BadRequestException(response.data.toString());
       case 403:
-        throw UnauthorisedException(response.body.toString());
+        throw UnauthorisedException(response.data.toString());
       case 408:
-        throw TimeoutException(response.body.toString());
+        throw TimeoutException(response.data.toString());
       case 500:
-        throw HttpException(response.body.toString());
+        throw HttpException(response.data.toString());
       default:
-        // throw FetchDataException('Error occurred while Communication with Server with StatusCode : ${response.statusCode}');
         break;
     }
+    return response;
   }
 
   // void registerBinaries() {

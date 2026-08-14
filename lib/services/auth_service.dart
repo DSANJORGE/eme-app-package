@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import '../models/user.dart';
@@ -68,7 +69,12 @@ class AuthService {
     }
   }
 
+  static late Dio _dio;
+
   static Future<void> init() async {
+    await DioUtil.init();
+    _dio = DioUtil.dio;
+
     await loadSessionForActiveWorkspace();
   }
 
@@ -115,20 +121,24 @@ class AuthService {
   static Future<User?> fetchUser() async {
     if (_token == null || _token!.isEmpty) return null;
 
-    final url = Uri.parse('$mediaDBRoot/services/authentication/user.json');
+    final url = '$mediaDBRoot/services/authentication/user.json';
     try {
-      final response = await http.get(
+      final response = await _dio.get(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-token': _token!,
-        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': _token!,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = response.data is String
+            ? json.decode(response.data)
+            : response.data;
         final userJson = data['user'] as Map<String, dynamic>;
         _currentUser = User.fromJson(userJson);
         if (_currentUser!.id.isNotEmpty) {
@@ -228,10 +238,7 @@ class AuthService {
     String? firstName,
     String? lastName,
   }) async {
-    final url = Uri.parse(
-      '$mediaDBRoot/services/authentication/sendusercode.json',
-    );
-    final Map<String, String> headers = {'Content-Type': 'application/json'};
+    final url = '$mediaDBRoot/services/authentication/sendusercode.json';
     final Map<String, dynamic> body = {'email': email};
     if (firstName != null && firstName.trim().isNotEmpty) {
       body['firstName'] = firstName.trim();
@@ -241,14 +248,16 @@ class AuthService {
     }
 
     try {
-      final response = await http.post(
+      final response = await _dio.post(
         url,
-        headers: headers,
-        body: json.encode(body),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+        data: json.encode(body),
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = response.data is String
+            ? json.decode(response.data)
+            : response.data;
         final responseObj = data['response'] as Map<String, dynamic>?;
         if (responseObj != null) {
           return responseObj;
@@ -272,20 +281,23 @@ class AuthService {
   static Future<bool> refreshAuthToken() async {
     if (_refreshToken == null) return false;
 
-    final url = Uri.parse('$mediaDBRoot/services/authentication/token.json');
-    final Map<String, String> headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    };
+    final url = '$mediaDBRoot/services/authentication/token.json';
     final Map<String, String> body = {
       'grant_type': 'refresh_token',
       'refresh_token': _refreshToken!,
     };
 
     try {
-      final response = await http.post(url, headers: headers, body: body);
+      final response = await _dio.post(
+        url,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+        data: body,
+      );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = response.data is String
+            ? json.decode(response.data)
+            : response.data;
 
         final key = data['access_token']?.toString() ?? '';
         final newRefreshToken = data['refresh_token']?.toString();
@@ -312,24 +324,27 @@ class AuthService {
   }
 
   static Future<void> loadWorkspaces() async {
-    final workspacesUrl = Uri.parse('$mediaDBRoot/services/server/list.json');
+    final workspacesUrl = '$mediaDBRoot/services/server/list.json';
 
     final Map<String, String> credentials = await AuthService.getCredentials();
-    final workspacesResponse = await http.get(
+    final workspacesResponse = await _dio.get(
       workspacesUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-tokentype': 'entermedia',
-        'X-entermediakey': credentials['entermediakey']!,
-        'X-userid': credentials['user']!,
-      },
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-tokentype': 'entermedia',
+          'X-entermediakey': credentials['entermediakey']!,
+          'X-userid': credentials['user']!,
+        },
+      ),
     );
 
     if (workspacesResponse.statusCode == 200) {
-      final Map<String, dynamic> workspacesData = json.decode(
-        workspacesResponse.body,
-      );
+      final Map<String, dynamic> workspacesData =
+          workspacesResponse.data is String
+          ? json.decode(workspacesResponse.data)
+          : workspacesResponse.data;
 
       final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
 
@@ -346,10 +361,7 @@ class AuthService {
   }
 
   static Future<bool> loginWithOtp(String email, String otp) async {
-    final url = Uri.parse('$mediaDBRoot/services/authentication/token.json');
-    final Map<String, String> headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    };
+    final url = '$mediaDBRoot/services/authentication/token.json';
     final Map<String, String> body = {
       'grant_type': 'otp',
       'email': email,
@@ -357,10 +369,16 @@ class AuthService {
     };
 
     try {
-      final response = await http.post(url, headers: headers, body: body);
+      final response = await _dio.post(
+        url,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+        data: body,
+      );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = response.data is String
+            ? json.decode(response.data)
+            : response.data;
 
         final key = data['access_token']?.toString() ?? '';
         final refreshToken = data['refresh_token']?.toString();
@@ -394,7 +412,9 @@ class AuthService {
         }
       } else {
         try {
-          final Map<String, dynamic> data = json.decode(response.body);
+          final Map<String, dynamic> data = response.data is String
+              ? json.decode(response.data)
+              : response.data;
           final errorMsg =
               data['error_description']?.toString() ??
               data['error']?.toString() ??
@@ -414,18 +434,19 @@ class AuthService {
   }
 
   static Future<bool> _login(Map<String, dynamic> requestBody) async {
-    final url = Uri.parse('$mediaDBRoot/services/authentication/login.json');
-    final Map<String, String> headers = {'Content-Type': 'application/json'};
+    final url = '$mediaDBRoot/services/authentication/login.json';
 
     try {
-      final response = await http.post(
+      final response = await _dio.post(
         url,
-        headers: headers,
-        body: json.encode(requestBody),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+        data: json.encode(requestBody),
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = response.data is String
+            ? json.decode(response.data)
+            : response.data;
         final responseObj = data['response'] as Map<String, dynamic>?;
 
         if (responseObj != null && responseObj['status'] == 'ok') {

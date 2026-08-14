@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:video_player/video_player.dart';
@@ -261,9 +261,12 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
     });
 
     try {
-      final response = await http.get(Uri.parse(widget.effectiveUrl));
+      final response = await Dio().get(
+        widget.effectiveUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
       if (response.statusCode == 200) {
-        final bytes = response.bodyBytes;
+        final bytes = response.data as List<int>;
         final tempDir = await getTemporaryDirectory();
         final filename = 'doc_${DateTime.now().millisecondsSinceEpoch}.pdf';
         final file = File('${tempDir.path}/$filename');
