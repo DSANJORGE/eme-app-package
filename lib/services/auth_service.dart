@@ -4,6 +4,8 @@ import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import '../models/user.dart';
+import 'package:openinsitute_core/openinsitute_core.dart';
+import 'package:get/get.dart';
 import '../models/workspace.dart';
 import 'workspace_service.dart';
 
@@ -95,6 +97,10 @@ class AuthService {
     }
 
     await WorkspaceService.setActiveWorkspace(workspace);
+
+    if (Get.isRegistered<OpenI>()) {
+      Get.find<OpenI>().updateSettings(workspace.toJson());
+    }
 
     if (childOfCurrentWorkspace &&
         currentUserId != null &&

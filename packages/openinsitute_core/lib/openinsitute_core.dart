@@ -33,7 +33,7 @@ class AppSettings {
 }
 
 class OpenI {
-  late final AppSettings _settings;
+  late AppSettings _settings;
   OiChatManager? chatManager;
 
   Future<void> initialize({required Map<String, dynamic> workspaceData}) async {
@@ -42,6 +42,10 @@ class OpenI {
     Get.put<OpenI>(this, permanent: true);
     chatManager = OiChatManager();
     Get.put<OiChatManager>(chatManager!, permanent: true);
+  }
+
+  void updateSettings(Map<String, dynamic> workspaceData) {
+    _settings = AppSettings.fromJSON(workspaceData);
   }
 
   AppSettings get settings {
