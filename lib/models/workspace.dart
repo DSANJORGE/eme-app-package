@@ -168,7 +168,7 @@ class Workspace {
     'id': id,
     'name': name,
     'mediadb': mediaDBRoot,
-    'siteroot': uri.origin,
+    'siteroot': uri.host,
     'https': uri.scheme == 'https',
     if (_iconAsset != null) 'iconAsset': _iconAsset,
   };
