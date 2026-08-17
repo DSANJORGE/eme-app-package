@@ -25,6 +25,10 @@ class WorkspaceService {
         try {
           final Map<String, dynamic> map = json.decode(rawJson);
           final ws = Workspace.fromJson(map);
+          if (ws.mediaDBRoot.isEmpty) {
+            logPrint("workspace ${ws.id} has no mediaDBRoot, skip");
+            continue;
+          }
           if (!_workspaces.any(
             (w) => w.id.toLowerCase() == ws.id.toLowerCase(),
           )) {
@@ -58,6 +62,11 @@ class WorkspaceService {
     // final firstWs = workspaces.first;
     for (final workspace in workspaces) {
       logPrint("add workspace ${workspace.id}:${workspace.mediaDBRoot}");
+
+      if (workspace.mediaDBRoot.isEmpty) {
+        logPrint("workspace ${workspace.id} has no mediaDBRoot, skip");
+        continue;
+      }
 
       if (!_workspaces.any(
         (w) =>

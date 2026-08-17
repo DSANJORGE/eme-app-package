@@ -145,6 +145,7 @@ class AuthService {
         final Map<String, dynamic> data = response.data is String
             ? json.decode(response.data)
             : response.data;
+
         final userJson = data['user'] as Map<String, dynamic>;
         _currentUser = User.fromJson(userJson);
         if (_currentUser!.id.isNotEmpty) {
@@ -152,19 +153,11 @@ class AuthService {
         }
         try {
           final workspaceJson = data['servers'] as List<dynamic>;
+
           List<Workspace> customWorkspaces = workspaceJson.map((ws) {
-            final root = (ws['mediadbroot'] as String).replaceAll(
-              RegExp(r'\/$'),
-              '',
-            );
-            return Workspace(
-              id: ws['id'] as String,
-              name: ws['name'] as String,
-              mediaDBRoot: root,
-              iconAsset: ws['iconasset'] as String?,
-            );
+            return Workspace.fromJson(ws);
           }).toList();
-          logPrint("workspaces $customWorkspaces");
+
           WorkspaceService.addWorkspaces(customWorkspaces);
         } catch (e) {
           logPrint('Failed to load workspaces: $e');
@@ -352,6 +345,8 @@ class AuthService {
 
   static Future<void> loadWorkspaces() async {
     final workspacesUrl = '$mediaDBRoot/services/server/list.json';
+
+    logPrint("fetching workspaces $workspacesUrl");
 
     final Map<String, String> credentials = await AuthService.getCredentials();
     final workspacesResponse = await _dio.get(
