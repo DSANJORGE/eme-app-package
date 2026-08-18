@@ -7,6 +7,7 @@ import '../models/user.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
 import 'package:get/get.dart';
 import '../models/workspace.dart';
+import '../utils/error_handler.dart';
 import 'workspace_service.dart';
 
 class AuthService {
@@ -59,8 +60,14 @@ class AuthService {
     if (_token != null && _token!.isNotEmpty) {
       try {
         await fetchUser();
-      } catch (e) {
+      } catch (e, stack) {
         logPrint('Error fetching user for workspace $wsId: $e');
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'Error fetching user during loadSessionForActiveWorkspace',
+          customKeys: {'workspaceId': wsId},
+        );
       }
     } else {
       _token = null;
@@ -159,14 +166,25 @@ class AuthService {
           }).toList();
 
           WorkspaceService.addWorkspaces(customWorkspaces);
-        } catch (e) {
+        } catch (e, stack) {
           logPrint('Failed to load workspaces: $e');
+          AppErrorHandler.recordNonFatal(
+            e,
+            stack,
+            reason: 'AuthService.fetchUser workspace parsing failed',
+          );
         }
 
         return _currentUser;
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('Failed to fetch user');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.fetchUser failed',
+        customKeys: {'url': url},
+      );
     }
     return null;
   }
@@ -239,8 +257,13 @@ class AuthService {
 
     try {
       await DioUtil.clearCookies();
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('Error clearing cookies: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.logout clearCookies failed',
+      );
     }
 
     _token = null;
@@ -287,7 +310,13 @@ class AuthService {
           'Failed to send user code: Server returned status code ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.sendUserCode failed',
+        customKeys: {'email': email, 'url': url},
+      );
       throw Exception('Failed to send user code: $e');
     }
   }
@@ -337,8 +366,14 @@ class AuthService {
           return true;
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('Failed to refresh token: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.refreshAuthToken failed',
+        customKeys: {'url': url},
+      );
     }
     return false;
   }
@@ -348,41 +383,51 @@ class AuthService {
 
     logPrint("fetching workspaces $workspacesUrl");
 
-    final Map<String, String> credentials = await AuthService.getCredentials();
-    final workspacesResponse = await _dio.get(
-      workspacesUrl,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-tokentype': 'entermedia',
-          'X-entermediakey': credentials['entermediakey']!,
-          'X-userid': credentials['user']!,
-        },
-      ),
-    );
+    try {
+      final Map<String, String> credentials = await AuthService.getCredentials();
+      final workspacesResponse = await _dio.get(
+        workspacesUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-entermediakey': credentials['entermediakey']!,
+            'X-userid': credentials['user']!,
+          },
+        ),
+      );
 
-    if (workspacesResponse.statusCode == 200) {
-      final Map<String, dynamic> workspacesData =
-          workspacesResponse.data is String
-          ? json.decode(workspacesResponse.data)
-          : workspacesResponse.data;
+      if (workspacesResponse.statusCode == 200) {
+        final Map<String, dynamic> workspacesData =
+            workspacesResponse.data is String
+            ? json.decode(workspacesResponse.data)
+            : workspacesResponse.data;
 
-      final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
+        final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
 
-      List<Workspace> customWorkspaces = workspacesList.map((ws) {
-        final root = (ws['mediadbroot'] as String).replaceAll(
-          RegExp(r'\/$'),
-          '',
-        );
-        return Workspace(
-          id: ws['id'] as String,
-          name: ws['name'] as String,
-          mediaDBRoot: root,
-          iconAsset: ws['iconasset'] as String?,
-        );
-      }).toList();
-      WorkspaceService.addWorkspaces(customWorkspaces);
+        List<Workspace> customWorkspaces = workspacesList.map((ws) {
+          final root = (ws['mediadbroot'] as String).replaceAll(
+            RegExp(r'\/$'),
+            '',
+          );
+          return Workspace(
+            id: ws['id'] as String,
+            name: ws['name'] as String,
+            mediaDBRoot: root,
+            iconAsset: ws['iconasset'] as String?,
+          );
+        }).toList();
+        WorkspaceService.addWorkspaces(customWorkspaces);
+      }
+    } catch (e, stack) {
+      logPrint('Failed to load workspaces: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.loadWorkspaces failed',
+        customKeys: {'url': workspacesUrl},
+      );
     }
   }
 
@@ -453,7 +498,13 @@ class AuthService {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthService.loginWithOtp failed',
+        customKeys: {'email': email, 'url': url},
+      );
       throw Exception(
         'Authentication failed: ${e.toString().replaceAll('Exception: ', '')}',
       );

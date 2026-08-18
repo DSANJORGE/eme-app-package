@@ -1,8 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter_eme_base/utils/log.dart';
-
 import '../services/auth_service.dart';
+import '../utils/error_handler.dart';
 
 enum MessageType {
   welcome,
@@ -155,8 +154,14 @@ class ChatMessage {
         if (decoded is Map<String, dynamic>) {
           decodedContext = decoded;
         }
-      } catch (e) {
+      } catch (e, stack) {
         logPrint('Error decoding agentcontextvalues: $e');
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'Error decoding agentcontextvalues in ChatMessage.fromJson',
+          customKeys: {'rawAgentContext': rawAgentContext.toString()},
+        );
       }
     }
     AgentContextValues agentContextValues = AgentContextValues.fromJson(

@@ -67,6 +67,36 @@ class AppErrorHandler {
     debugPrint(buffer.toString());
   }
 
+  static void recordFatal(
+    dynamic exception,
+    StackTrace? stackTrace, {
+    String? reason,
+    Map<String, Object>? customKeys,
+  }) {
+    if (_isFirebaseInitialized) {
+      FirebaseCrashlytics.instance.recordError(
+        exception,
+        stackTrace,
+        fatal: true,
+      );
+    }
+    if (kDebugMode) {
+      debugPrint('[Fatal Error] $reason: $exception');
+      if (stackTrace != null) {
+        debugPrint('$stackTrace');
+      }
+      return;
+    }
+
+    final buffer = StringBuffer('[Fatal Telemetry Log]');
+    if (reason != null) buffer.write(' $reason:');
+    buffer.write(' $exception');
+    if (customKeys != null && customKeys.isNotEmpty) {
+      buffer.write(' | metadata: $customKeys');
+    }
+    debugPrint(buffer.toString());
+  }
+
   static void showUserError(BuildContext context, String message) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();

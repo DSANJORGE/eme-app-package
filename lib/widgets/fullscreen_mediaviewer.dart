@@ -7,6 +7,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/error_handler.dart';
 import 'pip_video_overlay.dart';
 
 enum DetectedMediaType { image, audio, video, pdf, unknown }
@@ -200,7 +201,13 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
         _videoController!.play();
         _resetHideControlsTimer();
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'FullScreenMediaViewer _initVideo failed',
+        customKeys: {'url': widget.effectiveUrl},
+      );
       if (mounted) {
         setState(() {
           _isVideoError = true;
@@ -244,7 +251,13 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
       await _audioPlayer!.setSourceUrl(widget.effectiveUrl);
       await _audioPlayer!.resume();
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'FullScreenMediaViewer _initAudio failed',
+        customKeys: {'url': widget.effectiveUrl},
+      );
       if (mounted) {
         setState(() {
           _isAudioLoading = false;
@@ -281,7 +294,13 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
       } else {
         throw Exception('Failed to load PDF (${response.statusCode})');
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'FullScreenMediaViewer _downloadAndInitPdf failed',
+        customKeys: {'url': widget.effectiveUrl},
+      );
       if (mounted) {
         setState(() {
           _isPdfLoading = false;
@@ -314,13 +333,23 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   Future<void> _openInExternalBrowser() async {
     final uri = Uri.parse(widget.effectiveUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          AppErrorHandler.showUserError(context, 'Could not launch media URL');
+        }
+      }
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'FullScreenMediaViewer _openInExternalBrowser failed',
+        customKeys: {'url': widget.effectiveUrl},
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch media URL')),
-        );
+        AppErrorHandler.showUserError(context, 'Could not launch media URL');
       }
     }
   }
@@ -828,6 +857,12 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
             });
           },
           onError: (error) {
+            AppErrorHandler.recordNonFatal(
+              error,
+              null,
+              reason: 'FullScreenMediaViewer PDFView render error',
+              customKeys: {'url': widget.effectiveUrl},
+            );
             setState(() {
               _isPdfError = true;
             });

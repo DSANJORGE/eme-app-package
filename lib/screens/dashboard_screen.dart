@@ -17,6 +17,7 @@ import '../services/workspace_service.dart';
 import '../widgets/data_consent_dialog.dart';
 import 'compliance_screen.dart';
 import 'profile_screen.dart';
+import '../utils/error_handler.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   final String fullName;
@@ -797,13 +798,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       child: InkWell(
                         onTap: () async {
                           final url = Uri.parse('https://eme.world');
-                          if (await canLaunchUrl(url)) {
-                            await launchUrl(
-                              url,
-                              mode: LaunchMode.externalApplication,
+                          try {
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } else {
+                              logPrint('Could not launch $url');
+                              if (mounted) {
+                                AppErrorHandler.showUserError(
+                                  context,
+                                  'Could not open link: $url',
+                                );
+                              }
+                            }
+                          } catch (e, stack) {
+                            AppErrorHandler.recordNonFatal(
+                              e,
+                              stack,
+                              reason: 'DashboardScreen URL launch failed',
+                              customKeys: {'url': url.toString()},
                             );
-                          } else {
-                            logPrint('Could not launch $url');
+                            if (mounted) {
+                              AppErrorHandler.showUserError(
+                                context,
+                                'Could not open link: $url',
+                              );
+                            }
                           }
                         },
                         child: Text(
@@ -877,7 +899,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       isScrollControlled: true,
       builder: (BuildContext sheetContext) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
+          builder: (modalContext, setSheetState) {
             final workspaces = WorkspaceService.workspaces;
             final activeWs = WorkspaceService.activeWorkspace;
             return Container(
@@ -1016,25 +1038,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       onPressed: () async {
                                         final confirmed =
                                             await _showConfirmDeleteDialog(
-                                              context,
+                                              modalContext,
                                               ws,
                                             );
                                         if (confirmed) {
-                                          await WorkspaceService.removeWorkspace(
-                                            ws,
-                                          );
-                                          await AuthService.loadSessionForActiveWorkspace();
-                                          if (mounted) {
-                                            setState(() {
-                                              _activeWorkSpace =
-                                                  WorkspaceService
-                                                      .activeWorkspace
-                                                      .name;
-                                              _loadTopics();
-                                            });
-                                            widget.onWorkspaceChanged?.call();
+                                          try {
+                                            await WorkspaceService.removeWorkspace(
+                                              ws,
+                                            );
+                                            await AuthService.loadSessionForActiveWorkspace();
+                                            if (mounted) {
+                                              setState(() {
+                                                _activeWorkSpace =
+                                                    WorkspaceService
+                                                        .activeWorkspace
+                                                        .name;
+                                                _loadTopics();
+                                              });
+                                              AppErrorHandler.showUserSuccess(
+                                                this.context,
+                                                'Workspace removed',
+                                              );
+                                              widget.onWorkspaceChanged?.call();
+                                            }
+                                            setSheetState(() {});
+                                          } catch (e, stack) {
+                                            AppErrorHandler.recordNonFatal(
+                                              e,
+                                              stack,
+                                              reason: 'DashboardScreen remove workspace failed',
+                                              customKeys: {'workspaceId': ws.id},
+                                            );
+                                            if (mounted) {
+                                              AppErrorHandler.showUserError(
+                                                this.context,
+                                                'Failed to remove workspace',
+                                              );
+                                            }
                                           }
-                                          setSheetState(() {});
                                         }
                                       },
                                     )

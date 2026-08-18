@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_eme_base/flutter_eme_base.dart';
-import 'package:flutter_eme_base/utils/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/workspace.dart';
 
 class WorkspaceService {
   static final List<Workspace> _workspaces = [];
@@ -34,7 +32,14 @@ class WorkspaceService {
           )) {
             _workspaces.add(ws);
           }
-        } catch (_) {}
+        } catch (e, stack) {
+          AppErrorHandler.recordNonFatal(
+            e,
+            stack,
+            reason: 'Failed to parse custom dynamic workspace JSON',
+            customKeys: {'rawJson': rawJson},
+          );
+        }
       }
     }
 
@@ -133,11 +138,19 @@ class WorkspaceService {
   }
 
   static Future<void> _saveCustomWorkspaces() async {
-    final prefs = await SharedPreferences.getInstance();
-    final customList = _workspaces
-        .map((ws) => json.encode(ws.toJson()))
-        .toList();
-    await prefs.setStringList('custom_dynamic_workspaces', customList);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final customList = _workspaces
+          .map((ws) => json.encode(ws.toJson()))
+          .toList();
+      await prefs.setStringList('custom_dynamic_workspaces', customList);
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'Failed to save custom workspaces to SharedPreferences',
+      );
+    }
   }
 
   static Future<void> setActiveWorkspace(Workspace workspace) async {

@@ -4,6 +4,7 @@ import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
+import '../utils/error_handler.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -38,12 +39,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ImagePicker failed in EditProfileScreen',
+      );
+      if (mounted) {
+        AppErrorHandler.showUserError(context, 'Failed to select image');
+      }
     }
   }
 
@@ -91,20 +103,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Refresh user data
         await AuthService.fetchUser();
         if (mounted) {
+          AppErrorHandler.showUserSuccess(
+            context,
+            'Profile updated successfully',
+          );
           Navigator.pop(context);
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update profile')),
-          );
+          AppErrorHandler.showUserError(context, 'Failed to update profile');
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'EditProfileScreen _saveProfile failed',
+      );
       if (mounted) {
-        ScaffoldMessenger.of(
+        AppErrorHandler.showUserError(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          'Error: ${e.toString().replaceAll('Exception: ', '')}',
+        );
       }
     } finally {
       if (mounted) {

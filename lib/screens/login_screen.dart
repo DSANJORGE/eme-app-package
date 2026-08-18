@@ -7,6 +7,7 @@ import 'package:transparent_image/transparent_image.dart';
 import '../models/workspace.dart';
 import '../services/auth_service.dart';
 import '../services/workspace_service.dart';
+import '../utils/error_handler.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function(String) onLoginSuccess;
@@ -125,37 +126,11 @@ class _LoginScreenState extends State<LoginScreen>
 
         _startResendTimer();
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.mark_email_read_rounded,
-                  color: Color(0xFF38B6FF),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isResend
-                        ? 'Verification code resent to your email!'
-                        : 'Verification code sent to your email!',
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF161C24),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: const Color(0xFF38B6FF).withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-          ),
+        AppErrorHandler.showUserSuccess(
+          context,
+          isResend
+              ? 'Verification code resent to your email!'
+              : 'Verification code sent to your email!',
         );
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -174,41 +149,29 @@ class _LoginScreenState extends State<LoginScreen>
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User does not exist.'),
-              backgroundColor: Color(0xFFF50057),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppErrorHandler.showUserError(context, 'User does not exist.');
         }
       } else {
         setState(() {
           _isLoading = false;
         });
         final msg = response['message']?.toString() ?? 'Failed to send code';
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: const Color(0xFFF50057),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppErrorHandler.showUserError(context, msg);
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
-          backgroundColor: const Color(0xFFF50057),
-          behavior: SnackBarBehavior.floating,
-        ),
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'LoginScreen _sendOtp failed',
+        customKeys: {'email': _emailController.text.trim()},
+      );
+      AppErrorHandler.showUserError(
+        context,
+        'Error: ${e.toString().replaceAll('Exception: ', '')}',
       );
     }
   }
@@ -244,13 +207,19 @@ class _LoginScreenState extends State<LoginScreen>
         });
         _otpFocusNode.requestFocus();
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
         _otpError = e.toString().replaceAll('Exception: ', '');
         _otpController.clear();
       });
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'LoginScreen _verifyOtp failed',
+        customKeys: {'email': _emailController.text.trim()},
+      );
       _otpFocusNode.requestFocus();
     }
   }
@@ -894,7 +863,7 @@ class _LoginScreenState extends State<LoginScreen>
       isScrollControlled: true,
       builder: (BuildContext sheetContext) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
+          builder: (modalContext, setSheetState) {
             final workspaces = WorkspaceService.workspaces;
             return Container(
               decoration: const BoxDecoration(
@@ -923,28 +892,11 @@ class _LoginScreenState extends State<LoginScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // TextButton.icon(
-                      //   onPressed: () async {
-                      //     Navigator.pop(sheetContext);
-                      //     await _showAddWorkspaceDialog(context);
-                      //   },
-                      //   icon: const Icon(
-                      //     Icons.add_circle_outline_rounded,
-                      //     size: 16,
-                      //     color: Color(0xFF38B6FF),
-                      //   ),
-                      //   label: const Text(
-                      //     'Add New',
-                      //     style: TextStyle(
-                      //       color: Color(0xFF38B6FF),
-                      //       fontWeight: FontWeight.bold,
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Flexible(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 320),
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: workspaces.length,
@@ -952,7 +904,9 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final ws = workspaces[index];
-                        final isSelected = ws.id == _selectedWorkspace.id;
+                        final isSelected =
+                            ws.id.toLowerCase() ==
+                            _selectedWorkspace.id.toLowerCase();
                         final color = ws.id == 'minsur'
                             ? const Color(0xFF0072FF)
                             : ws.id == 'eme'
@@ -981,7 +935,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             child: ListTile(
                               onTap: () async {
-                                Navigator.pop(sheetContext);
+                                Navigator.pop(modalContext);
                                 final isLoggedIn =
                                     await AuthService.switchWorkspace(ws);
                                 if (isLoggedIn) {
@@ -1016,10 +970,8 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                               title: Text(
                                 ws.name,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? const Color(0xFF38B6FF)
-                                      : Colors.white,
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -1043,23 +995,42 @@ class _LoginScreenState extends State<LoginScreen>
                                       onPressed: () async {
                                         final confirmed =
                                             await _showConfirmDeleteDialog(
-                                              context,
+                                              modalContext,
                                               ws,
                                             );
                                         if (confirmed) {
-                                          await WorkspaceService.removeWorkspace(
-                                            ws,
-                                          );
-                                          await AuthService.loadSessionForActiveWorkspace();
-                                          if (mounted) {
-                                            setState(() {
-                                              _selectedWorkspace =
-                                                  WorkspaceService
-                                                      .activeWorkspace;
-                                            });
-                                            widget.onWorkspaceChanged?.call();
+                                          try {
+                                            await WorkspaceService.removeWorkspace(
+                                              ws,
+                                            );
+                                            await AuthService.loadSessionForActiveWorkspace();
+                                            if (mounted) {
+                                              setState(() {
+                                                _selectedWorkspace =
+                                                    WorkspaceService
+                                                        .activeWorkspace;
+                                              });
+                                              AppErrorHandler.showUserSuccess(
+                                                this.context,
+                                                'Workspace removed',
+                                              );
+                                              widget.onWorkspaceChanged?.call();
+                                            }
+                                            setSheetState(() {});
+                                          } catch (e, stack) {
+                                            AppErrorHandler.recordNonFatal(
+                                              e,
+                                              stack,
+                                              reason: 'Failed to remove workspace',
+                                              customKeys: {'workspaceId': ws.id},
+                                            );
+                                            if (mounted) {
+                                              AppErrorHandler.showUserError(
+                                                this.context,
+                                                'Failed to remove workspace',
+                                              );
+                                            }
                                           }
-                                          setSheetState(() {});
                                         }
                                       },
                                     )

@@ -4,6 +4,7 @@ import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transparent_image/transparent_image.dart';
 import '../services/auth_service.dart';
+import '../utils/error_handler.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -256,18 +257,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onPressed: () async {
               Navigator.pop(ctx);
-              await AuthService.logout();
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.clear();
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Account data cleared successfully.'),
-                  ),
-                );
+              try {
                 await AuthService.logout();
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
                 if (mounted) {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  AppErrorHandler.showUserSuccess(
+                    context,
+                    'Account data cleared successfully.',
+                  );
+                  await AuthService.logout();
+                  if (mounted) {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  }
+                }
+              } catch (e, stack) {
+                AppErrorHandler.recordNonFatal(
+                  e,
+                  stack,
+                  reason: 'ProfileScreen delete account failed',
+                );
+                if (mounted) {
+                  AppErrorHandler.showUserError(
+                    context,
+                    'Failed to clear account data',
+                  );
                 }
               }
             },

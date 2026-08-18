@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/error_handler.dart';
 
 import '../services/workspace_service.dart';
 
@@ -24,7 +25,13 @@ class Workspace {
     try {
       final uri = Uri.parse(mediaDBRoot);
       return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}/site/find/theme/logo.png';
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'Workspace.iconAsset URI parse error',
+        customKeys: {'mediaDBRoot': mediaDBRoot},
+      );
       return null;
     }
   }
@@ -60,7 +67,13 @@ class Workspace {
         }
       }
       return host.toLowerCase();
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'Workspace.extractHostname failed',
+        customKeys: {'url': url},
+      );
       return 'workspace';
     }
   }

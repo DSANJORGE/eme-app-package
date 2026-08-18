@@ -8,6 +8,7 @@ import 'package:flutter_eme_base/utils/log.dart';
 import '../models/topic.dart';
 import '../models/tutor_channel.dart';
 import '../models/tutorial.dart';
+import '../utils/error_handler.dart';
 
 import 'workspace_service.dart';
 
@@ -62,8 +63,14 @@ class TopicService {
         );
         return [];
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.fetchTopics failed',
+        customKeys: {'url': targetUrl},
+      );
       return [];
     }
   }
@@ -113,8 +120,14 @@ class TopicService {
           'Failed to fetch tutorials. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching tutorials from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.fetchTutorialsForTopic failed',
+        customKeys: {'url': targetUrl, 'topicId': topicId},
+      );
       rethrow;
     }
   }
@@ -164,8 +177,14 @@ class TopicService {
           'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching tutor channels from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.fetchTutorChannel failed',
+        customKeys: {'url': targetUrl, 'tutorialId': tutorialId},
+      );
       rethrow;
     }
   }
@@ -224,10 +243,16 @@ class TopicService {
                   }
                 }
                 messages.add(message);
-              } catch (e) {
+              } catch (e, stack) {
                 logPrint(e.toString());
                 logPrint(
                   'TopicService error fetching tutor history from $targetUrl',
+                );
+                AppErrorHandler.recordNonFatal(
+                  e,
+                  stack,
+                  reason: 'TopicService.fetchTutorHistory failed to parse chat message',
+                  customKeys: {'url': targetUrl, 'channelId': channelId},
                 );
               }
             }
@@ -241,8 +266,14 @@ class TopicService {
           'Failed to fetch tutor history. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching tutor history from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.fetchTutorHistory failed',
+        customKeys: {'url': targetUrl, 'channelId': channelId},
+      );
       rethrow;
     }
   }
@@ -284,8 +315,14 @@ class TopicService {
           'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching tutor channels from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.startTutorial failed',
+        customKeys: {'url': targetUrl, 'tutorialId': tutorialId, 'channel': channel},
+      );
       rethrow;
     }
   }
@@ -333,10 +370,20 @@ class TopicService {
           'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) {
         logPrint('TopicService error fetching tutor channels from $targetUrl');
       }
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.continueTutorial failed',
+        customKeys: {
+          'url': targetUrl,
+          'tutorialId': tutorialId,
+          'channel': channel ?? '',
+        },
+      );
       rethrow;
     }
   }
@@ -385,9 +432,18 @@ class TopicService {
           'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('TopicService error fetching tutor channels from $targetUrl');
-
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.submitAnswer failed',
+        customKeys: {
+          'url': targetUrl,
+          'channel': channel,
+          'questionId': questionId,
+        },
+      );
       rethrow;
     }
   }

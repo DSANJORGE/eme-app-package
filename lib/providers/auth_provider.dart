@@ -3,6 +3,8 @@ import '../models/user.dart';
 import '../models/workspace.dart';
 import '../services/auth_service.dart';
 
+import '../utils/error_handler.dart';
+
 class AuthState {
   final bool isLoggedIn;
   final String? userId;
@@ -32,20 +34,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> loginWithOtp(String accountOrEmail, String code) async {
-    final success = await AuthService.loginWithOtp(accountOrEmail, code);
-    refresh();
-    return success;
+    try {
+      final success = await AuthService.loginWithOtp(accountOrEmail, code);
+      refresh();
+      return success;
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthNotifier.loginWithOtp failed',
+        customKeys: {'accountOrEmail': accountOrEmail},
+      );
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
-    await AuthService.logout();
-    refresh();
+    try {
+      await AuthService.logout();
+      refresh();
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthNotifier.logout failed',
+      );
+      rethrow;
+    }
   }
 
   Future<bool> switchWorkspace(Workspace workspace) async {
-    final success = await AuthService.switchWorkspace(workspace);
-    refresh();
-    return success;
+    try {
+      final success = await AuthService.switchWorkspace(workspace);
+      refresh();
+      return success;
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AuthNotifier.switchWorkspace failed',
+        customKeys: {'workspace': workspace.id},
+      );
+      rethrow;
+    }
   }
 }
 

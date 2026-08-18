@@ -17,6 +17,7 @@ import 'package:transparent_image/transparent_image.dart';
 
 import '../models/tutor_channel.dart';
 import '../models/tutorial.dart';
+import '../utils/error_handler.dart';
 
 enum MessageStage {
   loading,
@@ -193,7 +194,16 @@ class _RehearseScreenState extends State<RehearseScreen> {
         _isLoading = false;
       });
       _scrollToBottom();
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _loadTutorialSession failed',
+        customKeys: {'tutorialId': widget.tutorial.id},
+      );
+      if (mounted) {
+        AppErrorHandler.showUserError(context, 'Failed to load tutorial session');
+      }
       setState(() {
         _isLoading = false;
         _stage = MessageStage.error;
@@ -277,18 +287,25 @@ class _RehearseScreenState extends State<RehearseScreen> {
       }
     });
 
-    setState(() {
-      _stage = MessageStage.loading;
-    });
-
-    TopicService().submitAnswer(
-      questionId: _lastMessage!.question!.id,
-      selectedOption: _tempSelectedAnswerIndex!.toStr(),
-      confidence: _tempConfidenceLevel!.name,
-      channel: _messages.last.channel,
-      sectionId: _messages.last.sectionId!,
-      componentId: _messages.last.componentId!,
-    );
+    try {
+      TopicService().submitAnswer(
+        questionId: _lastMessage!.question!.id,
+        selectedOption: _tempSelectedAnswerIndex!.toStr(),
+        confidence: _tempConfidenceLevel!.name,
+        channel: _messages.last.channel,
+        sectionId: _messages.last.sectionId!,
+        componentId: _messages.last.componentId!,
+      );
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _submitAnswer failed',
+      );
+      if (mounted) {
+        AppErrorHandler.showUserError(context, 'Failed to submit answer');
+      }
+    }
   }
 
   void _sendFollowUp() {
@@ -329,12 +346,23 @@ class _RehearseScreenState extends State<RehearseScreen> {
     logPrint(
       "continue From SECTION: ${_lastMessage!.sectionId} and COMPONENT: ${_lastMessage!.componentId}",
     );
-    await TopicService().continueTutorial(
-      tutorialId: widget.tutorial.id,
-      channel: _lastMessage!.channel,
-      sectionId: _lastMessage!.sectionId,
-      componentId: _lastMessage!.componentId,
-    );
+    try {
+      await TopicService().continueTutorial(
+        tutorialId: widget.tutorial.id,
+        channel: _lastMessage!.channel,
+        sectionId: _lastMessage!.sectionId,
+        componentId: _lastMessage!.componentId,
+      );
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _tutorialContinue failed',
+      );
+      if (mounted) {
+        AppErrorHandler.showUserError(context, 'Failed to continue tutorial');
+      }
+    }
     _scrollToBottom();
   }
 
@@ -613,11 +641,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 ),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.reportAiSuccess),
-                      backgroundColor: const Color(0xFF141923),
-                    ),
+                  AppErrorHandler.showUserSuccess(
+                    context,
+                    l10n.reportAiSuccess,
                   );
                 },
                 child: Text(

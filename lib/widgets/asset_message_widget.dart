@@ -5,6 +5,7 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/chat_message.dart';
+import '../utils/error_handler.dart';
 import 'fullscreen_mediaviewer.dart';
 import 'pip_video_overlay.dart';
 
@@ -113,7 +114,13 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
         controller.play();
         _resetHideControlsTimer();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'AssetMessageWidget inline player failed',
+        customKeys: {'videoUrl': videoUrl},
+      );
       if (mounted) {
         setState(() {
           _isInitializing = false;

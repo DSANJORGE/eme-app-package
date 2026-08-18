@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import '../models/workspace.dart';
+import '../utils/error_handler.dart';
 import 'auth_service.dart';
 import 'workspace_service.dart';
 
@@ -32,8 +33,13 @@ class DeepLinkService {
           onParametersReceived: onParametersReceived,
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       logPrint('Error getting initial deep link: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'Error getting initial deep link',
+      );
     }
 
     // On Web (or platform launch), also process current window location from Uri.base
@@ -46,8 +52,13 @@ class DeepLinkService {
           onWorkspaceOpened: onWorkspaceOpened,
           onParametersReceived: onParametersReceived,
         );
-      } catch (e) {
+      } catch (e, stack) {
         logPrint('Error reading web parameters from Uri.base: $e');
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'Error reading web parameters from Uri.base',
+        );
       }
     }
 
@@ -63,6 +74,11 @@ class DeepLinkService {
       },
       onError: (err) {
         logPrint('Deep link stream error: $err');
+        AppErrorHandler.recordNonFatal(
+          err,
+          null,
+          reason: 'Deep link stream error',
+        );
       },
     );
   }
@@ -285,8 +301,14 @@ class DeepLinkService {
       logPrint('Deep link OTP login for email: $email');
       try {
         await AuthService.loginWithOtp(email, code);
-      } catch (e) {
+      } catch (e, stack) {
         logPrint('Error during deep link OTP login: $e');
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'Error during deep link OTP login',
+          customKeys: {'email': email},
+        );
       }
     } else if (workspace != null) {
       await AuthService.loadSessionForActiveWorkspace();

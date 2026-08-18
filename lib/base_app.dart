@@ -13,16 +13,28 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/deep_link_service.dart';
 
+import 'utils/error_handler.dart';
+
 class BaseApp extends ConsumerWidget {
   final AppConfig config;
 
   const BaseApp({super.key, required this.config});
 
   static Future<void> initialize({required Workspace initialWorkspace}) async {
-    await WorkspaceService.init(initialWorkspace: initialWorkspace);
-    await AuthService.init();
-    final oi = OpenI();
-    await oi.initialize(workspaceData: initialWorkspace.toJson());
+    try {
+      await WorkspaceService.init(initialWorkspace: initialWorkspace);
+      await AuthService.init();
+      final oi = OpenI();
+      await oi.initialize(workspaceData: initialWorkspace.toJson());
+    } catch (e, stack) {
+      AppErrorHandler.recordFatal(
+        e,
+        stack,
+        reason: 'Critical failure during BaseApp.initialize',
+        customKeys: {'workspace': initialWorkspace.id},
+      );
+      rethrow;
+    }
   }
 
   @override

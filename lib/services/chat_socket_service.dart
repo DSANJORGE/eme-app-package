@@ -7,6 +7,7 @@ import 'package:openinsitute_core/openinsitute_core.dart';
 import 'package:flutter_eme_base/utils/log.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/chat_message.dart';
+import '../utils/error_handler.dart';
 import 'auth_service.dart';
 
 enum SocketConnectionState { disconnected, connecting, connected, reconnecting }
@@ -101,8 +102,14 @@ class ChatSocketService {
         onDone: _onSocketDone,
         cancelOnError: false,
       );
-    } catch (e) {
-      logPrint('ChatSocketService connection error');
+    } catch (e, stack) {
+      logPrint('ChatSocketService connection error: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ChatSocketService connection error',
+        customKeys: {'channel': channel, 'baseUrl': _baseUrl ?? ''},
+      );
       _handleDisconnectAndReconnect();
     }
   }
@@ -148,8 +155,14 @@ class ChatSocketService {
       final jsonStr = json.encode(data);
       _channel!.sink.add(jsonStr);
       logPrint('ChatSocketService sent: $jsonStr');
-    } catch (e) {
-      logPrint('ChatSocketService error sending message');
+    } catch (e, stack) {
+      logPrint('ChatSocketService error sending message: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ChatSocketService sendRaw error',
+        customKeys: {'data': data.toString()},
+      );
     }
   }
 
@@ -199,6 +212,11 @@ class ChatSocketService {
       }
     } catch (e, stack) {
       logError('ChatSocketService error parsing incoming message: $e\n$stack');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ChatSocketService error parsing incoming message',
+      );
     }
   }
 
@@ -225,7 +243,13 @@ class ChatSocketService {
   }
 
   void _onSocketError(dynamic error) {
-    logPrint('ChatSocketService stream error');
+    logPrint('ChatSocketService stream error: $error');
+    AppErrorHandler.recordNonFatal(
+      error,
+      null,
+      reason: 'ChatSocketService stream error',
+      customKeys: {'channel': _channelId},
+    );
     _handleDisconnectAndReconnect();
   }
 
@@ -305,7 +329,13 @@ class ChatSocketService {
         final scheme = oi.settings.https ? 'wss' : 'ws';
         return '$scheme://$siteRoot/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ChatSocketService _resolveBaseUrl failed',
+      );
+    }
     throw Exception('chat_socket_url not found in app settings');
   }
 

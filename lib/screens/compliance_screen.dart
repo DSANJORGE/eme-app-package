@@ -1,6 +1,7 @@
 import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/error_handler.dart';
 import '../widgets/data_consent_dialog.dart';
 
 class ComplianceScreen extends StatefulWidget {
@@ -31,21 +32,31 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   }
 
   Future<void> _toggleConsent(bool value) async {
-    await DataCollectionConsentDialog.saveConsent(value);
-    setState(() {
-      _hasConsented = value;
-    });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value
-                ? 'Data collection consent updated to Accepted.'
-                : 'Data collection consent updated to Essential-only.',
-          ),
-          backgroundColor: const Color(0xFF1E2631),
-        ),
+    try {
+      await DataCollectionConsentDialog.saveConsent(value);
+      setState(() {
+        _hasConsented = value;
+      });
+      if (mounted) {
+        AppErrorHandler.showUserSuccess(
+          context,
+          value
+              ? 'Data collection consent updated to Accepted.'
+              : 'Data collection consent updated to Essential-only.',
+        );
+      }
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'ComplianceScreen _toggleConsent failed',
       );
+      if (mounted) {
+        AppErrorHandler.showUserError(
+          context,
+          'Failed to update consent preference',
+        );
+      }
     }
   }
 
@@ -90,16 +101,27 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             ),
             onPressed: () async {
               Navigator.pop(ctx);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('data_collection_consented');
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Personal collected data and progress cache deleted.',
-                    ),
-                  ),
+              try {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('data_collection_consented');
+                if (mounted) {
+                  AppErrorHandler.showUserSuccess(
+                    context,
+                    'Personal collected data and progress cache deleted.',
+                  );
+                }
+              } catch (e, stack) {
+                AppErrorHandler.recordNonFatal(
+                  e,
+                  stack,
+                  reason: 'ComplianceScreen delete progress cache failed',
                 );
+                if (mounted) {
+                  AppErrorHandler.showUserError(
+                    context,
+                    'Failed to delete progress cache',
+                  );
+                }
               }
             },
             child: Text(

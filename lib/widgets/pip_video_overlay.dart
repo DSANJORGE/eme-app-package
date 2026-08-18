@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../utils/error_handler.dart';
 import 'fullscreen_mediaviewer.dart';
 
 /// Floating Picture-in-Picture (PiP) Overlay manager and widget for video playback.
@@ -142,7 +143,13 @@ class _PipVideoOverlayWidgetState extends State<_PipVideoOverlayWidget> {
         _controller!.play();
         _resetHideControlsTimer();
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'PipVideoOverlay _initVideo failed',
+        customKeys: {'videoUrl': widget.videoUrl},
+      );
       if (mounted) {
         setState(() {
           _hasError = true;
