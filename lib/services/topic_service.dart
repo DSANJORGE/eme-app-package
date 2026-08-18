@@ -229,7 +229,6 @@ class TopicService {
           if (history is List) {
             for (final item in history) {
               try {
-                print(item);
                 final message = ChatMessage.fromJson(item);
                 if (message.messageType.isQuestion) {
                   final rawAnswer = answers.isEmpty

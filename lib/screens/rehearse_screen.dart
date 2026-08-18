@@ -667,6 +667,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   Widget _buildMessageContainer({
     required bool isAgent,
     required bool isAiGenerated,
+    bool showAvatar = true,
     required Widget child,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -677,27 +678,30 @@ class _RehearseScreenState extends State<RehearseScreen> {
           : MainAxisAlignment.end,
       children: [
         if (isAgent) ...[
-          Container(
-            width: 32,
-            height: 32,
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFFFFFFF).withValues(alpha: 0.2),
-              border: Border.all(
-                color: const Color(0xFFFFFFFF).withValues(alpha: 0.4),
+          if (showAvatar)
+            Container(
+              width: 32,
+              height: 32,
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFFFFFF).withValues(alpha: 0.2),
+                border: Border.all(
+                  color: const Color(0xFFFFFFFF).withValues(alpha: 0.4),
+                ),
               ),
-            ),
-            alignment: Alignment.center,
-            child: FadeInImage.memoryNetwork(
-              placeholder: kTransparentImage,
-              image:
-                  "https://minsur.genailabs.tech/site/mediadb/services/module/asset/generated/Sources/Iris_Avatar_Minsur/Iris_Avatar_Minsur.png/image200x200.webp",
-              imageErrorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.smart_toy, color: Colors.white);
-              },
-            ),
-          ),
+              alignment: Alignment.center,
+              child: FadeInImage.memoryNetwork(
+                placeholder: kTransparentImage,
+                image:
+                    "https://minsur.genailabs.tech/site/mediadb/services/module/asset/generated/Sources/Iris_Avatar_Minsur/Iris_Avatar_Minsur.png/image200x200.webp",
+                imageErrorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.smart_toy, color: Colors.white);
+                },
+              ),
+            )
+          else
+            const SizedBox(width: 32),
           const SizedBox(width: 12),
         ],
         Flexible(
@@ -707,17 +711,17 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   ? const Color(0xFF161C24).withValues(alpha: 0.8)
                   : const Color(0xFFF27121).withValues(alpha: 0.15),
               borderRadius: isAgent
-                  ? const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
+                  ? BorderRadius.only(
+                      topLeft: Radius.circular(showAvatar ? 4 : 16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: const Radius.circular(16),
+                      bottomRight: const Radius.circular(16),
                     )
-                  : const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(4),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
+                  : BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: Radius.circular(showAvatar ? 4 : 16),
+                      bottomLeft: const Radius.circular(16),
+                      bottomRight: const Radius.circular(16),
                     ),
               border: Border.all(
                 color: isAgent
@@ -759,33 +763,62 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                   ]
                                 : [],
                           ),
-                          InkWell(
-                            onTap: () => _showReportAiDialog(context),
-                            borderRadius: BorderRadius.circular(12),
+                          PopupMenuButton<String>(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 140),
+                            position: PopupMenuPosition.under,
+                            color: const Color(0xFF161C24),
+                            elevation: 8,
+                            shadowColor: Colors.black.withValues(alpha: 0.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                width: 1,
+                              ),
+                            ),
+                            tooltip: '',
+                            onSelected: (value) {
+                              if (value == 'report') {
+                                _showReportAiDialog(context);
+                              }
+                            },
+                            itemBuilder: (BuildContext context) => [
+                              PopupMenuItem<String>(
+                                value: 'report',
+                                height: 36,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.outlined_flag_rounded,
+                                      size: 16,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.reportAi,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 2,
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.outlined_flag,
-                                    size: 13,
-                                    color: Colors.white.withValues(alpha: 0.4),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    'Report',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.4,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              child: Icon(
+                                Icons.more_horiz_rounded,
+                                size: 16,
+                                color: Colors.white.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
@@ -798,63 +831,75 @@ class _RehearseScreenState extends State<RehearseScreen> {
         ),
         if (!isAgent) ...[
           const SizedBox(width: 12),
-          Container(
-            width: 32,
-            height: 32,
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFFFFFFF).withValues(alpha: 0.2),
-              border: Border.all(
-                color: const Color(0xFFFFFFFF).withValues(alpha: 0.4),
+          if (showAvatar)
+            Container(
+              width: 32,
+              height: 32,
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFFFFFF).withValues(alpha: 0.2),
+                border: Border.all(
+                  color: const Color(0xFFFFFFFF).withValues(alpha: 0.4),
+                ),
               ),
-            ),
-            alignment: Alignment.center,
-            child: FadeInImage.memoryNetwork(
-              placeholder: kTransparentImage,
-              image:
-                  "https://eme.world/mediadb/services/module/asset/generated/Entity%20Assets/profile/placeholder.jpg/image200x200.webp",
-              imageErrorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.person, color: Colors.white);
-              },
-            ),
-          ),
+              alignment: Alignment.center,
+              child: FadeInImage.memoryNetwork(
+                placeholder: kTransparentImage,
+                image:
+                    "https://eme.world/mediadb/services/module/asset/generated/Entity%20Assets/profile/placeholder.jpg/image200x200.webp",
+                imageErrorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.person, color: Colors.white);
+                },
+              ),
+            )
+          else
+            const SizedBox(width: 32),
         ],
       ],
     );
   }
 
-  List<Widget> _buildChatMessageItem(ChatMessage message, bool isLast) {
+  List<Widget> _buildChatMessageItem(
+    ChatMessage message,
+    bool isLast, {
+    bool showAvatar = true,
+  }) {
     switch (message.messageType) {
       case MessageType.usercomment:
-        return [_buildUserCommentMessage(message)];
+        return [_buildUserCommentMessage(message, showAvatar: showAvatar)];
       case MessageType.agentcomment:
-        return [_buildAgentCommentMessage(message)];
+        return [_buildAgentCommentMessage(message, showAvatar: showAvatar)];
       case MessageType.end:
-        return [_buildEndMessage(message)];
+        return [_buildEndMessage(message, showAvatar: showAvatar)];
       case MessageType.question:
-        return [_buildQuestionMessage(message, isLast)];
+        return [_buildQuestionMessage(message, isLast, showAvatar: showAvatar)];
       case MessageType.asset:
-        return [_buildAssetMessage(message)];
+        return [_buildAssetMessage(message, showAvatar: showAvatar)];
       case MessageType.welcome:
       case MessageType.text:
       default:
-        return [_buildTextMessage(message)];
+        return [_buildTextMessage(message, showAvatar: showAvatar)];
     }
   }
 
-  Widget _buildAssetMessage(ChatMessage message) {
+  Widget _buildAssetMessage(ChatMessage message, {bool showAvatar = true}) {
     return _buildMessageContainer(
       isAgent: message.isAI,
       isAiGenerated: false,
+      showAvatar: showAvatar,
       child: AssetMessageWidget(message: message),
     );
   }
 
-  Widget _buildUserCommentMessage(ChatMessage message) {
+  Widget _buildUserCommentMessage(
+    ChatMessage message, {
+    bool showAvatar = true,
+  }) {
     return _buildMessageContainer(
       isAgent: false,
       isAiGenerated: false,
+      showAvatar: showAvatar,
       child: _buildRichText(
         message.text,
         const TextStyle(fontSize: 14, color: Colors.white, height: 1.4),
@@ -862,10 +907,14 @@ class _RehearseScreenState extends State<RehearseScreen> {
     );
   }
 
-  Widget _buildAgentCommentMessage(ChatMessage message) {
+  Widget _buildAgentCommentMessage(
+    ChatMessage message, {
+    bool showAvatar = true,
+  }) {
     return _buildMessageContainer(
       isAgent: true,
       isAiGenerated: true,
+      showAvatar: showAvatar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -882,10 +931,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
     );
   }
 
-  Widget _buildEndMessage(ChatMessage message) {
+  Widget _buildEndMessage(ChatMessage message, {bool showAvatar = true}) {
     return _buildMessageContainer(
       isAgent: true,
       isAiGenerated: true,
+      showAvatar: showAvatar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -918,10 +968,37 @@ class _RehearseScreenState extends State<RehearseScreen> {
     );
   }
 
-  Widget _buildTextMessage(ChatMessage message) {
+  Widget _buildHeadingMessage(ChatMessage message) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 32.0, bottom: 16.0, left: 44.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      alignment: Alignment.center,
+      child: _buildRichText(
+        message.text,
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          height: 1.35,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextMessage(ChatMessage message, {bool showAvatar = true}) {
+    if (message.componentType == 'heading') {
+      return _buildHeadingMessage(message);
+    }
     return _buildMessageContainer(
       isAgent: message.isAI,
       isAiGenerated: false,
+      showAvatar: showAvatar,
       child: _buildRichText(
         message.text,
         TextStyle(
@@ -935,7 +1012,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
     );
   }
 
-  Widget _buildQuestionMessage(ChatMessage message, bool isLast) {
+  Widget _buildQuestionMessage(
+    ChatMessage message,
+    bool isLast, {
+    bool showAvatar = true,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final bool isInteractive = message.interactive;
 
@@ -951,6 +1032,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     return _buildMessageContainer(
       isAgent: true,
       isAiGenerated: false,
+      showAvatar: showAvatar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1511,10 +1593,26 @@ class _RehearseScreenState extends State<RehearseScreen> {
               final messageIndex = _messages.length - 1 - index;
               final message = _messages[messageIndex];
               final isLast = messageIndex == _messages.length - 1;
+
+              bool showAvatar = true;
+              if (messageIndex > 0) {
+                final prevMessage = _messages[messageIndex - 1];
+                final isPrevHeading = prevMessage.componentType == 'heading';
+                if (!isPrevHeading && prevMessage.isUser == message.isUser) {
+                  showAvatar = false;
+                }
+              }
+
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
+                padding: EdgeInsets.only(bottom: showAvatar ? 8.0 : 24.0),
                 child: Column(
-                  children: [..._buildChatMessageItem(message, isLast)],
+                  children: [
+                    ..._buildChatMessageItem(
+                      message,
+                      isLast,
+                      showAvatar: showAvatar,
+                    ),
+                  ],
                 ),
               );
             },
