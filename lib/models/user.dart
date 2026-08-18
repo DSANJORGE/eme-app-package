@@ -5,6 +5,7 @@ class User {
   final String screenName;
   final String assetPortrait;
   final String email;
+  final bool dataConsent;
 
   const User({
     required this.id,
@@ -13,6 +14,7 @@ class User {
     required this.screenName,
     required this.assetPortrait,
     required this.email,
+    this.dataConsent = false,
   });
 
   String get displayName {
@@ -31,6 +33,7 @@ class User {
       screenName: json['screenname'] as String? ?? '',
       assetPortrait: json['assetportrait'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      dataConsent: bool.parse(json['dataconsent'] as String? ?? 'false'),
     );
   }
 
@@ -42,6 +45,7 @@ class User {
       'screenname': screenName,
       'assetportrait': assetPortrait,
       'email': email,
+      'dataconsent': dataConsent,
     };
   }
 
@@ -52,6 +56,7 @@ class User {
     String? screenName,
     String? assetPortrait,
     String? email,
+    bool? dataConsent,
   }) {
     return User(
       id: id ?? this.id,
@@ -60,6 +65,7 @@ class User {
       screenName: screenName ?? this.screenName,
       assetPortrait: assetPortrait ?? this.assetPortrait,
       email: email ?? this.email,
+      dataConsent: dataConsent ?? this.dataConsent,
     );
   }
 }

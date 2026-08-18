@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_eme_base/flutter_eme_base.dart';
 import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/error_handler.dart';
+import 'package:flutter_eme_base/utils/dio.dart';
+import 'package:intl/intl.dart';
 import '../widgets/data_consent_dialog.dart';
 
 class ComplianceScreen extends StatefulWidget {
@@ -22,21 +24,27 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
     _loadConsentStatus();
   }
 
-  Future<void> _loadConsentStatus() async {
-    final status = await DataCollectionConsentDialog.hasConsented();
+  void _loadConsentStatus() {
     if (mounted) {
       setState(() {
-        _hasConsented = status;
+        _hasConsented = DataCollectionConsentDialog.hasConsented();
       });
     }
   }
 
   Future<void> _toggleConsent(bool value) async {
     try {
-      await DataCollectionConsentDialog.saveConsent(value);
       setState(() {
         _hasConsented = value;
       });
+
+      final success = await DataCollectionConsentDialog.saveConsent(value);
+      if (!success && mounted) {
+        setState(() {
+          _hasConsented = !value;
+        });
+      }
+
       if (mounted) {
         AppErrorHandler.showUserSuccess(
           context,
@@ -52,6 +60,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         reason: 'ComplianceScreen _toggleConsent failed',
       );
       if (mounted) {
+        setState(() {
+          _hasConsented = !_hasConsented;
+        });
         AppErrorHandler.showUserError(
           context,
           'Failed to update consent preference',
@@ -102,12 +113,34 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.remove('data_collection_consented');
+                final now = DateTime.now();
+                final dateValue = DateFormat('yyyy-MM-dd').format(now);
+                final hourValue = DateFormat('HH').format(now);
+                final minuteValue = DateFormat('mm').format(now);
+
+                final mediaDbRoot = AuthService.mediaDBRoot;
+                final targetUrl =
+                    '$mediaDbRoot/services/authentication/usersave.json?'
+                    'save=true&'
+                    'userid=${AuthService.userId}&'
+                    'username=${AuthService.userId}&'
+                    'field=datadeleterequested&'
+                    'datadeleterequested.value=$dateValue&'
+                    'datadeleterequested.hour=$hourValue&'
+                    'datadeleterequested.minute=$minuteValue';
+                await DioUtil.dio.post(
+                  targetUrl,
+                  options: Options(
+                    headers: {
+                      'X-tokentype': 'entermedia',
+                      'X-token': AuthService.token ?? '',
+                    },
+                  ),
+                );
                 if (mounted) {
                   AppErrorHandler.showUserSuccess(
                     context,
-                    'Personal collected data and progress cache deleted.',
+                    'Personal collected data deletion has been requested.',
                   );
                 }
               } catch (e, stack) {
@@ -119,7 +152,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 if (mounted) {
                   AppErrorHandler.showUserError(
                     context,
-                    'Failed to delete progress cache',
+                    'Failed to request data deletion',
                   );
                 }
               }

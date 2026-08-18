@@ -40,7 +40,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TopicService _topicService = TopicService();
   late Future<List<Topic>> _topicsFuture;
-  String _activeWorkSpace = WorkspaceService.activeWorkspace.name;
+  Workspace _activeWorkSpace = WorkspaceService.activeWorkspace;
   String selectedTab = 'Catalog';
 
   @override
@@ -222,8 +222,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDesktop, String workspace) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildHeader(
+    BuildContext context,
+    bool isDesktop,
+    Workspace workspace,
+  ) {
+    // final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 40 : 20,
@@ -252,211 +256,221 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 alignment: Alignment.centerLeft,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minWidth: 32, maxWidth: 150),
-                  child: Image.asset(
-                    workspace.toLowerCase() == 'minsur'
-                        ? 'assets/minsur.png'
-                        : 'assets/${workspace.toLowerCase()}.png',
-                    errorBuilder: (context, error, stackTrace) => Text(
-                      workspace,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          Row(
-            children: [
-              PopupMenuButton<int>(
-                offset: const Offset(0, 48),
-                color: const Color(0xFF161C24),
-                elevation: 8,
-                shadowColor: Colors.black.withValues(alpha: 0.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    width: 1.5,
-                  ),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.04),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.notifications_outlined,
-                          size: 18,
-                          color: Color(0xFF38B6FF),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF50057),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                  PopupMenuItem<int>(
-                    value: -1,
-                    enabled: false,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.notifications,
+                  child: workspace.iconAsset != null
+                      ? FadeInImage.memoryNetwork(
+                          image: workspace.iconAsset!,
+                          placeholder: kTransparentImage,
+                          imageErrorBuilder: (context, _, _) => Text(
+                            workspace.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      : Text(
+                          workspace.name,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
                             color: Colors.white,
+                            fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFF50057,
-                            ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            l10n.newTutorials,
-                            style: const TextStyle(
-                              color: Color(0xFFF50057),
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(height: 1),
-                  PopupMenuItem<int>(
-                    value: 0,
-                    child: _buildNotificationItem(
-                      title: l10n.newTutorialTitle,
-                      body: l10n.newTutorialBody,
-                      time: l10n.time5m,
-                      isNew: true,
-                    ),
-                  ),
-                  PopupMenuItem<int>(
-                    value: 1,
-                    child: _buildNotificationItem(
-                      title: l10n.achievementTitle,
-                      body: l10n.achievementBody,
-                      time: l10n.time2h,
-                      isNew: true,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.04),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.analytics_outlined,
-                    size: 18,
-                    color: Colors.white70,
-                  ),
                 ),
               ),
             ],
           ),
+
+          // Row(
+          //   children: [
+          //     PopupMenuButton<int>(
+          //       offset: const Offset(0, 48),
+          //       color: const Color(0xFF161C24),
+          //       elevation: 8,
+          //       shadowColor: Colors.black.withValues(alpha: 0.5),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(16),
+          //         side: BorderSide(
+          //           color: Colors.white.withValues(alpha: 0.08),
+          //           width: 1.5,
+          //         ),
+          //       ),
+          //       child: Stack(
+          //         clipBehavior: Clip.none,
+          //         children: [
+          //           Container(
+          //             width: 38,
+          //             height: 38,
+          //             decoration: BoxDecoration(
+          //               shape: BoxShape.circle,
+          //               color: Colors.white.withValues(alpha: 0.04),
+          //               border: Border.all(
+          //                 color: Colors.white.withValues(alpha: 0.08),
+          //               ),
+          //             ),
+          //             child: const Center(
+          //               child: Icon(
+          //                 Icons.notifications_outlined,
+          //                 size: 18,
+          //                 color: Color(0xFF38B6FF),
+          //               ),
+          //             ),
+          //           ),
+          //           Positioned(
+          //             top: 0,
+          //             right: 0,
+          //             child: Container(
+          //               width: 8,
+          //               height: 8,
+          //               decoration: const BoxDecoration(
+          //                 color: Color(0xFFF50057),
+          //                 shape: BoxShape.circle,
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //       itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+          // PopupMenuItem<int>(
+          //   value: -1,
+          //   enabled: false,
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //     children: [
+          //       Text(
+          //         l10n.notifications,
+          //         style: const TextStyle(
+          //           fontWeight: FontWeight.bold,
+          //           color: Colors.white,
+          //           fontSize: 14,
+          //         ),
+          //       ),
+          //       Container(
+          //         padding: const EdgeInsets.symmetric(
+          //           horizontal: 6,
+          //           vertical: 2,
+          //         ),
+          //         decoration: BoxDecoration(
+          //           color: const Color(
+          //             0xFFF50057,
+          //           ).withValues(alpha: 0.15),
+          //           borderRadius: BorderRadius.circular(10),
+          //         ),
+          //         child: Text(
+          //           l10n.newTutorials,
+          //           style: const TextStyle(
+          //             color: Color(0xFFF50057),
+          //             fontSize: 9,
+          //             fontWeight: FontWeight.bold,
+          //           ),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // const PopupMenuDivider(height: 1),
+          // PopupMenuItem<int>(
+          //   value: 0,
+          //   child: _buildNotificationItem(
+          //     title: l10n.newTutorialTitle,
+          //     body: l10n.newTutorialBody,
+          //     time: l10n.time5m,
+          //     isNew: true,
+          //   ),
+          // ),
+          // PopupMenuItem<int>(
+          //   value: 1,
+          //   child: _buildNotificationItem(
+          //     title: l10n.achievementTitle,
+          //     body: l10n.achievementBody,
+          //     time: l10n.time2h,
+          //     isNew: true,
+          //   ),
+          // ),
+          // ],
+          // ),
+          //     const SizedBox(width: 10),
+          //     Container(
+          //       width: 38,
+          //       height: 38,
+          //       decoration: BoxDecoration(
+          //         shape: BoxShape.circle,
+          //         color: Colors.white.withValues(alpha: 0.04),
+          //         border: Border.all(
+          //           color: Colors.white.withValues(alpha: 0.08),
+          //         ),
+          //       ),
+          //       child: const Center(
+          //         child: Icon(
+          //           Icons.analytics_outlined,
+          //           size: 18,
+          //           color: Colors.white70,
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
   }
 
-  Widget _buildNotificationItem({
-    required String title,
-    required String body,
-    required String time,
-    required bool isNew,
-  }) {
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (isNew)
-                Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF38B6FF),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isNew ? Colors.white : Colors.white70,
-                    fontWeight: isNew ? FontWeight.bold : FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              Text(
-                time,
-                style: const TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            body,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildNotificationItem({
+  //   required String title,
+  //   required String body,
+  //   required String time,
+  //   required bool isNew,
+  // }) {
+  //   return Container(
+  //     width: 280,
+  //     padding: const EdgeInsets.symmetric(vertical: 4),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             if (isNew)
+  //               Container(
+  //                 margin: const EdgeInsets.only(right: 6),
+  //                 width: 6,
+  //                 height: 6,
+  //                 decoration: const BoxDecoration(
+  //                   color: Color(0xFF38B6FF),
+  //                   shape: BoxShape.circle,
+  //                 ),
+  //               ),
+  //             Expanded(
+  //               child: Text(
+  //                 title,
+  //                 style: TextStyle(
+  //                   color: isNew ? Colors.white : Colors.white70,
+  //                   fontWeight: isNew ? FontWeight.bold : FontWeight.w600,
+  //                   fontSize: 12,
+  //                 ),
+  //               ),
+  //             ),
+  //             Text(
+  //               time,
+  //               style: const TextStyle(color: Colors.white38, fontSize: 10),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Text(
+  //           body,
+  //           maxLines: 2,
+  //           overflow: TextOverflow.ellipsis,
+  //           style: const TextStyle(color: Colors.white54, fontSize: 11),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildDrawer(String displayName, String portraitUrl) {
     final l10n = AppLocalizations.of(context)!;
@@ -675,7 +689,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                _activeWorkSpace,
+                                _activeWorkSpace.name,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -990,7 +1004,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 Navigator.pop(sheetContext);
                                 await AuthService.switchWorkspace(ws);
                                 setState(() {
-                                  _activeWorkSpace = ws.name;
+                                  _activeWorkSpace = ws;
                                   _loadTopics();
                                 });
                                 widget.onWorkspaceChanged?.call();
@@ -1051,8 +1065,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               setState(() {
                                                 _activeWorkSpace =
                                                     WorkspaceService
-                                                        .activeWorkspace
-                                                        .name;
+                                                        .activeWorkspace;
                                                 _loadTopics();
                                               });
                                               AppErrorHandler.showUserSuccess(
@@ -1066,8 +1079,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             AppErrorHandler.recordNonFatal(
                                               e,
                                               stack,
-                                              reason: 'DashboardScreen remove workspace failed',
-                                              customKeys: {'workspaceId': ws.id},
+                                              reason:
+                                                  'DashboardScreen remove workspace failed',
+                                              customKeys: {
+                                                'workspaceId': ws.id,
+                                              },
                                             );
                                             if (mounted) {
                                               AppErrorHandler.showUserError(
@@ -1146,105 +1162,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
     return result ?? false;
   }
-
-  // Future<void> _showAddWorkspaceDialog(BuildContext context) async {
-  //   final urlController = TextEditingController();
-  //   final formKey = GlobalKey<FormState>();
-
-  //   await showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         backgroundColor: const Color(0xFF161C24),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(16),
-  //           side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-  //         ),
-  //         title: const Row(
-  //           children: [
-  //             Icon(Icons.add_link_rounded, color: Color(0xFF38B6FF)),
-  //             SizedBox(width: 8),
-  //             Text(
-  //               'Add Custom Workspace',
-  //               style: TextStyle(color: Colors.white, fontSize: 16),
-  //             ),
-  //           ],
-  //         ),
-  //         content: Form(
-  //           key: formKey,
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               const Text(
-  //                 'Enter the MediaDB Root URL for your workspace:',
-  //                 style: TextStyle(color: Colors.white70, fontSize: 13),
-  //               ),
-  //               const SizedBox(height: 12),
-  //               TextFormField(
-  //                 controller: urlController,
-  //                 style: const TextStyle(color: Colors.white, fontSize: 13),
-  //                 decoration: InputDecoration(
-  //                   hintText: 'https://minsur.genailabs.tech/site/mediadb',
-  //                   hintStyle: const TextStyle(
-  //                     color: Colors.white38,
-  //                     fontSize: 12,
-  //                   ),
-  //                   filled: true,
-  //                   fillColor: const Color(0xFF0F1319),
-  //                   border: OutlineInputBorder(
-  //                     borderRadius: BorderRadius.circular(10),
-  //                     borderSide: BorderSide(
-  //                       color: Colors.white.withValues(alpha: 0.1),
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 validator: (val) {
-  //                   if (val == null || val.trim().isEmpty) {
-  //                     return 'Please enter a MediaDB Root URL';
-  //                   }
-  //                   return null;
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: const Text(
-  //               'Cancel',
-  //               style: TextStyle(color: Colors.white54),
-  //             ),
-  //           ),
-  //           ElevatedButton(
-  //             onPressed: () async {
-  //               if (formKey.currentState!.validate()) {
-  //                 final newWs =
-  //                     WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
-  //                       urlController.text.trim(),
-  //                     );
-  //                 if (mounted) {
-  //                   setState(() {
-  //                     _activeWorkSpace = newWs.name;
-  //                     _loadTopics();
-  //                   });
-  //                   widget.onWorkspaceChanged?.call();
-  //                   Navigator.pop(context);
-  //                 }
-  //                 await AuthService.switchWorkspace(newWs);
-  //               }
-  //             },
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: const Color(0xFF38B6FF),
-  //             ),
-  //             child: const Text(
-  //               'Add & Select',
-  //               style: TextStyle(color: Colors.white),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 }

@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_eme_base/flutter_eme_base.dart';
 import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_eme_base/utils/dio.dart';
 
 class DataCollectionConsentDialog extends StatelessWidget {
   final VoidCallback onConsentGiven;
@@ -8,20 +10,37 @@ class DataCollectionConsentDialog extends StatelessWidget {
   const DataCollectionConsentDialog({super.key, required onConsentGiven})
     : onConsentGiven = onConsentGiven;
 
-  static const String prefsKey = 'data_collection_consented';
-
-  static Future<bool> hasConsented() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(prefsKey) ?? false;
+  static bool hasConsented() {
+    return AuthService.currentUser?.dataConsent ?? false;
   }
 
-  static Future<void> saveConsent(bool consented) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(prefsKey, consented);
+  static Future<bool> saveConsent(bool consented) async {
+    final mediaDbRoot = AuthService.mediaDBRoot;
+    final targetUrl =
+        '$mediaDbRoot/services/authentication/usersave.json?'
+        'save=true&'
+        'userid=${AuthService.userId}&'
+        'username=${AuthService.userId}&'
+        'field=dataconsent&dataconsent.value=${consented.toString()}';
+
+    final response = await DioUtil.dio.post(
+      targetUrl,
+      options: Options(
+        headers: {
+          'X-tokentype': 'entermedia',
+          'X-token': AuthService.token ?? '',
+        },
+      ),
+    );
+    if (response.statusCode != 200) {
+      return false;
+    }
+    await AuthService.fetchUser();
+    return true;
   }
 
   static Future<void> showIfNeeded(BuildContext context) async {
-    final consented = await hasConsented();
+    final consented = hasConsented();
     if (!consented && context.mounted) {
       showDialog(
         context: context,
