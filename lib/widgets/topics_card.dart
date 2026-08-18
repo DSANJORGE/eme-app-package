@@ -10,8 +10,13 @@ import '../screens/topic_tutorials_screen.dart';
 
 class TopicCard extends ConsumerWidget {
   final Topic topic;
+  final bool isClickable;
 
-  const TopicCard({super.key, required this.topic});
+  const TopicCard({
+    super.key,
+    required this.topic,
+    this.isClickable = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,14 +28,16 @@ class TopicCard extends ConsumerWidget {
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TopicTutorialsScreen(topic: topic),
-            ),
-          );
-        },
+        onTap: isClickable
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TopicTutorialsScreen(topic: topic),
+                  ),
+                );
+              }
+            : null,
         borderRadius: BorderRadius.circular(16),
         splashColor: mainColor.withValues(alpha: 0.1),
         highlightColor: mainColor.withValues(alpha: 0.05),

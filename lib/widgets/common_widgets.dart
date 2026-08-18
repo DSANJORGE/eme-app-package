@@ -52,7 +52,7 @@ class CommonWidgets {
             Icon(icon, size: 18, color: color),
             const SizedBox(width: 8),
             Text(
-              efficiency.name,
+              efficiency.name.toUpperCase(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -91,7 +91,7 @@ class CommonWidgets {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          efficiency.name,
+          efficiency.name.toUpperCase(),
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 10,

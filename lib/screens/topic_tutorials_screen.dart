@@ -79,7 +79,10 @@ class _TopicTutorialsScreenState extends ConsumerState<TopicTutorialsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Topic Overview Details
-                              TopicCard(topic: widget.topic),
+                              TopicCard(
+                                topic: widget.topic,
+                                isClickable: false,
+                              ),
                               const SizedBox(height: 32),
 
                               // Section Title

@@ -251,7 +251,8 @@ class TopicService {
                 AppErrorHandler.recordNonFatal(
                   e,
                   stack,
-                  reason: 'TopicService.fetchTutorHistory failed to parse chat message',
+                  reason:
+                      'TopicService.fetchTutorHistory failed to parse chat message',
                   customKeys: {'url': targetUrl, 'channelId': channelId},
                 );
               }
@@ -321,7 +322,11 @@ class TopicService {
         e,
         stack,
         reason: 'TopicService.startTutorial failed',
-        customKeys: {'url': targetUrl, 'tutorialId': tutorialId, 'channel': channel},
+        customKeys: {
+          'url': targetUrl,
+          'tutorialId': tutorialId,
+          'channel': channel,
+        },
       );
       rethrow;
     }
@@ -349,7 +354,7 @@ class TopicService {
       if (componentId != null) body += '&context_componentid=$componentId';
       body += '&context_skiploader=true';
 
-      logPrint("Continuing with: $body");
+      logPrint("Continuing to $targetUrl with: $body");
 
       final response = await _client.post(
         targetUrl,

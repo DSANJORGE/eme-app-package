@@ -60,7 +60,7 @@ class _TutorialCardState extends State<TutorialCard>
               padding: EdgeInsets.all(12),
               child: Text(
                 widget.tutorial.title,
-                maxLines: 1,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 18,
