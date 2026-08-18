@@ -37,6 +37,7 @@ class AgentContextValues {
   final String? tutorialId;
   final String? sectionId;
   final String? componentId;
+  final String? componentType;
   final String? componentContent;
   final Question? question;
   final Asset? asset;
@@ -48,6 +49,7 @@ class AgentContextValues {
     this.tutorialId = "",
     this.sectionId = "",
     this.componentId = "",
+    this.componentType,
     this.componentContent = "",
     this.question,
     this.asset,
@@ -73,6 +75,7 @@ class AgentContextValues {
       tutorialId: json['tutorialid']?.toString(),
       sectionId: json['sectionid']?.toString(),
       componentId: json['componentid']?.toString(),
+      componentType: json['componenttype']?.toString(),
       componentContent: json['componentcontent']?.toString(),
       question: json['question'] != null
           ? Question.fromJson(json['question'])
@@ -93,6 +96,7 @@ class AgentContextValues {
       'tutorialid': tutorialId,
       'sectionid': sectionId,
       'componentid': componentId,
+      'componenttype': componentType,
       'componentcontent': componentContent,
       'question': question?.toJson(),
       'asset': asset?.toJson(),
@@ -232,6 +236,7 @@ class ChatMessage {
   String? get tutorialId => contextValues.tutorialId;
   String? get sectionId => contextValues.sectionId;
   String? get componentId => contextValues.componentId;
+  String? get componentType => contextValues.componentType;
   String? get textContent => contextValues.componentContent;
   ProgressUpdate? get progressUpdate => contextValues.progressUpdate;
   bool get interactive => contextValues.interactive ?? false;

@@ -202,7 +202,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
         customKeys: {'tutorialId': widget.tutorial.id},
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Failed to load tutorial session');
+        AppErrorHandler.showUserError(
+          context,
+          'Failed to load tutorial session',
+        );
       }
       setState(() {
         _isLoading = false;
