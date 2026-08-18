@@ -202,29 +202,20 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: isVideo
-                  ? _buildVideoSection(
-                      imageUrl: imageUrl,
-                      targetUrl: targetUrl,
-                      caption: effectiveCaption,
-                      mediaType: effectiveMediaType,
-                    )
-                  : _buildImageSection(
-                      imageUrl: imageUrl,
-                      targetUrl: targetUrl,
-                      caption: effectiveCaption,
-                      mediaType: effectiveMediaType,
-                    ),
-            ),
+            constraints: BoxConstraints(maxHeight: 200),
+            child: isVideo
+                ? _buildVideoSection(
+                    imageUrl: imageUrl,
+                    targetUrl: targetUrl,
+                    caption: effectiveCaption,
+                    mediaType: effectiveMediaType,
+                  )
+                : _buildImageSection(
+                    imageUrl: imageUrl,
+                    targetUrl: targetUrl,
+                    caption: effectiveCaption,
+                    mediaType: effectiveMediaType,
+                  ),
           ),
           if (effectiveCaption != null &&
               effectiveCaption.trim().isNotEmpty) ...[
@@ -252,35 +243,38 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
     return InkWell(
       onTap: () => _openFullscreen(targetUrl, caption, mediaType),
       borderRadius: BorderRadius.circular(11),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
+      child: Center(
         child: Container(
+          constraints: BoxConstraints(maxHeight: 200),
           color: const Color(0xFF1E293B),
-          child: FadeInImage.memoryNetwork(
-            placeholder: kTransparentImage,
-            image: imageUrl,
-            fit: BoxFit.cover,
-            imageErrorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFF1E293B),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.broken_image_outlined,
-                      color: Colors.white54,
-                      size: 36,
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Media Preview',
-                      style: TextStyle(color: Colors.white60, fontSize: 12),
-                    ),
-                  ],
-                ),
-              );
-            },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: FadeInImage.memoryNetwork(
+              placeholder: kTransparentImage,
+              image: imageUrl,
+              fit: BoxFit.contain,
+              imageErrorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: const Color(0xFF1E293B),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.white54,
+                        size: 36,
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Media Preview',
+                        style: TextStyle(color: Colors.white60, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
