@@ -213,12 +213,6 @@ class ChatMessage {
 
   String get sender => isUser ? 'user' : 'ai';
 
-  String get actionButtonLabel {
-    if (agentContextValues!.messageType.isWelcome) return 'Start';
-    if (agentContextValues!.messageType.isEnd) return 'Finish';
-    return 'Continue';
-  }
-
   AgentContextValues get contextValues =>
       agentContextValues ?? AgentContextValues.fromJson({});
 

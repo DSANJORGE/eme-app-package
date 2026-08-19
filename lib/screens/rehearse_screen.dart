@@ -120,6 +120,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
               'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
             );
             return;
+          } else if (incomingMsg.messageType.isEnd) {
+            setState(() {
+              _stage = MessageStage.finished;
+              _isFinished = true;
+            });
+            return;
           }
 
           setState(() {
@@ -140,8 +146,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
             } else if (_lastMessage!.messageType.isEnd) {
               setState(() {
                 _stage = MessageStage.finished;
+                _isFinished = true;
               });
-              _isFinished = true;
             } else {
               setState(() {
                 _stage = MessageStage.explainAndFollowup;
@@ -179,8 +185,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
             } else if (_lastMessage!.messageType.isEnd) {
               setState(() {
                 _stage = MessageStage.finished;
+                _isFinished = true;
               });
-              _isFinished = true;
             } else {
               setState(() {
                 _stage = MessageStage.explainAndFollowup;
@@ -342,7 +348,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
     _scrollToBottom();
   }
 
-  Future<void> _tutorialContinue() async {
+  Future<void> _tutorialContinue([bool? restart]) async {
+    restart = restart ?? false;
     setState(() {
       _stage = MessageStage.loading;
     });
@@ -353,8 +360,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
       await TopicService().continueTutorial(
         tutorialId: widget.tutorial.id,
         channel: _lastMessage!.channel,
-        sectionId: _lastMessage!.sectionId,
-        componentId: _lastMessage!.componentId,
+        sectionId: restart ? null : _lastMessage!.sectionId,
+        componentId: restart ? null : _lastMessage!.componentId,
       );
     } catch (e, stack) {
       AppErrorHandler.recordNonFatal(
@@ -1346,7 +1353,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Contnue',
+                        'Continue',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -1668,16 +1675,34 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildResultsView() {
-    return Column(
-      children: [
-        Text("Quiz Completed! 🎉"),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text("Go Back"),
-        ),
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Quiz Completed! 🎉",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(Colors.orange),
+              foregroundColor: WidgetStatePropertyAll(Colors.black),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Go Back!"),
+          ),
+        ],
+      ),
     );
   }
 }
