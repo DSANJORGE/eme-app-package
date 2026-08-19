@@ -4,39 +4,48 @@ import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_eme_base/utils/dio.dart';
 
-class DataCollectionConsentDialog extends StatelessWidget {
+class DataCollectionConsentDialog extends StatefulWidget {
   final VoidCallback onConsentGiven;
 
-  const DataCollectionConsentDialog({super.key, required onConsentGiven})
-    : onConsentGiven = onConsentGiven;
+  const DataCollectionConsentDialog({super.key, required this.onConsentGiven});
 
   static bool hasConsented() {
     return AuthService.currentUser?.dataConsent ?? false;
   }
 
   static Future<bool> saveConsent(bool consented) async {
-    final mediaDbRoot = AuthService.mediaDBRoot;
-    final targetUrl =
-        '$mediaDbRoot/services/authentication/usersave.json?'
-        'save=true&'
-        'userid=${AuthService.userId}&'
-        'username=${AuthService.userId}&'
-        'field=dataconsent&dataconsent.value=${consented.toString()}';
+    try {
+      final mediaDbRoot = AuthService.mediaDBRoot;
+      final targetUrl =
+          '$mediaDbRoot/services/authentication/usersave.json?'
+          'save=true&'
+          'userid=${AuthService.userId}&'
+          'username=${AuthService.userId}&'
+          'field=dataconsent&dataconsent.value=${consented.toString()}';
 
-    final response = await DioUtil.dio.post(
-      targetUrl,
-      options: Options(
-        headers: {
-          'X-tokentype': 'entermedia',
-          'X-token': AuthService.token ?? '',
-        },
-      ),
-    );
-    if (response.statusCode != 200) {
+      final response = await DioUtil.dio.post(
+        targetUrl,
+        options: Options(
+          headers: {
+            'X-tokentype': 'entermedia',
+            'X-token': AuthService.token ?? '',
+          },
+        ),
+      );
+      if (response.statusCode != 200) {
+        return false;
+      }
+      await AuthService.fetchUser();
+      return true;
+    } catch (e, stack) {
+      logPrint('Failed to save consent: $e');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'DataCollectionConsentDialog.saveConsent failed',
+      );
       return false;
     }
-    await AuthService.fetchUser();
-    return true;
   }
 
   static Future<void> showIfNeeded(BuildContext context) async {
@@ -47,10 +56,39 @@ class DataCollectionConsentDialog extends StatelessWidget {
         barrierDismissible: false,
         builder: (ctx) => DataCollectionConsentDialog(
           onConsentGiven: () {
-            Navigator.of(ctx).pop();
+            if (ctx.mounted) {
+              Navigator.of(ctx).pop();
+            }
           },
         ),
       );
+    }
+  }
+
+  @override
+  State<DataCollectionConsentDialog> createState() =>
+      _DataCollectionConsentDialogState();
+}
+
+class _DataCollectionConsentDialogState
+    extends State<DataCollectionConsentDialog> {
+  bool _isLoading = false;
+
+  Future<void> _handleConsent(bool consented) async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await DataCollectionConsentDialog.saveConsent(consented);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        widget.onConsentGiven();
+      }
     }
   }
 
@@ -159,10 +197,7 @@ class DataCollectionConsentDialog extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () async {
-                          await saveConsent(false);
-                          onConsentGiven();
-                        },
+                        onPressed: _isLoading ? null : () => _handleConsent(false),
                         child: Text(
                           l10n.declineConsent,
                           textAlign: TextAlign.center,
@@ -184,19 +219,27 @@ class DataCollectionConsentDialog extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () async {
-                          await saveConsent(true);
-                          onConsentGiven();
-                        },
-                        child: Text(
-                          l10n.acceptConsent,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        onPressed: _isLoading ? null : () => _handleConsent(true),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.black,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                l10n.acceptConsent,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],
