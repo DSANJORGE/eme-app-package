@@ -124,7 +124,8 @@ class AuthService {
     return isLoggedIn;
   }
 
-  static bool get isLoggedIn => _token != null && _token!.isNotEmpty;
+  static bool get isLoggedIn =>
+      _token != null && _token!.isNotEmpty && _currentUser != null;
   static String? get token => _token;
   static String? get refreshToken => _refreshToken;
   static DateTime? get tokenExpiration => _tokenExpiration;
@@ -384,7 +385,8 @@ class AuthService {
     logPrint("fetching workspaces $workspacesUrl");
 
     try {
-      final Map<String, String> credentials = await AuthService.getCredentials();
+      final Map<String, String> credentials =
+          await AuthService.getCredentials();
       final workspacesResponse = await _dio.get(
         workspacesUrl,
         options: Options(
@@ -404,7 +406,8 @@ class AuthService {
             ? json.decode(workspacesResponse.data)
             : workspacesResponse.data;
 
-        final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
+        final workspacesList =
+            workspacesData['servers'] as List<dynamic>? ?? [];
 
         List<Workspace> customWorkspaces = workspacesList.map((ws) {
           final root = (ws['mediadbroot'] as String).replaceAll(
