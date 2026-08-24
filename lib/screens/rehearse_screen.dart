@@ -317,21 +317,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
     }
   }
 
-  void _sendFollowUp() {
+  void _sendFollowUp() async {
+    if (_lastMessage == null) return;
     final text = _followUpController.text.trim();
     if (text.isEmpty) return;
     _followUpController.clear();
 
     final userMsgId = 'user_comment_${DateTime.now().millisecondsSinceEpoch}';
-
-    ChatSocketService().sendMessage(
-      message: text,
-      messageType: MessageType.usercomment,
-      extraData: {
-        'context_sectionid': _messages.last.sectionId,
-        'context_componentid': _messages.last.componentId,
-      },
-    );
 
     setState(() {
       _messages.add(
@@ -339,13 +331,32 @@ class _RehearseScreenState extends State<RehearseScreen> {
           messageId: userMsgId,
           userId: AuthService.userId ?? 'user',
           message: text,
-          channel: _messages.last.channel,
+          channel: _lastMessage!.channel,
           createdAt: DateTime.now().toLocal(),
         ),
       );
-      _lastMessage = _messages.last;
     });
     _scrollToBottom();
+
+    try {
+      await TopicService().sendFollowUp(
+        messageId: userMsgId,
+        tutorialId: widget.tutorial.id,
+        channel: _lastMessage!.channel,
+        sectionId: _lastMessage!.sectionId!,
+        componentId: _lastMessage!.componentId!,
+        message: text,
+      );
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _sendFollowUp failed',
+      );
+      if (mounted) {
+        AppErrorHandler.showUserError(context, 'Failed to send follow up');
+      }
+    }
   }
 
   Future<void> _tutorialContinue([bool? restart]) async {
@@ -883,6 +894,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
         return [_buildQuestionMessage(message, isLast, showAvatar: showAvatar)];
       case MessageType.asset:
         return [_buildAssetMessage(message, showAvatar: showAvatar)];
+      case MessageType.answereval:
+        return [_buildAnswerEvalMessage(message, showAvatar: showAvatar)];
       case MessageType.welcome:
       case MessageType.text:
       default:
@@ -994,6 +1007,57 @@ class _RehearseScreenState extends State<RehearseScreen> {
           height: 1.35,
           letterSpacing: 0.2,
         ),
+      ),
+    );
+  }
+
+  Widget _buildAnswerEvalMessage(
+    ChatMessage message, {
+    bool showAvatar = true,
+  }) {
+    if (message.componentType == 'heading') {
+      return _buildHeadingMessage(message);
+    }
+    return _buildMessageContainer(
+      isAgent: message.isAI,
+      isAiGenerated: false,
+      showAvatar: showAvatar,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (message.isCorrect != null) ...[
+            if (message.isCorrect!) ...[
+              Text(
+                "Correct!",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF38EF7D),
+                ),
+              ),
+            ] else ...[
+              Text(
+                "Incorrect.",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFF50057),
+                ),
+              ),
+            ],
+          ],
+          const SizedBox(height: 8),
+          _buildRichText(
+            message.text,
+            TextStyle(
+              fontSize: 14,
+              color: message.isAI
+                  ? Colors.white.withValues(alpha: 0.85)
+                  : Colors.white,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1300,25 +1364,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(
-                            color: const Color(0xFFF27121),
+                            color: const Color(
+                              0xFFFFFFFF,
+                            ).withValues(alpha: 0.25),
                             width: 1.5,
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _sendFollowUp,
-                    icon: const Icon(Icons.send_rounded),
-                    color: const Color(0xFFF27121),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.04),
-                      padding: const EdgeInsets.all(12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
                     ),
@@ -1326,49 +1376,60 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: const Color(0xFFF27121),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF27121).withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _tutorialContinue,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _followUpController,
+                builder: (context, value, child) {
+                  final hasText = value.text.trim().isNotEmpty;
+                  final buttonFill = hasText
+                      ? const Color(0xFF357A38)
+                      : const Color(0xFFF27121);
+                  return Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
+                      color: buttonFill,
+                      boxShadow: [
+                        BoxShadow(
+                          color: buttonFill.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Continue',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                    child: ElevatedButton(
+                      onPressed: hasText ? _sendFollowUp : _tutorialContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 16,
-                        color: Colors.white,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            hasText ? "Send" : 'Continue',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            hasText
+                                ? Icons.send_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ] else if (_stage.isSelectOption) ...[
               const Padding(

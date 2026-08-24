@@ -452,4 +452,60 @@ class TopicService {
       rethrow;
     }
   }
+
+  Future<void> sendFollowUp({
+    required String channel,
+    required String messageId,
+    required String message,
+    required String sectionId,
+    required String componentId,
+    required String tutorialId,
+  }) async {
+    final targetUrl =
+        "$mediaDBRoot/services/module/entitytutorial/continue.json";
+    try {
+      final Map<String, String> credentials =
+          await AuthService.getCredentials();
+      final String token = credentials['entermediakey']!;
+
+      String body = 'currentscenario=chat_tutor';
+      body += '&functionname=chat_tutor_usercomment';
+      body += '&context_tempmesssageid=$messageId';
+      body += '&context_tutorialid=$tutorialId';
+      body += '&channel=$channel';
+      body += '&context_query=$message';
+      body += '&context_sectionid=$sectionId';
+      body += '&context_componentid=$componentId';
+      body += '&context_skiploader=true';
+
+      final response = await _client.post(
+        targetUrl,
+        data: body,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-tokentype': 'entermedia',
+            'X-token': token,
+          },
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
+        );
+      }
+    } catch (e, stack) {
+      logPrint('TopicService error fetching tutor channels from $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.sendFollowUp failed',
+        customKeys: {'url': targetUrl, 'channel': channel, 'message': message},
+      );
+      rethrow;
+    }
+  }
 }

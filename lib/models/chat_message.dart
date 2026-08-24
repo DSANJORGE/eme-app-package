@@ -8,6 +8,7 @@ enum MessageType {
   text,
   question,
   answer,
+  answereval,
   asset,
   usercomment,
   end,
@@ -19,6 +20,7 @@ enum MessageType {
   bool get isWelcome => this == MessageType.welcome;
   bool get isText => this == MessageType.text;
   bool get isAnswer => this == MessageType.answer;
+  bool get isAnswerEval => this == MessageType.answereval;
   bool get isUserComment => this == MessageType.usercomment;
   bool get isEnd => this == MessageType.end;
   bool get isAgentComment => this == MessageType.agentcomment;
@@ -39,6 +41,7 @@ class AgentContextValues {
   final String? componentId;
   final String? componentType;
   final String? componentContent;
+  final bool? isCorrect;
   final Question? question;
   final Asset? asset;
   final ProgressUpdate? progressUpdate;
@@ -51,6 +54,7 @@ class AgentContextValues {
     this.componentId = "",
     this.componentType,
     this.componentContent = "",
+    this.isCorrect,
     this.question,
     this.asset,
     this.progressUpdate,
@@ -77,6 +81,7 @@ class AgentContextValues {
       componentId: json['componentid']?.toString(),
       componentType: json['componenttype']?.toString(),
       componentContent: json['componentcontent']?.toString(),
+      isCorrect: bool.tryParse(json['iscorrect']?.toString() ?? ''),
       question: json['question'] != null
           ? Question.fromJson(json['question'])
           : null,
@@ -98,6 +103,7 @@ class AgentContextValues {
       'componentid': componentId,
       'componenttype': componentType,
       'componentcontent': componentContent,
+      if (isCorrect != null) 'iscorrect': isCorrect!.toString(),
       'question': question?.toJson(),
       'asset': asset?.toJson(),
       'progressupdate': progressUpdate?.toJson(),
@@ -233,6 +239,7 @@ class ChatMessage {
   String? get componentType => contextValues.componentType;
   String? get textContent => contextValues.componentContent;
   ProgressUpdate? get progressUpdate => contextValues.progressUpdate;
+  bool? get isCorrect => contextValues.isCorrect;
   bool get interactive => contextValues.interactive ?? false;
   set interactive(bool newInteractive) {
     contextValues.interactive = newInteractive;
