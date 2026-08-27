@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
+import '../models/workspace.dart';
 import 'error_handler.dart';
 
 class DioUtil {
@@ -24,6 +25,17 @@ class DioUtil {
 
   static Future<void> init() async {
     _dio = Dio(BaseOptions(validateStatus: (status) => true));
+
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final langCode = Workspace.currentLanguage.languageCode.toLowerCase();
+          options.headers['Accept-Language'] =
+              langCode == 'es' ? 'es-ES' : 'en-US';
+          handler.next(options);
+        },
+      ),
+    );
 
     if (kIsWeb) {
       _cookieJar = CookieJar();
