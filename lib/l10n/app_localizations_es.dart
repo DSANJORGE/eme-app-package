@@ -559,4 +559,58 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get confident => 'Seguro';
+
+  @override
+  String get dailyChallenge => 'DESAFÍO DIARIO';
+
+  @override
+  String get todaysChallenge => 'Desafío de Hoy';
+
+  @override
+  String get last6Days => 'Últimos 6 Días';
+
+  @override
+  String get completed => 'Completado';
+
+  @override
+  String completedCount(String completed, String total) {
+    return '$completed de $total completados';
+  }
+
+  @override
+  String get tapToFinish => 'Toca para completar';
+
+  @override
+  String get finishChallenge => 'Completar Desafío';
+
+  @override
+  String get challengeCompleted => '¡Desafío completado!';
+
+  @override
+  String get mistakes => 'ERRORES';
+
+  @override
+  String get redoMistakes => 'Rehacer Errores';
+
+  @override
+  String get redoQuestionsDesc => 'Practica las preguntas que respondiste mal para reforzar tu conocimiento.';
+
+  @override
+  String questionsToRedo(String count) {
+    return '$count por rehacer';
+  }
+
+  @override
+  String get noMistakesToRedo => '¡Todo al día! No hay errores por revisar.';
+
+  @override
+  String get practiceNow => 'Practicar Ahora';
+
+  @override
+  String get allMistakesCleared => '¡Todos los errores corregidos! ¡Excelente trabajo!';
+
+  @override
+  String streakDays(String count) {
+    return 'Racha de $count Días';
+  }
 }

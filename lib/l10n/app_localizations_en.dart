@@ -559,4 +559,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confident => 'Confident';
+
+  @override
+  String get dailyChallenge => 'DAILY CHALLENGE';
+
+  @override
+  String get todaysChallenge => 'Today\'s Challenge';
+
+  @override
+  String get last6Days => 'Past 6 Days';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String completedCount(String completed, String total) {
+    return '$completed of $total completed';
+  }
+
+  @override
+  String get tapToFinish => 'Tap to finish';
+
+  @override
+  String get finishChallenge => 'Finish Challenge';
+
+  @override
+  String get challengeCompleted => 'Challenge completed!';
+
+  @override
+  String get mistakes => 'MISTAKES';
+
+  @override
+  String get redoMistakes => 'Redo Mistakes';
+
+  @override
+  String get redoQuestionsDesc => 'Practice questions you got wrong to reinforce your knowledge.';
+
+  @override
+  String questionsToRedo(String count) {
+    return '$count to redo';
+  }
+
+  @override
+  String get noMistakesToRedo => 'All caught up! No mistakes to review.';
+
+  @override
+  String get practiceNow => 'Practice Now';
+
+  @override
+  String get allMistakesCleared => 'All mistakes cleared! Great job!';
+
+  @override
+  String streakDays(String count) {
+    return '$count Day Streak';
+  }
 }

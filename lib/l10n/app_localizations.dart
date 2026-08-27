@@ -1126,6 +1126,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confident'**
   String get confident;
+
+  /// Section title for daily challenge
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY CHALLENGE'**
+  String get dailyChallenge;
+
+  /// Title for today's daily challenge
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Challenge'**
+  String get todaysChallenge;
+
+  /// Title for past 6 days challenges
+  ///
+  /// In en, this message translates to:
+  /// **'Past 6 Days'**
+  String get last6Days;
+
+  /// Status text indicating completion
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// Completion count for challenge
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} of {total} completed'**
+  String completedCount(String completed, String total);
+
+  /// Call to action on incomplete challenges
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to finish'**
+  String get tapToFinish;
+
+  /// Button to finish a challenge
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Challenge'**
+  String get finishChallenge;
+
+  /// Message shown when a challenge is finished
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge completed!'**
+  String get challengeCompleted;
+
+  /// Section title for mistakes
+  ///
+  /// In en, this message translates to:
+  /// **'MISTAKES'**
+  String get mistakes;
+
+  /// Title for redoing wrong questions
+  ///
+  /// In en, this message translates to:
+  /// **'Redo Mistakes'**
+  String get redoMistakes;
+
+  /// Description for mistakes section
+  ///
+  /// In en, this message translates to:
+  /// **'Practice questions you got wrong to reinforce your knowledge.'**
+  String get redoQuestionsDesc;
+
+  /// Badge showing number of questions to redo
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to redo'**
+  String questionsToRedo(String count);
+
+  /// Message when no mistakes are left
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up! No mistakes to review.'**
+  String get noMistakesToRedo;
+
+  /// Button text to practice mistakes
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Now'**
+  String get practiceNow;
+
+  /// Celebration message after clearing mistakes
+  ///
+  /// In en, this message translates to:
+  /// **'All mistakes cleared! Great job!'**
+  String get allMistakesCleared;
+
+  /// Streak days badge
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Day Streak'**
+  String streakDays(String count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

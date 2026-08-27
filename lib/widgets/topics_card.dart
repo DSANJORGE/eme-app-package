@@ -136,24 +136,30 @@ class TopicCard extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            Text(
-                              l10n.averageRank.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white54,
-                                fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Sections Completed',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white54,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            CommonWidgets.buildCompetenceBadge(
-                              efficiency: topic.progress.getEfficiency(),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              LinearProgressIndicator(
+                                value: 0.25,
+                                color: Color(0xFF00E676),
+                                backgroundColor: Colors.white24,
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 16),
                         Row(
                           children: [
                             CommonWidgets.buildProgressColumn(

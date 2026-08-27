@@ -612,5 +612,87 @@
 	"confident": "Confident",
 	"@confident": {
 		"description": "Confidence level indicating certainty about the answer"
+	},
+	"dailyChallenge": "DAILY CHALLENGE",
+	"@dailyChallenge": {
+		"description": "Section title for daily challenge"
+	},
+	"todaysChallenge": "Today's Challenge",
+	"@todaysChallenge": {
+		"description": "Title for today's daily challenge"
+	},
+	"last6Days": "Past 6 Days",
+	"@last6Days": {
+		"description": "Title for past 6 days challenges"
+	},
+	"completed": "Completed",
+	"@completed": {
+		"description": "Status text indicating completion"
+	},
+	"completedCount": "{completed} of {total} completed",
+	"@completedCount": {
+		"description": "Completion count for challenge",
+		"placeholders": {
+			"completed": {
+				"type": "String"
+			},
+			"total": {
+				"type": "String"
+			}
+		}
+	},
+	"tapToFinish": "Tap to finish",
+	"@tapToFinish": {
+		"description": "Call to action on incomplete challenges"
+	},
+	"finishChallenge": "Finish Challenge",
+	"@finishChallenge": {
+		"description": "Button to finish a challenge"
+	},
+	"challengeCompleted": "Challenge completed!",
+	"@challengeCompleted": {
+		"description": "Message shown when a challenge is finished"
+	},
+	"mistakes": "MISTAKES",
+	"@mistakes": {
+		"description": "Section title for mistakes"
+	},
+	"redoMistakes": "Redo Mistakes",
+	"@redoMistakes": {
+		"description": "Title for redoing wrong questions"
+	},
+	"redoQuestionsDesc": "Practice questions you got wrong to reinforce your knowledge.",
+	"@redoQuestionsDesc": {
+		"description": "Description for mistakes section"
+	},
+	"questionsToRedo": "{count} to redo",
+	"@questionsToRedo": {
+		"description": "Badge showing number of questions to redo",
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"noMistakesToRedo": "All caught up! No mistakes to review.",
+	"@noMistakesToRedo": {
+		"description": "Message when no mistakes are left"
+	},
+	"practiceNow": "Practice Now",
+	"@practiceNow": {
+		"description": "Button text to practice mistakes"
+	},
+	"allMistakesCleared": "All mistakes cleared! Great job!",
+	"@allMistakesCleared": {
+		"description": "Celebration message after clearing mistakes"
+	},
+	"streakDays": "{count} Day Streak",
+	"@streakDays": {
+		"description": "Streak days badge",
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
 	}
 }

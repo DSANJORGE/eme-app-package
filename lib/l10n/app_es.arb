@@ -171,5 +171,21 @@
     "noIdea": "Ni idea",
     "notSure": "Poco seguro",
     "mostlySure": "Casi seguro",
-    "confident": "Seguro"
+    "confident": "Seguro",
+    "dailyChallenge": "DESAFÍO DIARIO",
+    "todaysChallenge": "Desafío de Hoy",
+    "last6Days": "Últimos 6 Días",
+    "completed": "Completado",
+    "completedCount": "{completed} de {total} completados",
+    "tapToFinish": "Toca para completar",
+    "finishChallenge": "Completar Desafío",
+    "challengeCompleted": "¡Desafío completado!",
+    "mistakes": "ERRORES",
+    "redoMistakes": "Rehacer Errores",
+    "redoQuestionsDesc": "Practica las preguntas que respondiste mal para reforzar tu conocimiento.",
+    "questionsToRedo": "{count} por rehacer",
+    "noMistakesToRedo": "¡Todo al día! No hay errores por revisar.",
+    "practiceNow": "Practicar Ahora",
+    "allMistakesCleared": "¡Todos los errores corregidos! ¡Excelente trabajo!",
+    "streakDays": "Racha de {count} Días"
 }
