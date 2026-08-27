@@ -1,6 +1,23 @@
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
+
 import 'tutorial.dart';
 
-enum Efficiency { beginner, competent, expert }
+enum Efficiency {
+  beginner,
+  competent,
+  expert;
+
+  String getLabel(AppLocalizations l10n) {
+    switch (this) {
+      case Efficiency.beginner:
+        return l10n.beginner;
+      case Efficiency.competent:
+        return l10n.competent;
+      case Efficiency.expert:
+        return l10n.expert;
+    }
+  }
+}
 
 class Topic {
   final String id;

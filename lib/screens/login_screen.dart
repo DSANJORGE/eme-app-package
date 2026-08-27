@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:transparent_image/transparent_image.dart';
 import '../models/workspace.dart';
 import '../services/auth_service.dart';
@@ -126,11 +127,12 @@ class _LoginScreenState extends State<LoginScreen>
 
         _startResendTimer();
 
+        final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserSuccess(
           context,
           isResend
-              ? 'Verification code resent to your email!'
-              : 'Verification code sent to your email!',
+              ? l10n.verificationCodeResent
+              : l10n.verificationCodeSent,
         );
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -149,13 +151,15 @@ class _LoginScreenState extends State<LoginScreen>
           setState(() {
             _isLoading = false;
           });
-          AppErrorHandler.showUserError(context, 'User does not exist.');
+          final l10n = AppLocalizations.of(context)!;
+          AppErrorHandler.showUserError(context, l10n.userDoesNotExist);
         }
       } else {
         setState(() {
           _isLoading = false;
         });
-        final msg = response['message']?.toString() ?? 'Failed to send code';
+        final l10n = AppLocalizations.of(context)!;
+        final msg = response['message']?.toString() ?? l10n.failedToSendCode;
         AppErrorHandler.showUserError(context, msg);
       }
     } catch (e, stack) {
@@ -178,8 +182,9 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _verifyOtp() async {
     if (_otpController.text.length < 6) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _otpError = 'Please enter all 6 digits';
+        _otpError = l10n.pleaseEnterAll6Digits;
       });
       return;
     }
@@ -198,13 +203,19 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
 
       if (success) {
-        widget.onLoginSuccess(_emailController.text.trim());
+        _resendTimer?.cancel();
+        widget.onLoginSuccess(
+          AuthService.currentUser?.email ??
+              AuthService.userId ??
+              _emailController.text.trim(),
+        );
       } else {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
-          _otpError = 'Invalid verification code. Please try again.';
-          _otpController.clear();
+          _otpError = l10n.invalidVerificationCode;
         });
+        _otpController.clear();
         _otpFocusNode.requestFocus();
       }
     } catch (e, stack) {
@@ -234,6 +245,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 600;
 
@@ -364,9 +376,9 @@ class _LoginScreenState extends State<LoginScreen>
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          'Create Account',
-                                          style: TextStyle(
+                                        Text(
+                                          l10n.createAccount,
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -380,17 +392,17 @@ class _LoginScreenState extends State<LoginScreen>
                                               _lastNameController.clear();
                                             });
                                           },
-                                          child: const Row(
+                                          child: Row(
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 Icons.edit,
                                                 color: Color(0xFF38B6FF),
                                                 size: 14,
                                               ),
-                                              SizedBox(width: 4),
+                                              const SizedBox(width: 4),
                                               Text(
-                                                'Edit Email',
-                                                style: TextStyle(
+                                                l10n.editEmail,
+                                                style: const TextStyle(
                                                   color: Color(0xFF38B6FF),
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w500,
@@ -403,7 +415,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'No account found for ${_emailController.text}. Please enter your details to register.',
+                                      l10n.noAccountFoundRegister(_emailController.text),
                                       style: const TextStyle(
                                         color: Color(0xFF90A4AE),
                                         fontSize: 12,
@@ -411,9 +423,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                     const SizedBox(height: 16),
 
-                                    const Text(
-                                      'First Name',
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.firstName,
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -422,20 +434,20 @@ class _LoginScreenState extends State<LoginScreen>
                                     const SizedBox(height: 8),
                                     _buildInputField(
                                       controller: _firstNameController,
-                                      hintText: 'Enter your first name',
+                                      hintText: l10n.enterFirstName,
                                       prefixIcon: Icons.person_outline,
                                       validator: (val) {
                                         if (val == null || val.trim().isEmpty) {
-                                          return 'Please enter your first name';
+                                          return l10n.pleaseEnterFirstName;
                                         }
                                         return null;
                                       },
                                     ),
                                     const SizedBox(height: 16),
 
-                                    const Text(
-                                      'Last Name',
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.lastName,
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -444,22 +456,19 @@ class _LoginScreenState extends State<LoginScreen>
                                     const SizedBox(height: 8),
                                     _buildInputField(
                                       controller: _lastNameController,
-                                      hintText: 'Enter your last name',
+                                      hintText: l10n.enterLastName,
                                       prefixIcon: Icons.person_outline,
                                       validator: (val) {
                                         if (val == null || val.trim().isEmpty) {
-                                          return 'Please enter your last name';
+                                          return l10n.pleaseEnterLastName;
                                         }
                                         return null;
                                       },
                                     ),
-                                  ] else if (!_isOtpStage) ...[
-                                    const SizedBox(height: 4),
-
-                                    // Email Address Input
-                                    const Text(
-                                      'Email Address',
-                                      style: TextStyle(
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l10n.emailAddress,
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -468,14 +477,46 @@ class _LoginScreenState extends State<LoginScreen>
                                     const SizedBox(height: 8),
                                     _buildInputField(
                                       controller: _emailController,
-                                      hintText: 'Enter your email',
+                                      hintText: l10n.enterEmail,
+                                      keyboardType: TextInputType.emailAddress,
                                       prefixIcon: Icons.email_outlined,
                                       validator: (val) {
                                         if (val == null || val.trim().isEmpty) {
-                                          return 'Please enter your email';
+                                          return l10n.pleaseEnterEmail;
                                         }
-                                        if (!val.contains('@')) {
-                                          return 'Please enter a valid email address';
+                                        if (!RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                        ).hasMatch(val.trim())) {
+                                          return l10n.pleaseEnterValidEmail;
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ] else if (!_isOtpStage) ...[
+                                    // Initial Email Input Stage
+                                    Text(
+                                      l10n.emailAddress,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildInputField(
+                                      controller: _emailController,
+                                      hintText: l10n.enterEmail,
+                                      keyboardType: TextInputType.emailAddress,
+                                      prefixIcon: Icons.email_outlined,
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return l10n.pleaseEnterEmail;
+                                        }
+                                        if (!RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                        ).hasMatch(val.trim())) {
+                                          return l10n.pleaseEnterValidEmail;
                                         }
                                         return null;
                                       },
@@ -487,9 +528,9 @@ class _LoginScreenState extends State<LoginScreen>
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          'Verification Code',
-                                          style: TextStyle(
+                                        Text(
+                                          l10n.verificationCode,
+                                          style: const TextStyle(
                                             color: Colors.white70,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -506,17 +547,17 @@ class _LoginScreenState extends State<LoginScreen>
                                               _timerSeconds = 0;
                                             });
                                           },
-                                          child: const Row(
+                                          child: Row(
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 Icons.edit,
                                                 color: Color(0xFF38B6FF),
                                                 size: 14,
                                               ),
-                                              SizedBox(width: 4),
+                                              const SizedBox(width: 4),
                                               Text(
-                                                'Edit Email',
-                                                style: TextStyle(
+                                                l10n.editEmail,
+                                                style: const TextStyle(
                                                   color: Color(0xFF38B6FF),
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w500,
@@ -529,7 +570,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Sent to ${_emailController.text}',
+                                      l10n.sentToEmail(_emailController.text),
                                       style: const TextStyle(
                                         color: Color(0xFF90A4AE),
                                         fontSize: 12,
@@ -545,7 +586,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Workspace: ${_selectedWorkspace.name}',
+                                          l10n.workspacePrefix(_selectedWorkspace.name),
                                           style: const TextStyle(
                                             color: Color(0xFF38B6FF),
                                             fontSize: 12,
@@ -576,8 +617,8 @@ class _LoginScreenState extends State<LoginScreen>
                                       children: [
                                         Text(
                                           _timerSeconds > 0
-                                              ? 'Resend code in ${_timerSeconds}s'
-                                              : "Didn't receive the code? ",
+                                              ? l10n.resendCodeIn(_timerSeconds.toString())
+                                              : l10n.didntReceiveCode,
                                           style: const TextStyle(
                                             color: Color(0xFF90A4AE),
                                             fontSize: 13,
@@ -587,9 +628,9 @@ class _LoginScreenState extends State<LoginScreen>
                                           GestureDetector(
                                             onTap: () =>
                                                 _sendOtp(isResend: true),
-                                            child: const Text(
-                                              'Resend Code',
-                                              style: TextStyle(
+                                            child: Text(
+                                              l10n.resendCode,
+                                              style: const TextStyle(
                                                 color: Color(0xFF38B6FF),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13,
@@ -652,10 +693,10 @@ class _LoginScreenState extends State<LoginScreen>
                                             ),
                                             child: Text(
                                               _isRegistrationStage
-                                                  ? 'Register & Send Code'
+                                                  ? l10n.registerAndSendCode
                                                   : _isOtpStage
-                                                  ? 'Verify & Sign In'
-                                                  : 'Send Verification Code',
+                                                  ? l10n.verifyAndSignIn
+                                                  : l10n.sendVerificationCode,
                                               style: const TextStyle(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold,
@@ -671,9 +712,9 @@ class _LoginScreenState extends State<LoginScreen>
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        const Text(
-                                          'Workspace:',
-                                          style: TextStyle(
+                                        Text(
+                                          '${l10n.workspace}:',
+                                          style: const TextStyle(
                                             color: Colors.white70,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -698,7 +739,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     const SizedBox(height: 4),
                                     Text(
                                       textAlign: TextAlign.center,
-                                      'Powered by eMe.world',
+                                      l10n.poweredBy,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.white.withValues(
@@ -827,6 +868,7 @@ class _LoginScreenState extends State<LoginScreen>
     required IconData prefixIcon,
     bool obscureText = false,
     Widget? suffixIcon,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
     return Container(
@@ -839,6 +881,7 @@ class _LoginScreenState extends State<LoginScreen>
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: keyboardType,
         validator: validator,
         style: const TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
@@ -857,6 +900,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _showWorkspaceModalSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -884,9 +928,9 @@ class _LoginScreenState extends State<LoginScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Select Workspace',
-                        style: TextStyle(
+                      Text(
+                        l10n.selectWorkspace,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1012,7 +1056,7 @@ class _LoginScreenState extends State<LoginScreen>
                                               });
                                               AppErrorHandler.showUserSuccess(
                                                 this.context,
-                                                'Workspace removed',
+                                                l10n.workspaceRemoved,
                                               );
                                               widget.onWorkspaceChanged?.call();
                                             }
@@ -1027,7 +1071,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             if (mounted) {
                                               AppErrorHandler.showUserError(
                                                 this.context,
-                                                'Failed to remove workspace',
+                                                l10n.failedToRemoveWorkspace,
                                               );
                                             }
                                           }
@@ -1054,6 +1098,7 @@ class _LoginScreenState extends State<LoginScreen>
     BuildContext context,
     Workspace ws,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1063,26 +1108,26 @@ class _LoginScreenState extends State<LoginScreen>
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
+              const SizedBox(width: 8),
               Text(
-                'Delete Workspace',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                l10n.deleteWorkspace,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
           content: Text(
-            'Are you sure you want to delete workspace "${ws.name}" (${ws.mediaDBRoot})?',
+            l10n.deleteWorkspaceConfirm(ws.name, ws.mediaDBRoot),
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white54),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: Colors.white54),
               ),
             ),
             ElevatedButton(
@@ -1090,9 +1135,9 @@ class _LoginScreenState extends State<LoginScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF50057),
               ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

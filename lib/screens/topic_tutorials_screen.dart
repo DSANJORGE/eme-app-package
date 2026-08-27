@@ -87,7 +87,7 @@ class _TopicTutorialsScreenState extends ConsumerState<TopicTutorialsScreen> {
 
                               // Section Title
                               Text(
-                                '${widget.topic.totalTutorials} ${l10n.tutorials}',
+                                l10n.tutorialsCount(widget.topic.totalTutorials.toString()),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -133,7 +133,7 @@ class _TopicTutorialsScreenState extends ConsumerState<TopicTutorialsScreen> {
                                           ),
                                           const SizedBox(height: 12),
                                           Text(
-                                            'Failed to load tutorials: ${snapshot.error}',
+                                            l10n.failedToLoadTutorials(snapshot.error.toString()),
                                             textAlign: TextAlign.center,
                                             style: const TextStyle(
                                               color: Colors.white70,
@@ -143,7 +143,7 @@ class _TopicTutorialsScreenState extends ConsumerState<TopicTutorialsScreen> {
                                           ElevatedButton.icon(
                                             onPressed: _loadTutorials,
                                             icon: const Icon(Icons.refresh),
-                                            label: const Text('Retry'),
+                                            label: Text(l10n.retry),
                                           ),
                                         ],
                                       ),
@@ -152,14 +152,14 @@ class _TopicTutorialsScreenState extends ConsumerState<TopicTutorialsScreen> {
 
                                   final tutorials = snapshot.data ?? [];
                                   if (tutorials.isEmpty) {
-                                    return const Padding(
-                                      padding: EdgeInsets.symmetric(
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
                                         vertical: 20.0,
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'No tutorials available.',
-                                          style: TextStyle(
+                                          l10n.noTutorialsAvailable,
+                                          style: const TextStyle(
                                             color: Colors.white60,
                                           ),
                                         ),

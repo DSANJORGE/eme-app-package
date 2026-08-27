@@ -91,16 +91,19 @@ class _TutorialCardState extends State<TutorialCard>
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.beginner,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.competent,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.expert,
+                              l10n,
                             ),
                           ],
                         ),
@@ -155,34 +158,16 @@ class _TutorialCardState extends State<TutorialCard>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text.rich(
-                    TextSpan(
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      children: [
-                        TextSpan(
-                          text:
-                              '${widget.tutorial.answersForgotten.toStringAsFixed(2)}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        TextSpan(text: ' answers forgotten over '),
-                        TextSpan(
-                          text: widget.tutorial.forgottenPeriod.toString(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        TextSpan(text: ' days'),
-                      ],
+                  Text(
+                    l10n.answersForgottenSummary(
+                      widget.tutorial.answersForgotten.toStringAsFixed(2),
+                      widget.tutorial.forgottenPeriod.toString(),
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

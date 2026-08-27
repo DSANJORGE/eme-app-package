@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_eme_base/utils/log.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
 
@@ -386,16 +387,16 @@ enum Confidence {
     }
   }
 
-  String get label {
+  String getLabel(AppLocalizations l10n) {
     switch (this) {
       case Confidence.noidea:
-        return 'No Idea';
+        return l10n.noIdea;
       case Confidence.notsure:
-        return 'Not sure';
+        return l10n.notSure;
       case Confidence.mostlysure:
-        return 'Mostly Sure';
+        return l10n.mostlySure;
       case Confidence.confident:
-        return 'Confident';
+        return l10n.confident;
     }
   }
 }

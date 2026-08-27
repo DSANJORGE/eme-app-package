@@ -470,7 +470,6 @@ class TopicService {
 
       String body = 'currentscenario=chat_tutor';
       body += '&functionname=chat_tutor_usercomment';
-      body += '&context_tempmesssageid=$messageId';
       body += '&context_tutorialid=$tutorialId';
       body += '&channel=$channel';
       body += '&context_query=$message';

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -338,7 +339,8 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         if (mounted) {
-          AppErrorHandler.showUserError(context, 'Could not launch media URL');
+          final l10n = AppLocalizations.of(context)!;
+          AppErrorHandler.showUserError(context, l10n.couldNotLaunchMediaUrl);
         }
       }
     } catch (e, stack) {
@@ -349,7 +351,8 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
         customKeys: {'url': widget.effectiveUrl},
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Could not launch media URL');
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.couldNotLaunchMediaUrl);
       }
     }
   }
@@ -425,6 +428,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   // --- IMAGE VIEWER ---
   Widget _buildImageViewer() {
+    final l10n = AppLocalizations.of(context)!;
     return InteractiveViewer(
       minScale: 0.5,
       maxScale: 4.0,
@@ -435,15 +439,8 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
           fit: BoxFit.contain,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
-            final progress = loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
-                : null;
-            return Center(
-              child: CircularProgressIndicator(
-                value: progress,
-                color: Colors.white,
-              ),
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
             );
           },
           errorBuilder: (context, error, stackTrace) {
@@ -456,15 +453,15 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
                   color: Colors.white54,
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Failed to load image',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                Text(
+                  l10n.failedToLoadImage,
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
                   onPressed: _openInExternalBrowser,
                   icon: const Icon(Icons.open_in_new),
-                  label: const Text('Open in Browser'),
+                  label: Text(l10n.openInBrowser),
                 ),
               ],
             );
@@ -476,6 +473,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   // --- VIDEO VIEWER ---
   Widget _buildVideoViewer() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isVideoError) {
       return Center(
         child: Column(
@@ -483,15 +481,15 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.white54),
             const SizedBox(height: 12),
-            const Text(
-              'Failed to play video',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            Text(
+              l10n.failedToPlayVideo,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _openInExternalBrowser,
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open Video Externally'),
+              label: Text(l10n.openVideoExternally),
             ),
           ],
         ),
@@ -610,6 +608,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   // --- AUDIO VIEWER ---
   Widget _buildAudioViewer() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isAudioError) {
       return Center(
         child: Column(
@@ -617,15 +616,15 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
           children: [
             const Icon(Icons.audiotrack, size: 64, color: Colors.white54),
             const SizedBox(height: 12),
-            const Text(
-              'Failed to load audio',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            Text(
+              l10n.failedToLoadAudio,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _openInExternalBrowser,
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open Audio Link'),
+              label: Text(l10n.openAudioLink),
             ),
           ],
         ),
@@ -792,16 +791,17 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   // --- PDF VIEWER ---
   Widget _buildPdfViewer() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isPdfLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 16),
             Text(
-              'Loading document...',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              l10n.loadingDocument,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
           ],
         ),
@@ -819,15 +819,15 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
               color: Colors.white54,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Failed to display PDF document',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            Text(
+              l10n.failedToDisplayPdf,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _openInExternalBrowser,
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open PDF in Browser'),
+              label: Text(l10n.openPdfInBrowser),
             ),
           ],
         ),
@@ -896,7 +896,10 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
                         : null,
                   ),
                   Text(
-                    'Page ${_pdfCurrentPage + 1} of $_pdfTotalPages',
+                    l10n.pageOfTotal(
+                      (_pdfCurrentPage + 1).toString(),
+                      _pdfTotalPages.toString(),
+                    ),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -922,6 +925,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
 
   // --- TOP HEADER BAR ---
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 8,
@@ -964,7 +968,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
                 Icons.picture_in_picture_alt,
                 color: Colors.white,
               ),
-              tooltip: 'Picture in Picture',
+              tooltip: l10n.pictureInPicture,
               onPressed: () {
                 final currentPos =
                     _videoController?.value.position ?? Duration.zero;
@@ -983,7 +987,7 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
             ),
           IconButton(
             icon: const Icon(Icons.open_in_new, color: Colors.white),
-            tooltip: 'Open link',
+            tooltip: l10n.openLink,
             onPressed: _openInExternalBrowser,
           ),
         ],

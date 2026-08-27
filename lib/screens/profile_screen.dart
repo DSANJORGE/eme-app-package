@@ -165,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     icon: const Icon(Icons.edit, color: Colors.white),
                     label: Text(
-                      'Edit Profile',
+                      l10n.editProfile,
                       style: const TextStyle(fontSize: 13, color: Colors.white),
                     ),
                     onPressed: () async {
@@ -264,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (mounted) {
                   AppErrorHandler.showUserSuccess(
                     context,
-                    'Account data cleared successfully.',
+                    l10n.accountDataCleared,
                   );
                   await AuthService.logout();
                   if (mounted) {
@@ -280,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (mounted) {
                   AppErrorHandler.showUserError(
                     context,
-                    'Failed to clear account data',
+                    l10n.failedToClearAccountData,
                   );
                 }
               }
@@ -299,6 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileTags(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sortedTags = List<Tag>.from(mockTags)
       ..sort((a, b) => b.score.compareTo(a.score));
 
@@ -331,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               child: Text(
-                '+$remainingCount more',
+                l10n.plusMoreCount(remainingCount.toString()),
                 style: const TextStyle(
                   color: Colors.blueAccent,
                   fontSize: 12,
@@ -472,7 +473,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       itemCount: top10.length,
                       itemBuilder: (context, index) {
                         final tag = top10[index];
-                        return _buildExcelTopicCard(tag, index + 1);
+                        return _buildExcelTopicCard(tag, index + 1, context);
                       },
                     ),
                   ),
@@ -485,7 +486,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildExcelTopicCard(Tag tag, int rank) {
+  Widget _buildExcelTopicCard(Tag tag, int rank, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Color rankColor;
     if (rank == 1) {
       rankColor = const Color(0xFFFFD700); // Gold
@@ -501,13 +503,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String scoreLevel;
     if (tag.score < 30) {
       scoreColor = Colors.redAccent;
-      scoreLevel = 'Beginner';
+      scoreLevel = l10n.beginner;
     } else if (tag.score < 70) {
       scoreColor = Colors.yellowAccent;
-      scoreLevel = 'Intermediate';
+      scoreLevel = l10n.intermediate;
     } else {
       scoreColor = Colors.greenAccent;
-      scoreLevel = 'Expert';
+      scoreLevel = l10n.expert;
     }
 
     Color competenceColor;

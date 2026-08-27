@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter_eme_base/models/topic.dart';
 import 'package:flutter_eme_base/models/tutorial.dart';
 
@@ -68,6 +69,7 @@ class CommonWidgets {
   static Widget buildProgressColumn(
     TutorialProgress progress,
     Efficiency efficiency,
+    AppLocalizations l10n,
   ) {
     final double progressValue;
     if (efficiency == Efficiency.beginner) {
@@ -91,7 +93,7 @@ class CommonWidgets {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          efficiency.name.toUpperCase(),
+          efficiency.getLabel(l10n),
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 10,

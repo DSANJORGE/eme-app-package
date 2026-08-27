@@ -8,13 +8,17 @@ import 'package:flutter_eme_base/widgets/topics_card.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/daily_challenge.dart';
+import '../models/mistake_item.dart';
 import '../models/topic.dart';
 import '../models/workspace.dart';
 import '../providers/workspace_provider.dart';
 import '../services/auth_service.dart';
 import '../services/topic_service.dart';
 import '../services/workspace_service.dart';
+import '../widgets/daily_challenge_section.dart';
 import '../widgets/data_consent_dialog.dart';
+import '../widgets/mistakes_section.dart';
 import 'compliance_screen.dart';
 import 'profile_screen.dart';
 import '../utils/error_handler.dart';
@@ -43,13 +47,122 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Workspace _activeWorkSpace = WorkspaceService.activeWorkspace;
   String selectedTab = 'Catalog';
 
+  late List<DailyChallengeItem> _dailyChallenges;
+  late List<MistakeItem> _mistakes;
+
   @override
   void initState() {
     super.initState();
+    _dailyChallenges = _initDailyChallenges();
+    _mistakes = _initMistakes();
     _loadTopics();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DataCollectionConsentDialog.showIfNeeded(context);
     });
+  }
+
+  List<DailyChallengeItem> _initDailyChallenges() {
+    final now = DateTime.now();
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final List<DailyChallengeItem> list = [];
+
+    for (int i = 6; i >= 1; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dayLabel = weekdays[date.weekday - 1];
+      final dateLabel = '${date.month}/${date.day}';
+      final isCompleted = (i == 6 || i == 5 || i == 4 || i == 2);
+      final completedQuestions = isCompleted ? 5 : (i == 3 ? 3 : 2);
+
+      list.add(
+        DailyChallengeItem(
+          id: 'day-$i',
+          date: date,
+          dayLabel: dayLabel,
+          dateLabel: dateLabel,
+          title: 'Daily Practice • $dayLabel',
+          totalQuestions: 5,
+          completedQuestions: completedQuestions,
+          isToday: false,
+        ),
+      );
+    }
+
+    // Today
+    list.add(
+      DailyChallengeItem(
+        id: 'today',
+        date: now,
+        dayLabel: 'Today',
+        dateLabel: '${now.month}/${now.day}',
+        title: 'Sunday, August 27',
+        totalQuestions: 20,
+        completedQuestions: 3,
+        isToday: true,
+      ),
+    );
+
+    return list;
+  }
+
+  List<MistakeItem> _initMistakes() {
+    return [
+      MistakeItem(
+        id: 'm1',
+        topicTitle: 'Algebra & Calculus',
+        question:
+            'What is the derivative of f(x) = 3x² + 5x - 4 with respect to x?',
+        options: ['6x + 5', '3x + 5', '6x² + 5', '6x - 4'],
+        correctOptionIndex: 0,
+        explanation:
+            'Applying the power rule d/dx[xⁿ] = n·xⁿ⁻¹, the derivative of 3x² is 6x and 5x is 5. Constant 4 becomes 0.',
+      ),
+      MistakeItem(
+        id: 'm2',
+        topicTitle: 'Language & Grammar',
+        question:
+            'Identify the sentence that uses the subjunctive mood correctly:',
+        options: [
+          'If I was you, I would take the offer.',
+          'If I were you, I would accept the opportunity.',
+          'I wish I was taller.',
+          'He acts like he was the owner.',
+        ],
+        correctOptionIndex: 1,
+        explanation:
+            'In contrary-to-fact conditional clauses, "were" is used for the subjunctive mood with singular subjects ("If I were you").',
+      ),
+      MistakeItem(
+        id: 'm3',
+        topicTitle: 'Physics & Circuits',
+        question:
+            'When an additional parallel resistor is connected in an active circuit, the total equivalent resistance:',
+        options: [
+          'Increases',
+          'Decreases',
+          'Remains unchanged',
+          'Becomes zero',
+        ],
+        correctOptionIndex: 1,
+        explanation:
+            'In parallel circuits, 1/R_eq = 1/R1 + 1/R2. Adding more pathways reduces overall total resistance and increases total current.',
+      ),
+    ];
+  }
+
+  void _onChallengeCompleted(DailyChallengeItem item) {
+    setState(() {
+      item.complete();
+    });
+  }
+
+  void _onMistakeResolved(MistakeItem mistake) {
+    setState(() {
+      mistake.isResolved = true;
+    });
+  }
+
+  void _onAllMistakesResolved() {
+    setState(() {});
   }
 
   void _loadTopics() {
@@ -115,6 +228,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // // Daily Challenge Section
+                            DailyChallengeSection(
+                              challenges: _dailyChallenges,
+                              onChallengeCompleted: _onChallengeCompleted,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Mistakes Section
+                            MistakesSection(
+                              mistakes: _mistakes,
+                              onMistakeResolved: _onMistakeResolved,
+                              onAllMistakesResolved: _onAllMistakesResolved,
+                            ),
+                            const SizedBox(height: 28),
+
                             // Section Title
                             Text(
                               l10n.topics,
@@ -164,7 +292,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         ),
                                         const SizedBox(height: 12),
                                         Text(
-                                          'Failed to load topics: ${snapshot.error}',
+                                          l10n.failedToLoadTopics(
+                                            snapshot.error.toString(),
+                                          ),
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             color: Colors.white70,
@@ -174,7 +304,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         ElevatedButton.icon(
                                           onPressed: _loadTopics,
                                           icon: const Icon(Icons.refresh),
-                                          label: const Text('Retry'),
+                                          label: Text(l10n.retry),
                                         ),
                                       ],
                                     ),
@@ -183,14 +313,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                                 final topics = snapshot.data ?? [];
                                 if (topics.isEmpty) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
                                       vertical: 20.0,
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'No topics available.',
-                                        style: TextStyle(color: Colors.white60),
+                                        l10n.noTopicsAvailable,
+                                        style: const TextStyle(
+                                          color: Colors.white60,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -557,9 +689,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                const Text(
-                                  'View profile',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.viewProfile,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF38B6FF),
                                     fontWeight: FontWeight.w600,
@@ -823,7 +955,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               if (mounted) {
                                 AppErrorHandler.showUserError(
                                   context,
-                                  'Could not open link: $url',
+                                  l10n.couldNotOpenLink(url.toString()),
                                 );
                               }
                             }
@@ -837,7 +969,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             if (mounted) {
                               AppErrorHandler.showUserError(
                                 context,
-                                'Could not open link: $url',
+                                l10n.couldNotOpenLink(url.toString()),
                               );
                             }
                           }
@@ -907,6 +1039,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   void _showWorkspaceModalSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -935,32 +1068,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Select Workspace',
-                        style: TextStyle(
+                      Text(
+                        l10n.selectWorkspace,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // TextButton.icon(
-                      //   onPressed: () async {
-                      //     Navigator.pop(sheetContext);
-                      //     await _showAddWorkspaceDialog(context);
-                      //   },
-                      //   icon: const Icon(
-                      //     Icons.add_circle_outline_rounded,
-                      //     size: 16,
-                      //     color: Color(0xFF38B6FF),
-                      //   ),
-                      //   label: const Text(
-                      //     'Add New',
-                      //     style: TextStyle(
-                      //       color: Color(0xFF38B6FF),
-                      //       fontWeight: FontWeight.bold,
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1070,7 +1185,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               });
                                               AppErrorHandler.showUserSuccess(
                                                 this.context,
-                                                'Workspace removed',
+                                                l10n.workspaceRemoved,
                                               );
                                               widget.onWorkspaceChanged?.call();
                                             }
@@ -1088,7 +1203,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             if (mounted) {
                                               AppErrorHandler.showUserError(
                                                 this.context,
-                                                'Failed to remove workspace',
+                                                l10n.failedToRemoveWorkspace,
                                               );
                                             }
                                           }
@@ -1115,6 +1230,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     BuildContext context,
     Workspace ws,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1124,26 +1240,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
+              const SizedBox(width: 8),
               Text(
-                'Delete Workspace',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                l10n.deleteWorkspace,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
           content: Text(
-            'Are you sure you want to delete workspace "${ws.name}" (${ws.mediaDBRoot})?',
+            l10n.deleteWorkspaceConfirm(ws.name, ws.mediaDBRoot),
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white54),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: Colors.white54),
               ),
             ),
             ElevatedButton(
@@ -1151,9 +1267,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF50057),
               ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

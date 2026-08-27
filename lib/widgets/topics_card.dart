@@ -12,11 +12,7 @@ class TopicCard extends ConsumerWidget {
   final Topic topic;
   final bool isClickable;
 
-  const TopicCard({
-    super.key,
-    required this.topic,
-    this.isClickable = true,
-  });
+  const TopicCard({super.key, required this.topic, this.isClickable = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,10 +67,7 @@ class TopicCard extends ConsumerWidget {
                         imageErrorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey,
-                            child: const Icon(
-                              Icons.error,
-                              color: Colors.white,
-                            ),
+                            child: const Icon(Icons.error, color: Colors.white),
                           );
                         },
                         fit: BoxFit.cover,
@@ -143,73 +136,64 @@ class TopicCard extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            Text(
-                              l10n.averageRank.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white54,
-                                fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Sections Completed',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white54,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            CommonWidgets.buildCompetenceBadge(
-                              efficiency: topic.progress.getEfficiency(),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              LinearProgressIndicator(
+                                value: 0.25,
+                                color: Color(0xFF00E676),
+                                backgroundColor: Colors.white24,
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 16),
                         Row(
                           children: [
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.beginner,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.competent,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.expert,
+                              l10n,
                             ),
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Text.rich(
+                    Text(
+                      l10n.answersForgottenSummary(
+                        topic.answersForgotten.toStringAsFixed(2),
+                        topic.forgottenPeriod.toString(),
+                      ),
                       textAlign: TextAlign.center,
-                      TextSpan(
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                        children: [
-                          TextSpan(text: 'An average of '),
-                          TextSpan(
-                            text:
-                                '${topic.answersForgotten.toStringAsFixed(2)}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                          TextSpan(text: ' answers forgotten over '),
-                          TextSpan(
-                            text: topic.forgottenPeriod.toString(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                          TextSpan(text: ' days'),
-                        ],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -222,4 +206,3 @@ class TopicCard extends ConsumerWidget {
     );
   }
 }
-

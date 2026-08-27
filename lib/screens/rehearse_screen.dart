@@ -208,9 +208,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
         customKeys: {'tutorialId': widget.tutorial.id},
       );
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserError(
           context,
-          'Failed to load tutorial session',
+          l10n.failedToLoadTutorialSession,
         );
       }
       setState(() {
@@ -312,7 +313,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
         reason: 'RehearseScreen _submitAnswer failed',
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Failed to submit answer');
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.failedToSubmitAnswer);
       }
     }
   }
@@ -354,7 +356,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
         reason: 'RehearseScreen _sendFollowUp failed',
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Failed to send follow up');
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.failedToSendFollowUp);
       }
     }
   }
@@ -381,7 +384,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
         reason: 'RehearseScreen _tutorialContinue failed',
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Failed to continue tutorial');
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.failedToContinueTutorial);
       }
     }
     _scrollToBottom();
@@ -552,7 +556,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Report hallucination, inaccurate information, or inappropriate AI response:',
+                    l10n.reportDetailsPrompt,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.7),
@@ -630,7 +634,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     maxLines: 2,
                     style: const TextStyle(fontSize: 12, color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Additional details (optional)...',
+                      hintText: l10n.additionalDetailsOptional,
                       hintStyle: const TextStyle(
                         fontSize: 12,
                         color: Colors.white38,
@@ -668,8 +672,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   );
                 },
                 child: Text(
-                  'Report',
-                  style: TextStyle(
+                  l10n.report,
+                  style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1015,6 +1019,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     ChatMessage message, {
     bool showAvatar = true,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     if (message.componentType == 'heading') {
       return _buildHeadingMessage(message);
     }
@@ -1028,20 +1033,20 @@ class _RehearseScreenState extends State<RehearseScreen> {
           if (message.isCorrect != null) ...[
             if (message.isCorrect!) ...[
               Text(
-                "Correct!",
-                style: TextStyle(
+                l10n.correct,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF38EF7D),
+                  color: Color(0xFF38EF7D),
                 ),
               ),
             ] else ...[
               Text(
-                "Incorrect.",
-                style: TextStyle(
+                l10n.incorrect,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFFF50057),
+                  color: Color(0xFFF50057),
                 ),
               ),
             ],
@@ -1209,7 +1214,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    message.answer!.confidence!.label,
+                    message.answer!.confidence!.getLabel(l10n),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -1229,6 +1234,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     if (message == null) {
       return const SizedBox.shrink();
     }
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -1256,8 +1262,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
             ] else if (_stage.isError) ...[
               Center(
                 child: Text(
-                  'An error occured while loading the chat.',
-                  style: TextStyle(color: Colors.white),
+                  l10n.errorLoadingChat,
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
               ElevatedButton(
@@ -1274,7 +1280,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Try Again',
+                      l10n.tryAgain,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1282,7 +1288,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.refresh, size: 16, color: Colors.white),
+                    const Icon(Icons.refresh, size: 16, color: Colors.white),
                   ],
                 ),
               ),
@@ -1314,7 +1320,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Start',
+                        l10n.start,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -1322,7 +1328,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.play_circle, size: 16, color: Colors.white),
+                      const Icon(
+                        Icons.play_circle,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
@@ -1336,7 +1346,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       onSubmitted: (_) => _sendFollowUp(),
                       decoration: InputDecoration(
-                        hintText: 'Ask a follow-up question...',
+                        hintText: l10n.askFollowUpHint,
                         hintStyle: const TextStyle(
                           color: Colors.white38,
                           fontSize: 14,
@@ -1410,7 +1420,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            hasText ? "Send" : 'Continue',
+                            hasText ? l10n.send : l10n.continueButton,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -1432,11 +1442,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 },
               ),
             ] else if (_stage.isSelectOption) ...[
-              const Padding(
-                padding: EdgeInsets.only(left: 4.0, bottom: 12.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 4.0, bottom: 12.0),
                 child: Text(
-                  'HOW CONFIDENT ARE YOU IN THIS ANSWER?',
-                  style: TextStyle(
+                  l10n.howConfidentQuestion,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.white38,
@@ -1472,7 +1482,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            confidence.label,
+                            confidence.getLabel(l10n),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -1532,7 +1542,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Submit Answer',
+                        l10n.submitAnswer,
                         style: TextStyle(
                           color:
                               (_tempSelectedAnswerIndex != null &&
@@ -1565,16 +1575,17 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildQuizView() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Color(0xFFF27121)),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(color: Color(0xFFF27121)),
+            const SizedBox(height: 16),
             Text(
-              'Connecting to tutor session...',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+              l10n.connectingToTutorSession,
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
           ],
         ),
@@ -1630,16 +1641,19 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.beginner,
+                          l10n,
                         ),
                         const SizedBox(width: 24),
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.competent,
+                          l10n,
                         ),
                         const SizedBox(width: 24),
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.expert,
+                          l10n,
                         ),
                       ],
                     ),
@@ -1736,13 +1750,14 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildResultsView() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Quiz Completed! 🎉",
-            style: TextStyle(
+            l10n.quizCompleted,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -1751,8 +1766,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
           const SizedBox(height: 16),
           ElevatedButton(
             style: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll(Colors.orange),
-              foregroundColor: WidgetStatePropertyAll(Colors.black),
+              backgroundColor: const WidgetStatePropertyAll(Colors.orange),
+              foregroundColor: const WidgetStatePropertyAll(Colors.black),
               shape: WidgetStatePropertyAll(
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
@@ -1760,7 +1775,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text("Go Back!"),
+            child: Text(l10n.goBack),
           ),
         ],
       ),

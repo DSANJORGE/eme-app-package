@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import '../utils/error_handler.dart';
 import 'fullscreen_mediaviewer.dart';
@@ -290,81 +291,102 @@ class _PipVideoOverlayWidgetState extends State<_PipVideoOverlayWidget> {
                       duration: const Duration(milliseconds: 180),
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.45),
-                        child: Stack(
-                          children: [
-                            // Top Bar: Drag Handle & Close Button
-                            Positioned(
-                              top: 2,
-                              left: 6,
-                              right: 2,
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.drag_handle_rounded,
-                                    color: Colors.white70,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      widget.title ?? 'PiP Video',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                        child: Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Stack(
+                              children: [
+                                // Top drag handle & close button
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.black.withValues(alpha: 0.8),
+                                          Colors.transparent,
+                                        ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
                                       ),
                                     ),
-                                  ),
-                                  InkWell(
-                                    onTap: widget.onClose,
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      child: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.drag_handle_rounded,
+                                          color: Colors.white70,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            widget.title ?? l10n.pipVideo,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        InkWell(
+                                          onTap: widget.onClose,
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            child: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-
-                            // Center Play / Pause Button
-                            Center(
-                              child: IconButton(
-                                iconSize: 34,
-                                padding: EdgeInsets.zero,
-                                icon: Icon(
-                                  (_controller?.value.isPlaying ?? false)
-                                      ? Icons.pause_circle_filled
-                                      : Icons.play_circle_filled,
-                                  color: Colors.white.withValues(alpha: 0.95),
                                 ),
-                                onPressed: _togglePlayPause,
-                              ),
-                            ),
 
-                            // Bottom Right: Fullscreen Action Button
-                            Positioned(
-                              bottom: 2,
-                              right: 2,
-                              child: IconButton(
-                                iconSize: 18,
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(),
-                                icon: const Icon(
-                                  Icons.fullscreen,
-                                  color: Colors.white,
+                                // Center Play / Pause Button
+                                Center(
+                                  child: IconButton(
+                                    iconSize: 34,
+                                    padding: EdgeInsets.zero,
+                                    icon: Icon(
+                                      (_controller?.value.isPlaying ?? false)
+                                          ? Icons.pause_circle_filled
+                                          : Icons.play_circle_filled,
+                                      color: Colors.white.withValues(alpha: 0.95),
+                                    ),
+                                    onPressed: _togglePlayPause,
+                                  ),
                                 ),
-                                tooltip: 'Fullscreen',
-                                onPressed: _openFullscreen,
-                              ),
-                            ),
-                          ],
+
+                                // Bottom Right: Fullscreen Action Button
+                                Positioned(
+                                  bottom: 2,
+                                  right: 2,
+                                  child: IconButton(
+                                    iconSize: 18,
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(
+                                      Icons.fullscreen,
+                                      color: Colors.white,
+                                    ),
+                                    tooltip: l10n.fullScreen,
+                                    onPressed: _openFullscreen,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
