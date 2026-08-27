@@ -466,6 +466,642 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have full control over your data. You can erase your collected data or permanently delete your account at any time.'**
   String get accountManagementBody;
+
+  /// Toast message when OTP code is sent to user email
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent to your email!'**
+  String get verificationCodeSent;
+
+  /// Toast message when OTP code is resent
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code resent to your email!'**
+  String get verificationCodeResent;
+
+  /// Error message shown when email is not found in system
+  ///
+  /// In en, this message translates to:
+  /// **'User does not exist.'**
+  String get userDoesNotExist;
+
+  /// Error message when sending verification code fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send code'**
+  String get failedToSendCode;
+
+  /// Validation error for OTP length
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter all 6 digits'**
+  String get pleaseEnterAll6Digits;
+
+  /// Error when OTP code is incorrect
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code. Please try again.'**
+  String get invalidVerificationCode;
+
+  /// Title for account registration form
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get createAccount;
+
+  /// Button to go back and edit the entered email address
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Email'**
+  String get editEmail;
+
+  /// Instructional message when user account is not found
+  ///
+  /// In en, this message translates to:
+  /// **'No account found for {email}. Please enter your details to register.'**
+  String noAccountFoundRegister(String email);
+
+  /// Label for first name input field
+  ///
+  /// In en, this message translates to:
+  /// **'First Name'**
+  String get firstName;
+
+  /// Placeholder hint for first name
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your first name'**
+  String get enterFirstName;
+
+  /// Validation error when first name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your first name'**
+  String get pleaseEnterFirstName;
+
+  /// Label for last name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Last Name'**
+  String get lastName;
+
+  /// Placeholder hint for last name
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your last name'**
+  String get enterLastName;
+
+  /// Validation error when last name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your last name'**
+  String get pleaseEnterLastName;
+
+  /// Label for email address field
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get emailAddress;
+
+  /// Placeholder hint for email input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get enterEmail;
+
+  /// Validation error when email is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email'**
+  String get pleaseEnterEmail;
+
+  /// Validation error when email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get pleaseEnterValidEmail;
+
+  /// Label for OTP input section
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Code'**
+  String get verificationCode;
+
+  /// Subheading showing which email address received the code
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {email}'**
+  String sentToEmail(String email);
+
+  /// Label displaying currently selected workspace
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace: {name}'**
+  String workspacePrefix(String name);
+
+  /// Timer label counting down until OTP resend is allowed
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {seconds}s'**
+  String resendCodeIn(String seconds);
+
+  /// Prompt asking user if OTP was received
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the code? '**
+  String get didntReceiveCode;
+
+  /// Button to request a new OTP code
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
+
+  /// Button action to register and send OTP
+  ///
+  /// In en, this message translates to:
+  /// **'Register & Send Code'**
+  String get registerAndSendCode;
+
+  /// Button action to submit OTP and login
+  ///
+  /// In en, this message translates to:
+  /// **'Verify & Sign In'**
+  String get verifyAndSignIn;
+
+  /// Button action to request initial OTP
+  ///
+  /// In en, this message translates to:
+  /// **'Send Verification Code'**
+  String get sendVerificationCode;
+
+  /// Title for workspace selector dialog/screen
+  ///
+  /// In en, this message translates to:
+  /// **'Select Workspace'**
+  String get selectWorkspace;
+
+  /// Toast confirming workspace removal
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace removed'**
+  String get workspaceRemoved;
+
+  /// Error message when workspace removal fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove workspace'**
+  String get failedToRemoveWorkspace;
+
+  /// Title of delete workspace confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Workspace'**
+  String get deleteWorkspace;
+
+  /// Confirmation prompt before deleting a workspace
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete workspace \"{name}\" ({root})?'**
+  String deleteWorkspaceConfirm(String name, String root);
+
+  /// Delete action button label
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// Toast message when user accepts data collection
+  ///
+  /// In en, this message translates to:
+  /// **'Data collection consent updated to Accepted.'**
+  String get consentUpdatedAccepted;
+
+  /// Toast message when user limits data collection to essentials
+  ///
+  /// In en, this message translates to:
+  /// **'Data collection consent updated to Essential-only.'**
+  String get consentUpdatedEssential;
+
+  /// Error message when updating consent setting fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update consent preference'**
+  String get failedToUpdateConsent;
+
+  /// Confirmation toast after requesting personal data deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Personal collected data deletion has been requested.'**
+  String get dataDeletionRequested;
+
+  /// Error message when requesting data deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to request data deletion'**
+  String get failedToRequestDataDeletion;
+
+  /// Section title in compliance screen
+  ///
+  /// In en, this message translates to:
+  /// **'Data Collection Consent Status'**
+  String get dataCollectionConsentStatus;
+
+  /// Disclosure category title for account info
+  ///
+  /// In en, this message translates to:
+  /// **'Account Information'**
+  String get accountInfoTitle;
+
+  /// Disclosure description for account info
+  ///
+  /// In en, this message translates to:
+  /// **'Name, email address, and authentication credentials.'**
+  String get accountInfoSubtitle;
+
+  /// Disclosure category title for chat and learning data
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive Chat & Learning Data'**
+  String get interactiveChatLearningTitle;
+
+  /// Disclosure description for chat and learning data
+  ///
+  /// In en, this message translates to:
+  /// **'Prompts, responses, diagnostic test scores & progress.'**
+  String get interactiveChatLearningSubtitle;
+
+  /// Disclosure category title for security and encryption
+  ///
+  /// In en, this message translates to:
+  /// **'Data Protection & Encryption'**
+  String get dataProtectionTitle;
+
+  /// Disclosure description for security and encryption
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS transmission and secure cloud storage.'**
+  String get dataProtectionSubtitle;
+
+  /// Error message when topics cannot be fetched
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load topics: {error}'**
+  String failedToLoadTopics(String error);
+
+  /// Button label to retry an operation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// Empty state text when no topics are available
+  ///
+  /// In en, this message translates to:
+  /// **'No topics available.'**
+  String get noTopicsAvailable;
+
+  /// Tooltip or link to open user profile
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
+
+  /// Tab or menu label for catalog section
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get catalog;
+
+  /// Error when a web link cannot be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link: {url}'**
+  String couldNotOpenLink(String url);
+
+  /// Error message when tutorials fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load tutorials: {error}'**
+  String failedToLoadTutorials(String error);
+
+  /// Empty state text when no tutorials are present
+  ///
+  /// In en, this message translates to:
+  /// **'No tutorials available.'**
+  String get noTutorialsAvailable;
+
+  /// Error message when image picker fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to select image'**
+  String get failedToSelectImage;
+
+  /// Success toast after saving profile changes
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSuccessfully;
+
+  /// Error message when profile save fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile'**
+  String get failedToUpdateProfile;
+
+  /// Title of the edit profile screen/action
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// Label for email field in profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// Button label to commit edits
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// Validation error template for mandatory fields
+  ///
+  /// In en, this message translates to:
+  /// **'{label} is required'**
+  String fieldIsRequired(String label);
+
+  /// Toast after user data is cleared
+  ///
+  /// In en, this message translates to:
+  /// **'Account data cleared successfully.'**
+  String get accountDataCleared;
+
+  /// Error message when clearing user data fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to clear account data'**
+  String get failedToClearAccountData;
+
+  /// Badge showing count of remaining items
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String plusMoreCount(String count);
+
+  /// User skill rank level
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get intermediate;
+
+  /// Error message when starting a tutorial session fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load tutorial session'**
+  String get failedToLoadTutorialSession;
+
+  /// Error message when submitting an answer fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit answer'**
+  String get failedToSubmitAnswer;
+
+  /// Error message when sending a follow up question fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send follow up'**
+  String get failedToSendFollowUp;
+
+  /// Error message when advancing tutorial fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to continue tutorial'**
+  String get failedToContinueTutorial;
+
+  /// Header description in AI response report dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Report hallucination, inaccurate information, or inappropriate AI response:'**
+  String get reportDetailsPrompt;
+
+  /// Hint text for additional comments in report dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Additional details (optional)...'**
+  String get additionalDetailsOptional;
+
+  /// Button label to submit a report
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get report;
+
+  /// Feedback shown when answer is correct
+  ///
+  /// In en, this message translates to:
+  /// **'Correct!'**
+  String get correct;
+
+  /// Feedback shown when answer is incorrect
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect.'**
+  String get incorrect;
+
+  /// Error message shown when tutor chat fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'An error occured while loading the chat.'**
+  String get errorLoadingChat;
+
+  /// Button label to retry loading chat or session
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// Button label to start a tutorial
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start;
+
+  /// Hint text in chat input field
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a follow-up question...'**
+  String get askFollowUpHint;
+
+  /// Button label to send chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// Button label to continue tutorial
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// Prompt header for confidence rating
+  ///
+  /// In en, this message translates to:
+  /// **'HOW CONFIDENT ARE YOU IN THIS ANSWER?'**
+  String get howConfidentQuestion;
+
+  /// Button label to submit quiz answer
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Answer'**
+  String get submitAnswer;
+
+  /// Status banner while WebSocket / tutor session connects
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to tutor session...'**
+  String get connectingToTutorSession;
+
+  /// Header celebration text when quiz is completed
+  ///
+  /// In en, this message translates to:
+  /// **'Quiz Completed! 🎉'**
+  String get quizCompleted;
+
+  /// Button label to exit quiz and go back to topics
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back!'**
+  String get goBack;
+
+  /// Error state when image fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load image'**
+  String get failedToLoadImage;
+
+  /// Button to open asset in external browser
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Browser'**
+  String get openInBrowser;
+
+  /// Error state when video player fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to play video'**
+  String get failedToPlayVideo;
+
+  /// Button to open video URL externally
+  ///
+  /// In en, this message translates to:
+  /// **'Open Video Externally'**
+  String get openVideoExternally;
+
+  /// Error state when audio player fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load audio'**
+  String get failedToLoadAudio;
+
+  /// Button to open audio URL externally
+  ///
+  /// In en, this message translates to:
+  /// **'Open Audio Link'**
+  String get openAudioLink;
+
+  /// Status text while loading PDF document
+  ///
+  /// In en, this message translates to:
+  /// **'Loading document...'**
+  String get loadingDocument;
+
+  /// Error state when PDF viewer fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to display PDF document'**
+  String get failedToDisplayPdf;
+
+  /// Button to open PDF in external browser
+  ///
+  /// In en, this message translates to:
+  /// **'Open PDF in Browser'**
+  String get openPdfInBrowser;
+
+  /// PDF page indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Page {current} of {total}'**
+  String pageOfTotal(String current, String total);
+
+  /// Tooltip for entering picture-in-picture mode
+  ///
+  /// In en, this message translates to:
+  /// **'Picture in Picture'**
+  String get pictureInPicture;
+
+  /// Tooltip for opening external link
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get openLink;
+
+  /// Header title for media viewer screen
+  ///
+  /// In en, this message translates to:
+  /// **'Media Viewer'**
+  String get mediaViewer;
+
+  /// Error message when opening media URL fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch media URL'**
+  String get couldNotLaunchMediaUrl;
+
+  /// Title for media preview widget
+  ///
+  /// In en, this message translates to:
+  /// **'Media Preview'**
+  String get mediaPreview;
+
+  /// Title for video preview widget
+  ///
+  /// In en, this message translates to:
+  /// **'Video Preview'**
+  String get videoPreview;
+
+  /// Error message when video cannot be loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load video'**
+  String get failedToLoadVideo;
+
+  /// Button label to open resource in external application
+  ///
+  /// In en, this message translates to:
+  /// **'Open External'**
+  String get openExternal;
+
+  /// Tooltip for entering fullscreen
+  ///
+  /// In en, this message translates to:
+  /// **'Full Screen'**
+  String get fullScreen;
+
+  /// Default title for picture-in-picture overlay
+  ///
+  /// In en, this message translates to:
+  /// **'PiP Video'**
+  String get pipVideo;
+
+  /// Summary sentence of forgotten answers over period
+  ///
+  /// In en, this message translates to:
+  /// **'An average of {percent}% answers forgotten over {days} days'**
+  String answersForgottenSummary(String percent, String days);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

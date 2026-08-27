@@ -162,23 +162,20 @@ class _DataCollectionConsentDialogState
                     children: [
                       _buildDataPoint(
                         icon: Icons.person_outline,
-                        title: 'Account Information',
-                        subtitle:
-                            'Name, email address, and authentication credentials.',
+                        title: l10n.accountInfoTitle,
+                        subtitle: l10n.accountInfoSubtitle,
                       ),
                       const SizedBox(height: 8),
                       _buildDataPoint(
                         icon: Icons.chat_bubble_outline,
-                        title: 'Interactive Chat & Learning Data',
-                        subtitle:
-                            'Prompts, responses, diagnostic test scores & progress.',
+                        title: l10n.interactiveChatLearningTitle,
+                        subtitle: l10n.interactiveChatLearningSubtitle,
                       ),
                       const SizedBox(height: 8),
                       _buildDataPoint(
                         icon: Icons.security,
-                        title: 'Data Protection & Encryption',
-                        subtitle:
-                            'HTTPS transmission and secure cloud storage.',
+                        title: l10n.dataProtectionTitle,
+                        subtitle: l10n.dataProtectionSubtitle,
                       ),
                     ],
                   ),

@@ -182,34 +182,16 @@ class TopicCard extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Text.rich(
+                    Text(
+                      l10n.answersForgottenSummary(
+                        topic.answersForgotten.toStringAsFixed(2),
+                        topic.forgottenPeriod.toString(),
+                      ),
                       textAlign: TextAlign.center,
-                      TextSpan(
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                        children: [
-                          TextSpan(text: 'An average of '),
-                          TextSpan(
-                            text:
-                                '${topic.answersForgotten.toStringAsFixed(2)}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                          TextSpan(text: ' answers forgotten over '),
-                          TextSpan(
-                            text: topic.forgottenPeriod.toString(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                          TextSpan(text: ' days'),
-                        ],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

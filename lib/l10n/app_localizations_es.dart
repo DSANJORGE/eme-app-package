@@ -205,4 +205,346 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accountManagementBody => 'Tienes control total sobre tus datos. Puedes borrar tus datos recopilados o eliminar permanentemente tu cuenta en cualquier momento.';
+
+  @override
+  String get verificationCodeSent => '¡Código de verificación enviado a tu correo electrónico!';
+
+  @override
+  String get verificationCodeResent => '¡Código de verificación reenviado a tu correo electrónico!';
+
+  @override
+  String get userDoesNotExist => 'El usuario no existe.';
+
+  @override
+  String get failedToSendCode => 'Error al enviar el código';
+
+  @override
+  String get pleaseEnterAll6Digits => 'Por favor, ingresa los 6 dígitos';
+
+  @override
+  String get invalidVerificationCode => 'Código de verificación inválido. Por favor, inténtalo de nuevo.';
+
+  @override
+  String get createAccount => 'Crear Cuenta';
+
+  @override
+  String get editEmail => 'Editar Correo';
+
+  @override
+  String noAccountFoundRegister(String email) {
+    return 'No se encontró ninguna cuenta para $email. Por favor, ingresa tus datos para registrarte.';
+  }
+
+  @override
+  String get firstName => 'Nombre';
+
+  @override
+  String get enterFirstName => 'Ingresa tu nombre';
+
+  @override
+  String get pleaseEnterFirstName => 'Por favor, ingresa tu nombre';
+
+  @override
+  String get lastName => 'Apellido';
+
+  @override
+  String get enterLastName => 'Ingresa tu apellido';
+
+  @override
+  String get pleaseEnterLastName => 'Por favor, ingresa tu apellido';
+
+  @override
+  String get emailAddress => 'Correo Electrónico';
+
+  @override
+  String get enterEmail => 'Ingresa tu correo';
+
+  @override
+  String get pleaseEnterEmail => 'Por favor, ingresa tu correo electrónico';
+
+  @override
+  String get pleaseEnterValidEmail => 'Por favor, ingresa un correo electrónico válido';
+
+  @override
+  String get verificationCode => 'Código de Verificación';
+
+  @override
+  String sentToEmail(String email) {
+    return 'Enviado a $email';
+  }
+
+  @override
+  String workspacePrefix(String name) {
+    return 'Espacio de trabajo: $name';
+  }
+
+  @override
+  String resendCodeIn(String seconds) {
+    return 'Reenviar código en ${seconds}s';
+  }
+
+  @override
+  String get didntReceiveCode => '¿No recibiste el código? ';
+
+  @override
+  String get resendCode => 'Reenviar Código';
+
+  @override
+  String get registerAndSendCode => 'Registrar y Enviar Código';
+
+  @override
+  String get verifyAndSignIn => 'Verificar e Iniciar Sesión';
+
+  @override
+  String get sendVerificationCode => 'Enviar Código de Verificación';
+
+  @override
+  String get selectWorkspace => 'Seleccionar Espacio de Trabajo';
+
+  @override
+  String get workspaceRemoved => 'Espacio de trabajo eliminado';
+
+  @override
+  String get failedToRemoveWorkspace => 'Error al eliminar espacio de trabajo';
+
+  @override
+  String get deleteWorkspace => 'Eliminar Espacio de Trabajo';
+
+  @override
+  String deleteWorkspaceConfirm(String name, String root) {
+    return '¿Estás seguro de que deseas eliminar el espacio de trabajo \"$name\" ($root)?';
+  }
+
+  @override
+  String get delete => 'Eliminar';
+
+  @override
+  String get consentUpdatedAccepted => 'Consentimiento de recopilación de datos actualizado a Aceptado.';
+
+  @override
+  String get consentUpdatedEssential => 'Consentimiento de recopilación de datos actualizado a Solo esenciales.';
+
+  @override
+  String get failedToUpdateConsent => 'Error al actualizar la preferencia de consentimiento';
+
+  @override
+  String get dataDeletionRequested => 'Se ha solicitado la eliminación de los datos personales recopilados.';
+
+  @override
+  String get failedToRequestDataDeletion => 'Error al solicitar la eliminación de datos';
+
+  @override
+  String get dataCollectionConsentStatus => 'Estado de consentimiento de recopilación de datos';
+
+  @override
+  String get accountInfoTitle => 'Información de la Cuenta';
+
+  @override
+  String get accountInfoSubtitle => 'Nombre, dirección de correo electrónico y credenciales de autenticación.';
+
+  @override
+  String get interactiveChatLearningTitle => 'Datos de Chat Interactivo y Aprendizaje';
+
+  @override
+  String get interactiveChatLearningSubtitle => 'Preguntas, respuestas, puntuaciones de pruebas diagnósticas y progreso.';
+
+  @override
+  String get dataProtectionTitle => 'Protección y Encriptación de Datos';
+
+  @override
+  String get dataProtectionSubtitle => 'Transmisión HTTPS y almacenamiento seguro en la nube.';
+
+  @override
+  String failedToLoadTopics(String error) {
+    return 'Error al cargar los temas: $error';
+  }
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get noTopicsAvailable => 'No hay temas disponibles.';
+
+  @override
+  String get viewProfile => 'Ver perfil';
+
+  @override
+  String get catalog => 'Catálogo';
+
+  @override
+  String couldNotOpenLink(String url) {
+    return 'No se pudo abrir el enlace: $url';
+  }
+
+  @override
+  String failedToLoadTutorials(String error) {
+    return 'Error al cargar los tutoriales: $error';
+  }
+
+  @override
+  String get noTutorialsAvailable => 'No hay tutoriales disponibles.';
+
+  @override
+  String get failedToSelectImage => 'Error al seleccionar imagen';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Perfil actualizado exitosamente';
+
+  @override
+  String get failedToUpdateProfile => 'Error al actualizar perfil';
+
+  @override
+  String get editProfile => 'Editar Perfil';
+
+  @override
+  String get email => 'Correo Electrónico';
+
+  @override
+  String get saveChanges => 'Guardar Cambios';
+
+  @override
+  String fieldIsRequired(String label) {
+    return '$label es obligatorio';
+  }
+
+  @override
+  String get accountDataCleared => 'Datos de la cuenta borrados exitosamente.';
+
+  @override
+  String get failedToClearAccountData => 'Error al borrar los datos de la cuenta';
+
+  @override
+  String plusMoreCount(String count) {
+    return '+$count más';
+  }
+
+  @override
+  String get intermediate => 'Intermedio';
+
+  @override
+  String get failedToLoadTutorialSession => 'Error al cargar la sesión del tutorial';
+
+  @override
+  String get failedToSubmitAnswer => 'Error al enviar la respuesta';
+
+  @override
+  String get failedToSendFollowUp => 'Error al enviar seguimiento';
+
+  @override
+  String get failedToContinueTutorial => 'Error al continuar el tutorial';
+
+  @override
+  String get reportDetailsPrompt => 'Reportar alucinación, información inexacta o respuesta inapropiada de la IA:';
+
+  @override
+  String get additionalDetailsOptional => 'Detalles adicionales (opcional)...';
+
+  @override
+  String get report => 'Reportar';
+
+  @override
+  String get correct => '¡Correcto!';
+
+  @override
+  String get incorrect => 'Incorrecto.';
+
+  @override
+  String get errorLoadingChat => 'Ocurrió un error al cargar el chat.';
+
+  @override
+  String get tryAgain => 'Intentar de nuevo';
+
+  @override
+  String get start => 'Iniciar';
+
+  @override
+  String get askFollowUpHint => 'Haz una pregunta de seguimiento...';
+
+  @override
+  String get send => 'Enviar';
+
+  @override
+  String get continueButton => 'Continuar';
+
+  @override
+  String get howConfidentQuestion => '¿QUÉ TAN SEGURO ESTÁS DE ESTA RESPUESTA?';
+
+  @override
+  String get submitAnswer => 'Enviar Respuesta';
+
+  @override
+  String get connectingToTutorSession => 'Conectando a la sesión de tutoría...';
+
+  @override
+  String get quizCompleted => '¡Cuestionario Completado! 🎉';
+
+  @override
+  String get goBack => '¡Volver!';
+
+  @override
+  String get failedToLoadImage => 'Error al cargar la imagen';
+
+  @override
+  String get openInBrowser => 'Abrir en el navegador';
+
+  @override
+  String get failedToPlayVideo => 'Error al reproducir el video';
+
+  @override
+  String get openVideoExternally => 'Abrir video externamente';
+
+  @override
+  String get failedToLoadAudio => 'Error al cargar el audio';
+
+  @override
+  String get openAudioLink => 'Abrir enlace de audio';
+
+  @override
+  String get loadingDocument => 'Cargando documento...';
+
+  @override
+  String get failedToDisplayPdf => 'Error al mostrar el documento PDF';
+
+  @override
+  String get openPdfInBrowser => 'Abrir PDF en el navegador';
+
+  @override
+  String pageOfTotal(String current, String total) {
+    return 'Página $current de $total';
+  }
+
+  @override
+  String get pictureInPicture => 'Imagen en imagen';
+
+  @override
+  String get openLink => 'Abrir enlace';
+
+  @override
+  String get mediaViewer => 'Visor de medios';
+
+  @override
+  String get couldNotLaunchMediaUrl => 'No se pudo abrir la URL del medio';
+
+  @override
+  String get mediaPreview => 'Vista previa de medios';
+
+  @override
+  String get videoPreview => 'Vista previa de video';
+
+  @override
+  String get failedToLoadVideo => 'Error al cargar el video';
+
+  @override
+  String get openExternal => 'Abrir externo';
+
+  @override
+  String get fullScreen => 'Pantalla completa';
+
+  @override
+  String get pipVideo => 'Video PiP';
+
+  @override
+  String answersForgottenSummary(String percent, String days) {
+    return 'Un promedio de $percent% de respuestas olvidadas en $days días';
+  }
 }

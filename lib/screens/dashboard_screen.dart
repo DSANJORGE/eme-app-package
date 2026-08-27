@@ -164,7 +164,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         ),
                                         const SizedBox(height: 12),
                                         Text(
-                                          'Failed to load topics: ${snapshot.error}',
+                                          l10n.failedToLoadTopics(snapshot.error.toString()),
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             color: Colors.white70,
@@ -174,7 +174,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         ElevatedButton.icon(
                                           onPressed: _loadTopics,
                                           icon: const Icon(Icons.refresh),
-                                          label: const Text('Retry'),
+                                          label: Text(l10n.retry),
                                         ),
                                       ],
                                     ),
@@ -183,14 +183,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                                 final topics = snapshot.data ?? [];
                                 if (topics.isEmpty) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
                                       vertical: 20.0,
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'No topics available.',
-                                        style: TextStyle(color: Colors.white60),
+                                        l10n.noTopicsAvailable,
+                                        style: const TextStyle(color: Colors.white60),
                                       ),
                                     ),
                                   );
@@ -557,9 +557,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                const Text(
-                                  'View profile',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.viewProfile,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF38B6FF),
                                     fontWeight: FontWeight.w600,
@@ -823,7 +823,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               if (mounted) {
                                 AppErrorHandler.showUserError(
                                   context,
-                                  'Could not open link: $url',
+                                  l10n.couldNotOpenLink(url.toString()),
                                 );
                               }
                             }
@@ -837,7 +837,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             if (mounted) {
                               AppErrorHandler.showUserError(
                                 context,
-                                'Could not open link: $url',
+                                l10n.couldNotOpenLink(url.toString()),
                               );
                             }
                           }
@@ -907,6 +907,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   void _showWorkspaceModalSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -935,32 +936,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Select Workspace',
-                        style: TextStyle(
+                      Text(
+                        l10n.selectWorkspace,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // TextButton.icon(
-                      //   onPressed: () async {
-                      //     Navigator.pop(sheetContext);
-                      //     await _showAddWorkspaceDialog(context);
-                      //   },
-                      //   icon: const Icon(
-                      //     Icons.add_circle_outline_rounded,
-                      //     size: 16,
-                      //     color: Color(0xFF38B6FF),
-                      //   ),
-                      //   label: const Text(
-                      //     'Add New',
-                      //     style: TextStyle(
-                      //       color: Color(0xFF38B6FF),
-                      //       fontWeight: FontWeight.bold,
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1070,7 +1053,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               });
                                               AppErrorHandler.showUserSuccess(
                                                 this.context,
-                                                'Workspace removed',
+                                                l10n.workspaceRemoved,
                                               );
                                               widget.onWorkspaceChanged?.call();
                                             }
@@ -1088,7 +1071,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             if (mounted) {
                                               AppErrorHandler.showUserError(
                                                 this.context,
-                                                'Failed to remove workspace',
+                                                l10n.failedToRemoveWorkspace,
                                               );
                                             }
                                           }
@@ -1115,6 +1098,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     BuildContext context,
     Workspace ws,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1124,26 +1108,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFF50057)),
+              const SizedBox(width: 8),
               Text(
-                'Delete Workspace',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                l10n.deleteWorkspace,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
           content: Text(
-            'Are you sure you want to delete workspace "${ws.name}" (${ws.mediaDBRoot})?',
+            l10n.deleteWorkspaceConfirm(ws.name, ws.mediaDBRoot),
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white54),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: Colors.white54),
               ),
             ),
             ElevatedButton(
@@ -1151,9 +1135,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF50057),
               ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

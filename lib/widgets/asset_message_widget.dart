@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:video_player/video_player.dart';
 
@@ -261,21 +262,22 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
               image: imageUrl,
               fit: BoxFit.contain,
               imageErrorBuilder: (context, error, stackTrace) {
+                final l10n = AppLocalizations.of(context)!;
                 return Container(
                   color: const Color(0xFF1E293B),
                   alignment: Alignment.center,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.broken_image_outlined,
                         color: Colors.white54,
                         size: 36,
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        'Media Preview',
-                        style: TextStyle(color: Colors.white60, fontSize: 12),
+                        l10n.mediaPreview,
+                        style: const TextStyle(color: Colors.white60, fontSize: 12),
                       ),
                     ],
                   ),
@@ -294,6 +296,7 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
     required String? caption,
     required String? mediaType,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     // If video is active and playing inline
     if (_isInlinePlaying &&
         _controller != null &&
@@ -413,7 +416,7 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                                 Icons.picture_in_picture_alt,
                                 color: Colors.white,
                               ),
-                              tooltip: 'Picture in Picture',
+                              tooltip: l10n.pictureInPicture,
                               onPressed: () =>
                                   _openPiP(targetUrl, caption, mediaType),
                             ),
@@ -428,7 +431,7 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                                 Icons.fullscreen,
                                 color: Colors.white,
                               ),
-                              tooltip: 'Full Screen',
+                              tooltip: l10n.fullScreen,
                               onPressed: () => _openFullscreen(
                                 targetUrl,
                                 caption,
@@ -463,21 +466,22 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                 image: imageUrl,
                 fit: BoxFit.cover,
                 imageErrorBuilder: (context, error, stackTrace) {
+                  final l10n = AppLocalizations.of(context)!;
                   return Container(
                     color: const Color(0xFF1E293B),
                     alignment: Alignment.center,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
+                      children: [
+                        const Icon(
                           Icons.movie_outlined,
                           color: Colors.white54,
                           size: 36,
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
-                          'Video Preview',
-                          style: TextStyle(color: Colors.white60, fontSize: 12),
+                          l10n.videoPreview,
+                          style: const TextStyle(color: Colors.white60, fontSize: 12),
                         ),
                       ],
                     ),
@@ -536,36 +540,41 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
           if (_isInitializing)
             const CircularProgressIndicator(color: Colors.white)
           else if (_hasError)
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.white70,
-                  size: 36,
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Failed to load video',
-                  style: TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-                const SizedBox(height: 4),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _openFullscreen(targetUrl, caption, mediaType),
-                  icon: const Icon(Icons.open_in_new, size: 14),
-                  label: const Text(
-                    'Open External',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.white70,
+                      size: 36,
                     ),
-                  ),
-                ),
-              ],
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.failedToLoadVideo,
+                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
+                    const SizedBox(height: 4),
+                    ElevatedButton.icon(
+                      onPressed: () =>
+                          _openFullscreen(targetUrl, caption, mediaType),
+                      icon: const Icon(Icons.open_in_new, size: 14),
+                      label: Text(
+                        l10n.openExternal,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             )
           else
             GestureDetector(

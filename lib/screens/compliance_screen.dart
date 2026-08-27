@@ -46,11 +46,12 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserSuccess(
           context,
           value
-              ? 'Data collection consent updated to Accepted.'
-              : 'Data collection consent updated to Essential-only.',
+              ? l10n.consentUpdatedAccepted
+              : l10n.consentUpdatedEssential,
         );
       }
     } catch (e, stack) {
@@ -63,9 +64,10 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         setState(() {
           _hasConsented = !_hasConsented;
         });
+        final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserError(
           context,
-          'Failed to update consent preference',
+          l10n.failedToUpdateConsent,
         );
       }
     }
@@ -140,7 +142,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 if (mounted) {
                   AppErrorHandler.showUserSuccess(
                     context,
-                    'Personal collected data deletion has been requested.',
+                    l10n.dataDeletionRequested,
                   );
                 }
               } catch (e, stack) {
@@ -152,7 +154,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 if (mounted) {
                   AppErrorHandler.showUserError(
                     context,
-                    'Failed to request data deletion',
+                    l10n.failedToRequestDataDeletion,
                   );
                 }
               }
@@ -228,10 +230,10 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Data Collection Consent Status',
-                            style: TextStyle(
+                            l10n.dataCollectionConsentStatus,
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_eme_base/l10n/app_localizations.dart';
 import 'package:flutter_eme_base/utils/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
@@ -54,7 +55,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         reason: 'ImagePicker failed in EditProfileScreen',
       );
       if (mounted) {
-        AppErrorHandler.showUserError(context, 'Failed to select image');
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.failedToSelectImage);
       }
     }
   }
@@ -103,15 +105,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Refresh user data
         await AuthService.fetchUser();
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           AppErrorHandler.showUserSuccess(
             context,
-            'Profile updated successfully',
+            l10n.profileUpdatedSuccessfully,
           );
           Navigator.pop(context);
         }
       } else {
         if (mounted) {
-          AppErrorHandler.showUserError(context, 'Failed to update profile');
+          final l10n = AppLocalizations.of(context)!;
+          AppErrorHandler.showUserError(context, l10n.failedToUpdateProfile);
         }
       }
     } catch (e, stack) {
@@ -137,9 +141,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(l10n.editProfile),
         backgroundColor: const Color(0xFF141923),
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(
@@ -225,20 +231,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 32),
                 _buildTextField(
+                  context: context,
                   controller: _firstNameController,
-                  label: 'First Name',
+                  label: l10n.firstName,
                   icon: Icons.person_outline,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
+                  context: context,
                   controller: _lastNameController,
-                  label: 'Last Name',
+                  label: l10n.lastName,
                   icon: Icons.person_outline,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
+                  context: context,
                   controller: _emailController,
-                  label: 'Email',
+                  label: l10n.email,
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
@@ -261,9 +270,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(
+                      : Text(
+                          l10n.saveChanges,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -279,11 +288,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType? keyboardType,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -309,7 +320,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return '$label is required';
+          return l10n.fieldIsRequired(label);
         }
         return null;
       },
