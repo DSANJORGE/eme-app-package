@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_eme_base/models/chat_message.dart';
-import 'package:flutter_eme_base/services/auth_service.dart';
-import 'package:flutter_eme_base/utils/dio.dart';
-import 'package:flutter_eme_base/utils/log.dart';
+import 'package:eme_app_package/models/chat_message.dart';
+import 'package:eme_app_package/services/auth_service.dart';
+import 'package:eme_app_package/utils/dio.dart';
+import 'package:eme_app_package/utils/log.dart';
 import '../models/topic.dart';
 import '../models/tutor_channel.dart';
 import '../models/tutorial.dart';

@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_eme_base/utils/log.dart';
-import 'package:flutter_eme_base/widgets/topics_card.dart';
+import 'package:eme_app_package/utils/log.dart';
+import 'package:eme_app_package/widgets/topics_card.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 

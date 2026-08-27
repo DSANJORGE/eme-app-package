@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
-import 'package:flutter_eme_base/utils/log.dart';
+import 'package:eme_app_package/utils/log.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/chat_message.dart';
 import '../utils/error_handler.dart';

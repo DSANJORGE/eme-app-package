@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
-import 'package:flutter_eme_base/utils/dio.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
+import 'package:eme_app_package/utils/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../services/auth_service.dart';

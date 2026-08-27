@@ -1,4 +1,4 @@
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 
 import 'tutorial.dart';
 

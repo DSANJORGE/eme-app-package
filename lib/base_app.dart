@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/models/workspace.dart';
-import 'package:flutter_eme_base/services/auth_service.dart';
-import 'package:flutter_eme_base/services/workspace_service.dart';
+import 'package:eme_app_package/models/workspace.dart';
+import 'package:eme_app_package/services/auth_service.dart';
+import 'package:eme_app_package/services/workspace_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
 

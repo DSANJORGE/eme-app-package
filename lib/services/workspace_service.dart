@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter_eme_base/flutter_eme_base.dart';
+import 'package:eme_app_package/eme_app_package.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkspaceService {

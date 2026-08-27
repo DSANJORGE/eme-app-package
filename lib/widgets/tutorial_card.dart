@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
-import 'package:flutter_eme_base/models/topic.dart';
-import 'package:flutter_eme_base/widgets/common_widgets.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
+import 'package:eme_app_package/models/topic.dart';
+import 'package:eme_app_package/widgets/common_widgets.dart';
 
 import '../models/tutorial.dart';
 import '../screens/rehearse_screen.dart';

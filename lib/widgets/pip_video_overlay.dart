@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import '../utils/error_handler.dart';
 import 'fullscreen_mediaviewer.dart';
@@ -338,7 +338,9 @@ class _PipVideoOverlayWidgetState extends State<_PipVideoOverlayWidget> {
                                         ),
                                         InkWell(
                                           onTap: widget.onClose,
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           child: Container(
                                             padding: const EdgeInsets.all(4),
                                             child: const Icon(
@@ -362,7 +364,9 @@ class _PipVideoOverlayWidgetState extends State<_PipVideoOverlayWidget> {
                                       (_controller?.value.isPlaying ?? false)
                                           ? Icons.pause_circle_filled
                                           : Icons.play_circle_filled,
-                                      color: Colors.white.withValues(alpha: 0.95),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.95,
+                                      ),
                                     ),
                                     onPressed: _togglePlayPause,
                                   ),

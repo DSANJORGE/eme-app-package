@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
-import 'package:flutter_eme_base/utils/log.dart';
+import 'package:eme_app_package/utils/log.dart';
 import '../models/workspace.dart';
 import '../utils/error_handler.dart';
 import 'auth_service.dart';
@@ -116,8 +116,9 @@ class DeepLinkService {
         final fragmentUri = Uri.parse('http://dummy?$fragmentPath');
         params.addAll(fragmentUri.queryParameters);
       } else if (fragmentPath.isNotEmpty && fragmentPath != '/') {
-        final cleanPath =
-            fragmentPath.startsWith('/') ? fragmentPath : '/$fragmentPath';
+        final cleanPath = fragmentPath.startsWith('/')
+            ? fragmentPath
+            : '/$fragmentPath';
         final fragmentPathUri = Uri.parse('http://dummy$cleanPath');
         final pathWs = _extractWorkspaceFromPath(fragmentPathUri);
         if (pathWs != null && !params.containsKey('workspace')) {
@@ -252,7 +253,8 @@ class DeepLinkService {
         }
       }
 
-      if (target.contains('://') || (target.contains('.') && target.contains('/'))) {
+      if (target.contains('://') ||
+          (target.contains('.') && target.contains('/'))) {
         return WorkspaceService.getOrCreateWorkspaceFromMediaDBRoot(
           target,
           useHttps: useHttps,
@@ -324,4 +326,3 @@ class DeepLinkService {
     _sub = null;
   }
 }
-

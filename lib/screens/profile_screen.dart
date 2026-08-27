@@ -1,6 +1,6 @@
-import 'package:flutter_eme_base/models/tag.dart';
+import 'package:eme_app_package/models/tag.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transparent_image/transparent_image.dart';
 import '../services/auth_service.dart';

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter_eme_base/utils/log.dart';
+import 'package:eme_app_package/utils/log.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';

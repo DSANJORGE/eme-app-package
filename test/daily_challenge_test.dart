@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
-import 'package:flutter_eme_base/models/daily_challenge.dart';
-import 'package:flutter_eme_base/models/mistake_item.dart';
-import 'package:flutter_eme_base/widgets/daily_challenge_section.dart';
-import 'package:flutter_eme_base/widgets/mistakes_section.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
+import 'package:eme_app_package/models/daily_challenge.dart';
+import 'package:eme_app_package/models/mistake_item.dart';
+import 'package:eme_app_package/widgets/daily_challenge_section.dart';
+import 'package:eme_app_package/widgets/mistakes_section.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

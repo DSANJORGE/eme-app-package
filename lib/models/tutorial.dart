@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter_eme_base/models/topic.dart';
+import 'package:eme_app_package/models/topic.dart';
 import 'package:flutter/material.dart';
 
 class TutorialProgress {
