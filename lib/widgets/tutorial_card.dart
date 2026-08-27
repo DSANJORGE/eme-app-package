@@ -91,16 +91,19 @@ class _TutorialCardState extends State<TutorialCard>
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.beginner,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.competent,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               widget.tutorial.progress,
                               Efficiency.expert,
+                              l10n,
                             ),
                           ],
                         ),

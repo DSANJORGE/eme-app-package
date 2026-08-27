@@ -1,600 +1,616 @@
 {
-    "@@locale": "en",
-    "catalogDashboard": "Catalog / Dashboard",
-    "profile": "PROFILE",
-    "overallProgress": "Overall Progress",
-    "overallPerformance": "Overall Performance",
-    "topics": "TOPICS",
-    "workspace": "WORKSPACE",
-    "language": "LANGUAGE",
-    "logout": "LOGOUT",
-    "poweredBy": "Powered by eMe.world",
-    "notifications": "Notifications",
-    "newTutorials": "3 New",
-    "level": "Level 10",
-    "avgSuffix": "Avg",
-    "newTutorialTitle": "New Tutorial Available",
-    "newTutorialBody": "Mathematical Competence 2 has been unlocked.",
-    "achievementTitle": "Achievement Unlocked",
-    "achievementBody": "You completed 3 subject diagnostic tests.",
-    "time5m": "5m ago",
-    "time2h": "2h ago",
-    "tutorialsCount": "{count} tutorials",
-    "@tutorialsCount": {
-        "placeholders": {
-            "count": {
-                "type": "String"
-            }
-        }
-    },
-    "daysToGo": "days to go",
-    "efficiency": "efficiency",
-    "moderate": "Moderate",
-    "lastUpdated": "Last updated: {date}",
-    "@lastUpdated": {
-        "placeholders": {
-            "date": {
-                "type": "String"
-            }
-        }
-    },
-    "tutorials": "Tutorials",
-    "totalTutorials": "TOTAL TUTORIALS",
-    "activeTutorials": "{count} Active Tutorials",
-    "@activeTutorials": {
-        "placeholders": {
-            "count": {
-                "type": "String"
-            }
-        }
-    },
-    "testsPerformance": "TESTS PERFORMANCE",
-    "averageScore": "{progress}% Average Score",
-    "@averageScore": {
-        "placeholders": {
-            "progress": {
-                "type": "String"
-            }
-        }
-    },
-    "overallTopicProgress": "Overall Topic Progress",
-    "finished": "{percent}% Finished",
-    "@finished": {
-        "placeholders": {
-            "percent": {
-                "type": "String"
-            }
-        }
-    },
-    "beginner": "Beginner",
-    "competent": "Competent",
-    "expert": "Expert",
-    "topicsYouExcelAt": "Topics you excel at",
-    "averageRank": "Average Rank",
-    "nextRankUp": "Average Score",
-    "improve": "Improve",
-    "refresh": "Refresh",
-    "lastReviewed": "Last reviewed {d} days ago",
-    "@lastReviewed": {
-        "placeholders": {
-            "d": {
-                "type": "String"
-            }
-        }
-    },
-    "confidence": "Confidence",
-    "privacyPolicy": "Privacy Policy",
-    "appCompliance": "Privacy & Data",
-    "dataConsentTitle": "Data Collection Disclosure & Consent",
-    "dataConsentBody": "We value your privacy. We collect account details (email, name), chat interactions, and learning progress to provide personalized AI tutoring. All data is transmitted securely over HTTPS and stored safely. We do not sell your personal data.",
-    "acceptConsent": "Accept",
-    "declineConsent": "Decline",
-    "deleteAccount": "Delete Account",
-    "deleteAccountConfirm": "Are you sure you want to delete your account? This action is permanent and will erase your credentials, history, and profile data.",
-    "deleteData": "Delete Collected Data",
-    "deleteDataConfirm": "Are you sure you want to delete all collected learning and chat data? This cannot be undone.",
-    "aiGenerated": "AI Generated",
-    "reportAi": "Report AI Response",
-    "reportAiSuccess": "Thank you! Your report has been submitted for review.",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "reasonHallucination": "Hallucination / Inaccurate Information",
-    "reasonInappropriate": "Inappropriate Content",
-    "reasonOffensive": "Offensive Language",
-    "reasonOther": "Other Issue",
-    "accountManagementTitle": "Account & Data Management",
-    "accountManagementBody": "You have full control over your data. You can erase your collected data or permanently delete your account at any time.",
-    "verificationCodeSent": "Verification code sent to your email!",
-    "@verificationCodeSent": {
-        "description": "Toast message when OTP code is sent to user email"
-    },
-    "verificationCodeResent": "Verification code resent to your email!",
-    "@verificationCodeResent": {
-        "description": "Toast message when OTP code is resent"
-    },
-    "userDoesNotExist": "User does not exist.",
-    "@userDoesNotExist": {
-        "description": "Error message shown when email is not found in system"
-    },
-    "failedToSendCode": "Failed to send code",
-    "@failedToSendCode": {
-        "description": "Error message when sending verification code fails"
-    },
-    "pleaseEnterAll6Digits": "Please enter all 6 digits",
-    "@pleaseEnterAll6Digits": {
-        "description": "Validation error for OTP length"
-    },
-    "invalidVerificationCode": "Invalid verification code. Please try again.",
-    "@invalidVerificationCode": {
-        "description": "Error when OTP code is incorrect"
-    },
-    "createAccount": "Create Account",
-    "@createAccount": {
-        "description": "Title for account registration form"
-    },
-    "editEmail": "Edit Email",
-    "@editEmail": {
-        "description": "Button to go back and edit the entered email address"
-    },
-    "noAccountFoundRegister": "No account found for {email}. Please enter your details to register.",
-    "@noAccountFoundRegister": {
-        "description": "Instructional message when user account is not found",
-        "placeholders": {
-            "email": {
-                "type": "String"
-            }
-        }
-    },
-    "firstName": "First Name",
-    "@firstName": {
-        "description": "Label for first name input field"
-    },
-    "enterFirstName": "Enter your first name",
-    "@enterFirstName": {
-        "description": "Placeholder hint for first name"
-    },
-    "pleaseEnterFirstName": "Please enter your first name",
-    "@pleaseEnterFirstName": {
-        "description": "Validation error when first name is empty"
-    },
-    "lastName": "Last Name",
-    "@lastName": {
-        "description": "Label for last name input field"
-    },
-    "enterLastName": "Enter your last name",
-    "@enterLastName": {
-        "description": "Placeholder hint for last name"
-    },
-    "pleaseEnterLastName": "Please enter your last name",
-    "@pleaseEnterLastName": {
-        "description": "Validation error when last name is empty"
-    },
-    "emailAddress": "Email Address",
-    "@emailAddress": {
-        "description": "Label for email address field"
-    },
-    "enterEmail": "Enter your email",
-    "@enterEmail": {
-        "description": "Placeholder hint for email input"
-    },
-    "pleaseEnterEmail": "Please enter your email",
-    "@pleaseEnterEmail": {
-        "description": "Validation error when email is empty"
-    },
-    "pleaseEnterValidEmail": "Please enter a valid email address",
-    "@pleaseEnterValidEmail": {
-        "description": "Validation error when email format is invalid"
-    },
-    "verificationCode": "Verification Code",
-    "@verificationCode": {
-        "description": "Label for OTP input section"
-    },
-    "sentToEmail": "Sent to {email}",
-    "@sentToEmail": {
-        "description": "Subheading showing which email address received the code",
-        "placeholders": {
-            "email": {
-                "type": "String"
-            }
-        }
-    },
-    "workspacePrefix": "Workspace: {name}",
-    "@workspacePrefix": {
-        "description": "Label displaying currently selected workspace",
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "resendCodeIn": "Resend code in {seconds}s",
-    "@resendCodeIn": {
-        "description": "Timer label counting down until OTP resend is allowed",
-        "placeholders": {
-            "seconds": {
-                "type": "String"
-            }
-        }
-    },
-    "didntReceiveCode": "Didn't receive the code? ",
-    "@didntReceiveCode": {
-        "description": "Prompt asking user if OTP was received"
-    },
-    "resendCode": "Resend Code",
-    "@resendCode": {
-        "description": "Button to request a new OTP code"
-    },
-    "registerAndSendCode": "Register & Send Code",
-    "@registerAndSendCode": {
-        "description": "Button action to register and send OTP"
-    },
-    "verifyAndSignIn": "Verify & Sign In",
-    "@verifyAndSignIn": {
-        "description": "Button action to submit OTP and login"
-    },
-    "sendVerificationCode": "Send Verification Code",
-    "@sendVerificationCode": {
-        "description": "Button action to request initial OTP"
-    },
-    "selectWorkspace": "Select Workspace",
-    "@selectWorkspace": {
-        "description": "Title for workspace selector dialog/screen"
-    },
-    "workspaceRemoved": "Workspace removed",
-    "@workspaceRemoved": {
-        "description": "Toast confirming workspace removal"
-    },
-    "failedToRemoveWorkspace": "Failed to remove workspace",
-    "@failedToRemoveWorkspace": {
-        "description": "Error message when workspace removal fails"
-    },
-    "deleteWorkspace": "Delete Workspace",
-    "@deleteWorkspace": {
-        "description": "Title of delete workspace confirmation dialog"
-    },
-    "deleteWorkspaceConfirm": "Are you sure you want to delete workspace \"{name}\" ({root})?",
-    "@deleteWorkspaceConfirm": {
-        "description": "Confirmation prompt before deleting a workspace",
-        "placeholders": {
-            "name": {
-                "type": "String"
-            },
-            "root": {
-                "type": "String"
-            }
-        }
-    },
-    "delete": "Delete",
-    "@delete": {
-        "description": "Delete action button label"
-    },
-    "consentUpdatedAccepted": "Data collection consent updated to Accepted.",
-    "@consentUpdatedAccepted": {
-        "description": "Toast message when user accepts data collection"
-    },
-    "consentUpdatedEssential": "Data collection consent updated to Essential-only.",
-    "@consentUpdatedEssential": {
-        "description": "Toast message when user limits data collection to essentials"
-    },
-    "failedToUpdateConsent": "Failed to update consent preference",
-    "@failedToUpdateConsent": {
-        "description": "Error message when updating consent setting fails"
-    },
-    "dataDeletionRequested": "Personal collected data deletion has been requested.",
-    "@dataDeletionRequested": {
-        "description": "Confirmation toast after requesting personal data deletion"
-    },
-    "failedToRequestDataDeletion": "Failed to request data deletion",
-    "@failedToRequestDataDeletion": {
-        "description": "Error message when requesting data deletion fails"
-    },
-    "dataCollectionConsentStatus": "Data Collection Consent Status",
-    "@dataCollectionConsentStatus": {
-        "description": "Section title in compliance screen"
-    },
-    "accountInfoTitle": "Account Information",
-    "@accountInfoTitle": {
-        "description": "Disclosure category title for account info"
-    },
-    "accountInfoSubtitle": "Name, email address, and authentication credentials.",
-    "@accountInfoSubtitle": {
-        "description": "Disclosure description for account info"
-    },
-    "interactiveChatLearningTitle": "Interactive Chat & Learning Data",
-    "@interactiveChatLearningTitle": {
-        "description": "Disclosure category title for chat and learning data"
-    },
-    "interactiveChatLearningSubtitle": "Prompts, responses, diagnostic test scores & progress.",
-    "@interactiveChatLearningSubtitle": {
-        "description": "Disclosure description for chat and learning data"
-    },
-    "dataProtectionTitle": "Data Protection & Encryption",
-    "@dataProtectionTitle": {
-        "description": "Disclosure category title for security and encryption"
-    },
-    "dataProtectionSubtitle": "HTTPS transmission and secure cloud storage.",
-    "@dataProtectionSubtitle": {
-        "description": "Disclosure description for security and encryption"
-    },
-    "failedToLoadTopics": "Failed to load topics: {error}",
-    "@failedToLoadTopics": {
-        "description": "Error message when topics cannot be fetched",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "retry": "Retry",
-    "@retry": {
-        "description": "Button label to retry an operation"
-    },
-    "noTopicsAvailable": "No topics available.",
-    "@noTopicsAvailable": {
-        "description": "Empty state text when no topics are available"
-    },
-    "viewProfile": "View profile",
-    "@viewProfile": {
-        "description": "Tooltip or link to open user profile"
-    },
-    "catalog": "Catalog",
-    "@catalog": {
-        "description": "Tab or menu label for catalog section"
-    },
-    "couldNotOpenLink": "Could not open link: {url}",
-    "@couldNotOpenLink": {
-        "description": "Error when a web link cannot be opened",
-        "placeholders": {
-            "url": {
-                "type": "String"
-            }
-        }
-    },
-    "failedToLoadTutorials": "Failed to load tutorials: {error}",
-    "@failedToLoadTutorials": {
-        "description": "Error message when tutorials fail to load",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "noTutorialsAvailable": "No tutorials available.",
-    "@noTutorialsAvailable": {
-        "description": "Empty state text when no tutorials are present"
-    },
-    "failedToSelectImage": "Failed to select image",
-    "@failedToSelectImage": {
-        "description": "Error message when image picker fails"
-    },
-    "profileUpdatedSuccessfully": "Profile updated successfully",
-    "@profileUpdatedSuccessfully": {
-        "description": "Success toast after saving profile changes"
-    },
-    "failedToUpdateProfile": "Failed to update profile",
-    "@failedToUpdateProfile": {
-        "description": "Error message when profile save fails"
-    },
-    "editProfile": "Edit Profile",
-    "@editProfile": {
-        "description": "Title of the edit profile screen/action"
-    },
-    "email": "Email",
-    "@email": {
-        "description": "Label for email field in profile screen"
-    },
-    "saveChanges": "Save Changes",
-    "@saveChanges": {
-        "description": "Button label to commit edits"
-    },
-    "fieldIsRequired": "{label} is required",
-    "@fieldIsRequired": {
-        "description": "Validation error template for mandatory fields",
-        "placeholders": {
-            "label": {
-                "type": "String"
-            }
-        }
-    },
-    "accountDataCleared": "Account data cleared successfully.",
-    "@accountDataCleared": {
-        "description": "Toast after user data is cleared"
-    },
-    "failedToClearAccountData": "Failed to clear account data",
-    "@failedToClearAccountData": {
-        "description": "Error message when clearing user data fails"
-    },
-    "plusMoreCount": "+{count} more",
-    "@plusMoreCount": {
-        "description": "Badge showing count of remaining items",
-        "placeholders": {
-            "count": {
-                "type": "String"
-            }
-        }
-    },
-    "intermediate": "Intermediate",
-    "@intermediate": {
-        "description": "User skill rank level"
-    },
-    "failedToLoadTutorialSession": "Failed to load tutorial session",
-    "@failedToLoadTutorialSession": {
-        "description": "Error message when starting a tutorial session fails"
-    },
-    "failedToSubmitAnswer": "Failed to submit answer",
-    "@failedToSubmitAnswer": {
-        "description": "Error message when submitting an answer fails"
-    },
-    "failedToSendFollowUp": "Failed to send follow up",
-    "@failedToSendFollowUp": {
-        "description": "Error message when sending a follow up question fails"
-    },
-    "failedToContinueTutorial": "Failed to continue tutorial",
-    "@failedToContinueTutorial": {
-        "description": "Error message when advancing tutorial fails"
-    },
-    "reportDetailsPrompt": "Report hallucination, inaccurate information, or inappropriate AI response:",
-    "@reportDetailsPrompt": {
-        "description": "Header description in AI response report dialog"
-    },
-    "additionalDetailsOptional": "Additional details (optional)...",
-    "@additionalDetailsOptional": {
-        "description": "Hint text for additional comments in report dialog"
-    },
-    "report": "Report",
-    "@report": {
-        "description": "Button label to submit a report"
-    },
-    "correct": "Correct!",
-    "@correct": {
-        "description": "Feedback shown when answer is correct"
-    },
-    "incorrect": "Incorrect.",
-    "@incorrect": {
-        "description": "Feedback shown when answer is incorrect"
-    },
-    "errorLoadingChat": "An error occured while loading the chat.",
-    "@errorLoadingChat": {
-        "description": "Error message shown when tutor chat fails to load"
-    },
-    "tryAgain": "Try Again",
-    "@tryAgain": {
-        "description": "Button label to retry loading chat or session"
-    },
-    "start": "Start",
-    "@start": {
-        "description": "Button label to start a tutorial"
-    },
-    "askFollowUpHint": "Ask a follow-up question...",
-    "@askFollowUpHint": {
-        "description": "Hint text in chat input field"
-    },
-    "send": "Send",
-    "@send": {
-        "description": "Button label to send chat message"
-    },
-    "continueButton": "Continue",
-    "@continueButton": {
-        "description": "Button label to continue tutorial"
-    },
-    "howConfidentQuestion": "HOW CONFIDENT ARE YOU IN THIS ANSWER?",
-    "@howConfidentQuestion": {
-        "description": "Prompt header for confidence rating"
-    },
-    "submitAnswer": "Submit Answer",
-    "@submitAnswer": {
-        "description": "Button label to submit quiz answer"
-    },
-    "connectingToTutorSession": "Connecting to tutor session...",
-    "@connectingToTutorSession": {
-        "description": "Status banner while WebSocket / tutor session connects"
-    },
-    "quizCompleted": "Quiz Completed! 🎉",
-    "@quizCompleted": {
-        "description": "Header celebration text when quiz is completed"
-    },
-    "goBack": "Go Back!",
-    "@goBack": {
-        "description": "Button label to exit quiz and go back to topics"
-    },
-    "failedToLoadImage": "Failed to load image",
-    "@failedToLoadImage": {
-        "description": "Error state when image fails to load"
-    },
-    "openInBrowser": "Open in Browser",
-    "@openInBrowser": {
-        "description": "Button to open asset in external browser"
-    },
-    "failedToPlayVideo": "Failed to play video",
-    "@failedToPlayVideo": {
-        "description": "Error state when video player fails"
-    },
-    "openVideoExternally": "Open Video Externally",
-    "@openVideoExternally": {
-        "description": "Button to open video URL externally"
-    },
-    "failedToLoadAudio": "Failed to load audio",
-    "@failedToLoadAudio": {
-        "description": "Error state when audio player fails"
-    },
-    "openAudioLink": "Open Audio Link",
-    "@openAudioLink": {
-        "description": "Button to open audio URL externally"
-    },
-    "loadingDocument": "Loading document...",
-    "@loadingDocument": {
-        "description": "Status text while loading PDF document"
-    },
-    "failedToDisplayPdf": "Failed to display PDF document",
-    "@failedToDisplayPdf": {
-        "description": "Error state when PDF viewer fails"
-    },
-    "openPdfInBrowser": "Open PDF in Browser",
-    "@openPdfInBrowser": {
-        "description": "Button to open PDF in external browser"
-    },
-    "pageOfTotal": "Page {current} of {total}",
-    "@pageOfTotal": {
-        "description": "PDF page indicator",
-        "placeholders": {
-            "current": {
-                "type": "String"
-            },
-            "total": {
-                "type": "String"
-            }
-        }
-    },
-    "pictureInPicture": "Picture in Picture",
-    "@pictureInPicture": {
-        "description": "Tooltip for entering picture-in-picture mode"
-    },
-    "openLink": "Open link",
-    "@openLink": {
-        "description": "Tooltip for opening external link"
-    },
-    "mediaViewer": "Media Viewer",
-    "@mediaViewer": {
-        "description": "Header title for media viewer screen"
-    },
-    "couldNotLaunchMediaUrl": "Could not launch media URL",
-    "@couldNotLaunchMediaUrl": {
-        "description": "Error message when opening media URL fails"
-    },
-    "mediaPreview": "Media Preview",
-    "@mediaPreview": {
-        "description": "Title for media preview widget"
-    },
-    "videoPreview": "Video Preview",
-    "@videoPreview": {
-        "description": "Title for video preview widget"
-    },
-    "failedToLoadVideo": "Failed to load video",
-    "@failedToLoadVideo": {
-        "description": "Error message when video cannot be loaded"
-    },
-    "openExternal": "Open External",
-    "@openExternal": {
-        "description": "Button label to open resource in external application"
-    },
-    "fullScreen": "Full Screen",
-    "@fullScreen": {
-        "description": "Tooltip for entering fullscreen"
-    },
-    "pipVideo": "PiP Video",
-    "@pipVideo": {
-        "description": "Default title for picture-in-picture overlay"
-    },
-    "answersForgottenSummary": "An average of {percent}% answers forgotten over {days} days",
-    "@answersForgottenSummary": {
-        "description": "Summary sentence of forgotten answers over period",
-        "placeholders": {
-            "percent": {
-                "type": "String"
-            },
-            "days": {
-                "type": "String"
-            }
-        }
-    }
+	"@@locale": "en",
+	"catalogDashboard": "Catalog / Dashboard",
+	"profile": "PROFILE",
+	"overallProgress": "Overall Progress",
+	"overallPerformance": "Overall Performance",
+	"topics": "TOPICS",
+	"workspace": "WORKSPACE",
+	"language": "LANGUAGE",
+	"logout": "LOGOUT",
+	"poweredBy": "Powered by eMe.world",
+	"notifications": "Notifications",
+	"newTutorials": "3 New",
+	"level": "Level 10",
+	"avgSuffix": "Avg",
+	"newTutorialTitle": "New Tutorial Available",
+	"newTutorialBody": "Mathematical Competence 2 has been unlocked.",
+	"achievementTitle": "Achievement Unlocked",
+	"achievementBody": "You completed 3 subject diagnostic tests.",
+	"time5m": "5m ago",
+	"time2h": "2h ago",
+	"tutorialsCount": "{count} tutorials",
+	"@tutorialsCount": {
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"daysToGo": "days to go",
+	"efficiency": "efficiency",
+	"moderate": "Moderate",
+	"lastUpdated": "Last updated: {date}",
+	"@lastUpdated": {
+		"placeholders": {
+			"date": {
+				"type": "String"
+			}
+		}
+	},
+	"tutorials": "Tutorials",
+	"totalTutorials": "TOTAL TUTORIALS",
+	"activeTutorials": "{count} Active Tutorials",
+	"@activeTutorials": {
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"testsPerformance": "TESTS PERFORMANCE",
+	"averageScore": "{progress}% Average Score",
+	"@averageScore": {
+		"placeholders": {
+			"progress": {
+				"type": "String"
+			}
+		}
+	},
+	"overallTopicProgress": "Overall Topic Progress",
+	"finished": "{percent}% Finished",
+	"@finished": {
+		"placeholders": {
+			"percent": {
+				"type": "String"
+			}
+		}
+	},
+	"beginner": "Beginner",
+	"competent": "Competent",
+	"expert": "Expert",
+	"topicsYouExcelAt": "Topics you excel at",
+	"averageRank": "Average Rank",
+	"nextRankUp": "Average Score",
+	"improve": "Improve",
+	"refresh": "Refresh",
+	"lastReviewed": "Last reviewed {d} days ago",
+	"@lastReviewed": {
+		"placeholders": {
+			"d": {
+				"type": "String"
+			}
+		}
+	},
+	"confidence": "Confidence",
+	"privacyPolicy": "Privacy Policy",
+	"appCompliance": "Privacy & Data",
+	"dataConsentTitle": "Data Collection Disclosure & Consent",
+	"dataConsentBody": "We value your privacy. We collect account details (email, name), chat interactions, and learning progress to provide personalized AI tutoring. All data is transmitted securely over HTTPS and stored safely. We do not sell your personal data.",
+	"acceptConsent": "Accept",
+	"declineConsent": "Decline",
+	"deleteAccount": "Delete Account",
+	"deleteAccountConfirm": "Are you sure you want to delete your account? This action is permanent and will erase your credentials, history, and profile data.",
+	"deleteData": "Delete Collected Data",
+	"deleteDataConfirm": "Are you sure you want to delete all collected learning and chat data? This cannot be undone.",
+	"aiGenerated": "AI Generated",
+	"reportAi": "Report AI Response",
+	"reportAiSuccess": "Thank you! Your report has been submitted for review.",
+	"cancel": "Cancel",
+	"confirm": "Confirm",
+	"reasonHallucination": "Hallucination / Inaccurate Information",
+	"reasonInappropriate": "Inappropriate Content",
+	"reasonOffensive": "Offensive Language",
+	"reasonOther": "Other Issue",
+	"accountManagementTitle": "Account & Data Management",
+	"accountManagementBody": "You have full control over your data. You can erase your collected data or permanently delete your account at any time.",
+	"verificationCodeSent": "Verification code sent to your email!",
+	"@verificationCodeSent": {
+		"description": "Toast message when OTP code is sent to user email"
+	},
+	"verificationCodeResent": "Verification code resent to your email!",
+	"@verificationCodeResent": {
+		"description": "Toast message when OTP code is resent"
+	},
+	"userDoesNotExist": "User does not exist.",
+	"@userDoesNotExist": {
+		"description": "Error message shown when email is not found in system"
+	},
+	"failedToSendCode": "Failed to send code",
+	"@failedToSendCode": {
+		"description": "Error message when sending verification code fails"
+	},
+	"pleaseEnterAll6Digits": "Please enter all 6 digits",
+	"@pleaseEnterAll6Digits": {
+		"description": "Validation error for OTP length"
+	},
+	"invalidVerificationCode": "Invalid verification code. Please try again.",
+	"@invalidVerificationCode": {
+		"description": "Error when OTP code is incorrect"
+	},
+	"createAccount": "Create Account",
+	"@createAccount": {
+		"description": "Title for account registration form"
+	},
+	"editEmail": "Edit Email",
+	"@editEmail": {
+		"description": "Button to go back and edit the entered email address"
+	},
+	"noAccountFoundRegister": "No account found for {email}. Please enter your details to register.",
+	"@noAccountFoundRegister": {
+		"description": "Instructional message when user account is not found",
+		"placeholders": {
+			"email": {
+				"type": "String"
+			}
+		}
+	},
+	"firstName": "First Name",
+	"@firstName": {
+		"description": "Label for first name input field"
+	},
+	"enterFirstName": "Enter your first name",
+	"@enterFirstName": {
+		"description": "Placeholder hint for first name"
+	},
+	"pleaseEnterFirstName": "Please enter your first name",
+	"@pleaseEnterFirstName": {
+		"description": "Validation error when first name is empty"
+	},
+	"lastName": "Last Name",
+	"@lastName": {
+		"description": "Label for last name input field"
+	},
+	"enterLastName": "Enter your last name",
+	"@enterLastName": {
+		"description": "Placeholder hint for last name"
+	},
+	"pleaseEnterLastName": "Please enter your last name",
+	"@pleaseEnterLastName": {
+		"description": "Validation error when last name is empty"
+	},
+	"emailAddress": "Email Address",
+	"@emailAddress": {
+		"description": "Label for email address field"
+	},
+	"enterEmail": "Enter your email",
+	"@enterEmail": {
+		"description": "Placeholder hint for email input"
+	},
+	"pleaseEnterEmail": "Please enter your email",
+	"@pleaseEnterEmail": {
+		"description": "Validation error when email is empty"
+	},
+	"pleaseEnterValidEmail": "Please enter a valid email address",
+	"@pleaseEnterValidEmail": {
+		"description": "Validation error when email format is invalid"
+	},
+	"verificationCode": "Verification Code",
+	"@verificationCode": {
+		"description": "Label for OTP input section"
+	},
+	"sentToEmail": "Sent to {email}",
+	"@sentToEmail": {
+		"description": "Subheading showing which email address received the code",
+		"placeholders": {
+			"email": {
+				"type": "String"
+			}
+		}
+	},
+	"workspacePrefix": "Workspace: {name}",
+	"@workspacePrefix": {
+		"description": "Label displaying currently selected workspace",
+		"placeholders": {
+			"name": {
+				"type": "String"
+			}
+		}
+	},
+	"resendCodeIn": "Resend code in {seconds}s",
+	"@resendCodeIn": {
+		"description": "Timer label counting down until OTP resend is allowed",
+		"placeholders": {
+			"seconds": {
+				"type": "String"
+			}
+		}
+	},
+	"didntReceiveCode": "Didn't receive the code? ",
+	"@didntReceiveCode": {
+		"description": "Prompt asking user if OTP was received"
+	},
+	"resendCode": "Resend Code",
+	"@resendCode": {
+		"description": "Button to request a new OTP code"
+	},
+	"registerAndSendCode": "Register & Send Code",
+	"@registerAndSendCode": {
+		"description": "Button action to register and send OTP"
+	},
+	"verifyAndSignIn": "Verify & Sign In",
+	"@verifyAndSignIn": {
+		"description": "Button action to submit OTP and login"
+	},
+	"sendVerificationCode": "Send Verification Code",
+	"@sendVerificationCode": {
+		"description": "Button action to request initial OTP"
+	},
+	"selectWorkspace": "Select Workspace",
+	"@selectWorkspace": {
+		"description": "Title for workspace selector dialog/screen"
+	},
+	"workspaceRemoved": "Workspace removed",
+	"@workspaceRemoved": {
+		"description": "Toast confirming workspace removal"
+	},
+	"failedToRemoveWorkspace": "Failed to remove workspace",
+	"@failedToRemoveWorkspace": {
+		"description": "Error message when workspace removal fails"
+	},
+	"deleteWorkspace": "Delete Workspace",
+	"@deleteWorkspace": {
+		"description": "Title of delete workspace confirmation dialog"
+	},
+	"deleteWorkspaceConfirm": "Are you sure you want to delete workspace \"{name}\" ({root})?",
+	"@deleteWorkspaceConfirm": {
+		"description": "Confirmation prompt before deleting a workspace",
+		"placeholders": {
+			"name": {
+				"type": "String"
+			},
+			"root": {
+				"type": "String"
+			}
+		}
+	},
+	"delete": "Delete",
+	"@delete": {
+		"description": "Delete action button label"
+	},
+	"consentUpdatedAccepted": "Data collection consent updated to Accepted.",
+	"@consentUpdatedAccepted": {
+		"description": "Toast message when user accepts data collection"
+	},
+	"consentUpdatedEssential": "Data collection consent updated to Essential-only.",
+	"@consentUpdatedEssential": {
+		"description": "Toast message when user limits data collection to essentials"
+	},
+	"failedToUpdateConsent": "Failed to update consent preference",
+	"@failedToUpdateConsent": {
+		"description": "Error message when updating consent setting fails"
+	},
+	"dataDeletionRequested": "Personal collected data deletion has been requested.",
+	"@dataDeletionRequested": {
+		"description": "Confirmation toast after requesting personal data deletion"
+	},
+	"failedToRequestDataDeletion": "Failed to request data deletion",
+	"@failedToRequestDataDeletion": {
+		"description": "Error message when requesting data deletion fails"
+	},
+	"dataCollectionConsentStatus": "Data Collection Consent Status",
+	"@dataCollectionConsentStatus": {
+		"description": "Section title in compliance screen"
+	},
+	"accountInfoTitle": "Account Information",
+	"@accountInfoTitle": {
+		"description": "Disclosure category title for account info"
+	},
+	"accountInfoSubtitle": "Name, email address, and authentication credentials.",
+	"@accountInfoSubtitle": {
+		"description": "Disclosure description for account info"
+	},
+	"interactiveChatLearningTitle": "Interactive Chat & Learning Data",
+	"@interactiveChatLearningTitle": {
+		"description": "Disclosure category title for chat and learning data"
+	},
+	"interactiveChatLearningSubtitle": "Prompts, responses, diagnostic test scores & progress.",
+	"@interactiveChatLearningSubtitle": {
+		"description": "Disclosure description for chat and learning data"
+	},
+	"dataProtectionTitle": "Data Protection & Encryption",
+	"@dataProtectionTitle": {
+		"description": "Disclosure category title for security and encryption"
+	},
+	"dataProtectionSubtitle": "HTTPS transmission and secure cloud storage.",
+	"@dataProtectionSubtitle": {
+		"description": "Disclosure description for security and encryption"
+	},
+	"failedToLoadTopics": "Failed to load topics: {error}",
+	"@failedToLoadTopics": {
+		"description": "Error message when topics cannot be fetched",
+		"placeholders": {
+			"error": {
+				"type": "String"
+			}
+		}
+	},
+	"retry": "Retry",
+	"@retry": {
+		"description": "Button label to retry an operation"
+	},
+	"noTopicsAvailable": "No topics available.",
+	"@noTopicsAvailable": {
+		"description": "Empty state text when no topics are available"
+	},
+	"viewProfile": "View profile",
+	"@viewProfile": {
+		"description": "Tooltip or link to open user profile"
+	},
+	"catalog": "Catalog",
+	"@catalog": {
+		"description": "Tab or menu label for catalog section"
+	},
+	"couldNotOpenLink": "Could not open link: {url}",
+	"@couldNotOpenLink": {
+		"description": "Error when a web link cannot be opened",
+		"placeholders": {
+			"url": {
+				"type": "String"
+			}
+		}
+	},
+	"failedToLoadTutorials": "Failed to load tutorials: {error}",
+	"@failedToLoadTutorials": {
+		"description": "Error message when tutorials fail to load",
+		"placeholders": {
+			"error": {
+				"type": "String"
+			}
+		}
+	},
+	"noTutorialsAvailable": "No tutorials available.",
+	"@noTutorialsAvailable": {
+		"description": "Empty state text when no tutorials are present"
+	},
+	"failedToSelectImage": "Failed to select image",
+	"@failedToSelectImage": {
+		"description": "Error message when image picker fails"
+	},
+	"profileUpdatedSuccessfully": "Profile updated successfully",
+	"@profileUpdatedSuccessfully": {
+		"description": "Success toast after saving profile changes"
+	},
+	"failedToUpdateProfile": "Failed to update profile",
+	"@failedToUpdateProfile": {
+		"description": "Error message when profile save fails"
+	},
+	"editProfile": "Edit Profile",
+	"@editProfile": {
+		"description": "Title of the edit profile screen/action"
+	},
+	"email": "Email",
+	"@email": {
+		"description": "Label for email field in profile screen"
+	},
+	"saveChanges": "Save Changes",
+	"@saveChanges": {
+		"description": "Button label to commit edits"
+	},
+	"fieldIsRequired": "{label} is required",
+	"@fieldIsRequired": {
+		"description": "Validation error template for mandatory fields",
+		"placeholders": {
+			"label": {
+				"type": "String"
+			}
+		}
+	},
+	"accountDataCleared": "Account data cleared successfully.",
+	"@accountDataCleared": {
+		"description": "Toast after user data is cleared"
+	},
+	"failedToClearAccountData": "Failed to clear account data",
+	"@failedToClearAccountData": {
+		"description": "Error message when clearing user data fails"
+	},
+	"plusMoreCount": "+{count} more",
+	"@plusMoreCount": {
+		"description": "Badge showing count of remaining items",
+		"placeholders": {
+			"count": {
+				"type": "String"
+			}
+		}
+	},
+	"intermediate": "Intermediate",
+	"@intermediate": {
+		"description": "User skill rank level"
+	},
+	"failedToLoadTutorialSession": "Failed to load tutorial session",
+	"@failedToLoadTutorialSession": {
+		"description": "Error message when starting a tutorial session fails"
+	},
+	"failedToSubmitAnswer": "Failed to submit answer",
+	"@failedToSubmitAnswer": {
+		"description": "Error message when submitting an answer fails"
+	},
+	"failedToSendFollowUp": "Failed to send follow up",
+	"@failedToSendFollowUp": {
+		"description": "Error message when sending a follow up question fails"
+	},
+	"failedToContinueTutorial": "Failed to continue tutorial",
+	"@failedToContinueTutorial": {
+		"description": "Error message when advancing tutorial fails"
+	},
+	"reportDetailsPrompt": "Report hallucination, inaccurate information, or inappropriate AI response:",
+	"@reportDetailsPrompt": {
+		"description": "Header description in AI response report dialog"
+	},
+	"additionalDetailsOptional": "Additional details (optional)...",
+	"@additionalDetailsOptional": {
+		"description": "Hint text for additional comments in report dialog"
+	},
+	"report": "Report",
+	"@report": {
+		"description": "Button label to submit a report"
+	},
+	"correct": "Correct!",
+	"@correct": {
+		"description": "Feedback shown when answer is correct"
+	},
+	"incorrect": "Incorrect.",
+	"@incorrect": {
+		"description": "Feedback shown when answer is incorrect"
+	},
+	"errorLoadingChat": "An error occured while loading the chat.",
+	"@errorLoadingChat": {
+		"description": "Error message shown when tutor chat fails to load"
+	},
+	"tryAgain": "Try Again",
+	"@tryAgain": {
+		"description": "Button label to retry loading chat or session"
+	},
+	"start": "Start",
+	"@start": {
+		"description": "Button label to start a tutorial"
+	},
+	"askFollowUpHint": "Ask a follow-up question...",
+	"@askFollowUpHint": {
+		"description": "Hint text in chat input field"
+	},
+	"send": "Send",
+	"@send": {
+		"description": "Button label to send chat message"
+	},
+	"continueButton": "Continue",
+	"@continueButton": {
+		"description": "Button label to continue tutorial"
+	},
+	"howConfidentQuestion": "HOW CONFIDENT ARE YOU IN THIS ANSWER?",
+	"@howConfidentQuestion": {
+		"description": "Prompt header for confidence rating"
+	},
+	"submitAnswer": "Submit Answer",
+	"@submitAnswer": {
+		"description": "Button label to submit quiz answer"
+	},
+	"connectingToTutorSession": "Connecting to tutor session...",
+	"@connectingToTutorSession": {
+		"description": "Status banner while WebSocket / tutor session connects"
+	},
+	"quizCompleted": "Quiz Completed! 🎉",
+	"@quizCompleted": {
+		"description": "Header celebration text when quiz is completed"
+	},
+	"goBack": "Go Back!",
+	"@goBack": {
+		"description": "Button label to exit quiz and go back to topics"
+	},
+	"failedToLoadImage": "Failed to load image",
+	"@failedToLoadImage": {
+		"description": "Error state when image fails to load"
+	},
+	"openInBrowser": "Open in Browser",
+	"@openInBrowser": {
+		"description": "Button to open asset in external browser"
+	},
+	"failedToPlayVideo": "Failed to play video",
+	"@failedToPlayVideo": {
+		"description": "Error state when video player fails"
+	},
+	"openVideoExternally": "Open Video Externally",
+	"@openVideoExternally": {
+		"description": "Button to open video URL externally"
+	},
+	"failedToLoadAudio": "Failed to load audio",
+	"@failedToLoadAudio": {
+		"description": "Error state when audio player fails"
+	},
+	"openAudioLink": "Open Audio Link",
+	"@openAudioLink": {
+		"description": "Button to open audio URL externally"
+	},
+	"loadingDocument": "Loading document...",
+	"@loadingDocument": {
+		"description": "Status text while loading PDF document"
+	},
+	"failedToDisplayPdf": "Failed to display PDF document",
+	"@failedToDisplayPdf": {
+		"description": "Error state when PDF viewer fails"
+	},
+	"openPdfInBrowser": "Open PDF in Browser",
+	"@openPdfInBrowser": {
+		"description": "Button to open PDF in external browser"
+	},
+	"pageOfTotal": "Page {current} of {total}",
+	"@pageOfTotal": {
+		"description": "PDF page indicator",
+		"placeholders": {
+			"current": {
+				"type": "String"
+			},
+			"total": {
+				"type": "String"
+			}
+		}
+	},
+	"pictureInPicture": "Picture in Picture",
+	"@pictureInPicture": {
+		"description": "Tooltip for entering picture-in-picture mode"
+	},
+	"openLink": "Open link",
+	"@openLink": {
+		"description": "Tooltip for opening external link"
+	},
+	"mediaViewer": "Media Viewer",
+	"@mediaViewer": {
+		"description": "Header title for media viewer screen"
+	},
+	"couldNotLaunchMediaUrl": "Could not launch media URL",
+	"@couldNotLaunchMediaUrl": {
+		"description": "Error message when opening media URL fails"
+	},
+	"mediaPreview": "Media Preview",
+	"@mediaPreview": {
+		"description": "Title for media preview widget"
+	},
+	"videoPreview": "Video Preview",
+	"@videoPreview": {
+		"description": "Title for video preview widget"
+	},
+	"failedToLoadVideo": "Failed to load video",
+	"@failedToLoadVideo": {
+		"description": "Error message when video cannot be loaded"
+	},
+	"openExternal": "Open External",
+	"@openExternal": {
+		"description": "Button label to open resource in external application"
+	},
+	"fullScreen": "Full Screen",
+	"@fullScreen": {
+		"description": "Tooltip for entering fullscreen"
+	},
+	"pipVideo": "PiP Video",
+	"@pipVideo": {
+		"description": "Default title for picture-in-picture overlay"
+	},
+	"answersForgottenSummary": "An average of {percent}% answers forgotten over {days} days",
+	"@answersForgottenSummary": {
+		"description": "Summary sentence of forgotten answers over period",
+		"placeholders": {
+			"percent": {
+				"type": "String"
+			},
+			"days": {
+				"type": "String"
+			}
+		}
+	},
+	"noIdea": "No Idea",
+	"@noIdea": {
+		"description": "Confidence level indicating no idea about the answer"
+	},
+	"notSure": "Not sure",
+	"@notSure": {
+		"description": "Confidence level indicating uncertainty about the answer"
+	},
+	"mostlySure": "Mostly Sure",
+	"@mostlySure": {
+		"description": "Confidence level indicating high likelihood of knowing the answer"
+	},
+	"confident": "Confident",
+	"@confident": {
+		"description": "Confidence level indicating certainty about the answer"
+	}
 }

@@ -1214,7 +1214,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    message.answer!.confidence!.label,
+                    message.answer!.confidence!.getLabel(l10n),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -1328,7 +1328,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.play_circle, size: 16, color: Colors.white),
+                      const Icon(
+                        Icons.play_circle,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
@@ -1478,7 +1482,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            confidence.label,
+                            confidence.getLabel(l10n),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -1637,16 +1641,19 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.beginner,
+                          l10n,
                         ),
                         const SizedBox(width: 24),
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.competent,
+                          l10n,
                         ),
                         const SizedBox(width: 24),
                         CommonWidgets.buildProgressColumn(
                           widget.tutorial.progress,
                           Efficiency.expert,
+                          l10n,
                         ),
                       ],
                     ),

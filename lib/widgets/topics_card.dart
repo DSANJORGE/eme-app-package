@@ -12,11 +12,7 @@ class TopicCard extends ConsumerWidget {
   final Topic topic;
   final bool isClickable;
 
-  const TopicCard({
-    super.key,
-    required this.topic,
-    this.isClickable = true,
-  });
+  const TopicCard({super.key, required this.topic, this.isClickable = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,10 +67,7 @@ class TopicCard extends ConsumerWidget {
                         imageErrorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey,
-                            child: const Icon(
-                              Icons.error,
-                              color: Colors.white,
-                            ),
+                            child: const Icon(Icons.error, color: Colors.white),
                           );
                         },
                         fit: BoxFit.cover,
@@ -166,16 +159,19 @@ class TopicCard extends ConsumerWidget {
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.beginner,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.competent,
+                              l10n,
                             ),
                             const SizedBox(width: 16),
                             CommonWidgets.buildProgressColumn(
                               topic.progress,
                               Efficiency.expert,
+                              l10n,
                             ),
                           ],
                         ),
@@ -204,4 +200,3 @@ class TopicCard extends ConsumerWidget {
     );
   }
 }
-

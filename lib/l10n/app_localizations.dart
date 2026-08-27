@@ -1102,6 +1102,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An average of {percent}% answers forgotten over {days} days'**
   String answersForgottenSummary(String percent, String days);
+
+  /// Confidence level indicating no idea about the answer
+  ///
+  /// In en, this message translates to:
+  /// **'No Idea'**
+  String get noIdea;
+
+  /// Confidence level indicating uncertainty about the answer
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure'**
+  String get notSure;
+
+  /// Confidence level indicating high likelihood of knowing the answer
+  ///
+  /// In en, this message translates to:
+  /// **'Mostly Sure'**
+  String get mostlySure;
+
+  /// Confidence level indicating certainty about the answer
+  ///
+  /// In en, this message translates to:
+  /// **'Confident'**
+  String get confident;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -167,5 +167,9 @@
     "openExternal": "Abrir externo",
     "fullScreen": "Pantalla completa",
     "pipVideo": "Video PiP",
-    "answersForgottenSummary": "Un promedio de {percent}% de respuestas olvidadas en {days} días"
+    "answersForgottenSummary": "Un promedio de {percent}% de respuestas olvidadas en {days} días",
+    "noIdea": "Ni idea",
+    "notSure": "Poco seguro",
+    "mostlySure": "Casi seguro",
+    "confident": "Seguro"
 }

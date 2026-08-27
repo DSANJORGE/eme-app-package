@@ -547,4 +547,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String answersForgottenSummary(String percent, String days) {
     return 'An average of $percent% answers forgotten over $days days';
   }
+
+  @override
+  String get noIdea => 'No Idea';
+
+  @override
+  String get notSure => 'Not sure';
+
+  @override
+  String get mostlySure => 'Mostly Sure';
+
+  @override
+  String get confident => 'Confident';
 }
