@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_eme_base/flutter_eme_base.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/eme_app_package.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/utils/dio.dart';
+import 'package:eme_app_package/utils/dio.dart';
 import 'package:intl/intl.dart';
 import '../widgets/data_consent_dialog.dart';
 
@@ -49,9 +49,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserSuccess(
           context,
-          value
-              ? l10n.consentUpdatedAccepted
-              : l10n.consentUpdatedEssential,
+          value ? l10n.consentUpdatedAccepted : l10n.consentUpdatedEssential,
         );
       }
     } catch (e, stack) {
@@ -65,10 +63,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
           _hasConsented = !_hasConsented;
         });
         final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(
-          context,
-          l10n.failedToUpdateConsent,
-        );
+        AppErrorHandler.showUserError(context, l10n.failedToUpdateConsent);
       }
     }
   }

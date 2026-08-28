@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import '../models/daily_challenge.dart';
 
 class DailyChallengeSection extends StatelessWidget {

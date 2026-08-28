@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_eme_base/flutter_eme_base.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/eme_app_package.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/utils/dio.dart';
+import 'package:eme_app_package/utils/dio.dart';
 
 class DataCollectionConsentDialog extends StatefulWidget {
   final VoidCallback onConsentGiven;
@@ -194,7 +194,9 @@ class _DataCollectionConsentDialogState
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: _isLoading ? null : () => _handleConsent(false),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _handleConsent(false),
                         child: Text(
                           l10n.declineConsent,
                           textAlign: TextAlign.center,
@@ -216,7 +218,9 @@ class _DataCollectionConsentDialogState
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: _isLoading ? null : () => _handleConsent(true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _handleConsent(true),
                         child: _isLoading
                             ? const SizedBox(
                                 width: 16,

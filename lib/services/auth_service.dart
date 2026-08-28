@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter_eme_base/utils/dio.dart';
+import 'package:eme_app_package/utils/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_eme_base/utils/log.dart';
+import 'package:eme_app_package/utils/log.dart';
 import '../models/user.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
 import 'package:get/get.dart';

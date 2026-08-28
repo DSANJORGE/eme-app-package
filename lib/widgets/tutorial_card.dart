@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
-import 'package:flutter_eme_base/models/topic.dart';
-import 'package:flutter_eme_base/widgets/common_widgets.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
+import 'package:eme_app_package/models/topic.dart';
+import 'package:eme_app_package/widgets/common_widgets.dart';
 
 import '../models/tutorial.dart';
 import '../screens/rehearse_screen.dart';
@@ -75,100 +75,113 @@ class _TutorialCardState extends State<TutorialCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 4),
-                  CommonWidgets.buildCompetenceBadge(
-                    efficiency: widget.tutorial.progress.getEfficiency(),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CommonWidgets.buildProgressColumn(
-                              widget.tutorial.progress,
-                              Efficiency.beginner,
-                              l10n,
+                            Text(
+                              'Sections Completed',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white54,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                            CommonWidgets.buildProgressColumn(
-                              widget.tutorial.progress,
-                              Efficiency.competent,
-                              l10n,
-                            ),
-                            const SizedBox(width: 16),
-                            CommonWidgets.buildProgressColumn(
-                              widget.tutorial.progress,
-                              Efficiency.expert,
-                              l10n,
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: widget.tutorial.totalSections > 0
+                                  ? widget.tutorial.completedSections /
+                                        widget.tutorial.totalSections
+                                  : 0.0,
+                              color: Color(0xFF00E676),
+                              backgroundColor: Colors.white24,
                             ),
                           ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RehearseScreen(
-                                      tutorial: widget.tutorial,
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: statusColor.withValues(
-                                  alpha: 0.15,
-                                ),
-                                foregroundColor: statusColor,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: BorderSide(
-                                    color: statusColor.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                widget.tutorial.progress.getEfficiency() ==
-                                        Efficiency.expert
-                                    ? l10n.refresh
-                                    : l10n.improve,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(width: 16),
+                      Row(
+                        children: [
+                          CommonWidgets.buildProgressColumn(
+                            widget.tutorial.progress,
+                            Efficiency.beginner,
+                            l10n,
+                          ),
+                          const SizedBox(width: 16),
+                          CommonWidgets.buildProgressColumn(
+                            widget.tutorial.progress,
+                            Efficiency.competent,
+                            l10n,
+                          ),
+                          const SizedBox(width: 16),
+                          CommonWidgets.buildProgressColumn(
+                            widget.tutorial.progress,
+                            Efficiency.expert,
+                            l10n,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    l10n.answersForgottenSummary(
-                      widget.tutorial.answersForgotten.toStringAsFixed(2),
-                      widget.tutorial.forgottenPeriod.toString(),
-                    ),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.answersForgottenSummary(
+                            widget.tutorial.answersForgotten.toStringAsFixed(2),
+                            widget.tutorial.forgottenPeriod.toString(),
+                          ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  RehearseScreen(tutorial: widget.tutorial),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: statusColor.withValues(alpha: 0.15),
+                          foregroundColor: statusColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(
+                              color: statusColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          widget.tutorial.progress.getEfficiency() ==
+                                  Efficiency.expert
+                              ? l10n.refresh
+                              : l10n.improve,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

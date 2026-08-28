@@ -1,12 +1,8 @@
 {
 	"folders": [
 		{
-			"name": "flutter_eme_base",
+			"name": "eme_app_package",
 			"path": ".",
-		},
-		{
-			"name": "eme_world",
-			"path": "../eme_world",
 		},
 		{
 			"name": "genai_labs",

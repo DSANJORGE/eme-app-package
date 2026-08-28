@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:video_player/video_player.dart';
 
@@ -277,7 +277,10 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                       const SizedBox(height: 6),
                       Text(
                         l10n.mediaPreview,
-                        style: const TextStyle(color: Colors.white60, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -481,7 +484,10 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                         const SizedBox(height: 6),
                         Text(
                           l10n.videoPreview,
-                          style: const TextStyle(color: Colors.white60, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -554,7 +560,10 @@ class _AssetMessageWidgetState extends State<AssetMessageWidget> {
                     const SizedBox(height: 4),
                     Text(
                       l10n.failedToLoadVideo,
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     ElevatedButton.icon(

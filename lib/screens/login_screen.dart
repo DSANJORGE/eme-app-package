@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:transparent_image/transparent_image.dart';
 import '../models/workspace.dart';
 import '../services/auth_service.dart';
@@ -130,9 +130,7 @@ class _LoginScreenState extends State<LoginScreen>
         final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserSuccess(
           context,
-          isResend
-              ? l10n.verificationCodeResent
-              : l10n.verificationCodeSent,
+          isResend ? l10n.verificationCodeResent : l10n.verificationCodeSent,
         );
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -415,7 +413,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      l10n.noAccountFoundRegister(_emailController.text),
+                                      l10n.noAccountFoundRegister(
+                                        _emailController.text,
+                                      ),
                                       style: const TextStyle(
                                         color: Color(0xFF90A4AE),
                                         fontSize: 12,
@@ -586,7 +586,9 @@ class _LoginScreenState extends State<LoginScreen>
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          l10n.workspacePrefix(_selectedWorkspace.name),
+                                          l10n.workspacePrefix(
+                                            _selectedWorkspace.name,
+                                          ),
                                           style: const TextStyle(
                                             color: Color(0xFF38B6FF),
                                             fontSize: 12,
@@ -617,7 +619,9 @@ class _LoginScreenState extends State<LoginScreen>
                                       children: [
                                         Text(
                                           _timerSeconds > 0
-                                              ? l10n.resendCodeIn(_timerSeconds.toString())
+                                              ? l10n.resendCodeIn(
+                                                  _timerSeconds.toString(),
+                                                )
                                               : l10n.didntReceiveCode,
                                           style: const TextStyle(
                                             color: Color(0xFF90A4AE),
@@ -1065,8 +1069,11 @@ class _LoginScreenState extends State<LoginScreen>
                                             AppErrorHandler.recordNonFatal(
                                               e,
                                               stack,
-                                              reason: 'Failed to remove workspace',
-                                              customKeys: {'workspaceId': ws.id},
+                                              reason:
+                                                  'Failed to remove workspace',
+                                              customKeys: {
+                                                'workspaceId': ws.id,
+                                              },
                                             );
                                             if (mounted) {
                                               AppErrorHandler.showUserError(

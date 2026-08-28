@@ -1,4 +1,4 @@
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 
 import 'tutorial.dart';
 
@@ -28,6 +28,8 @@ class Topic {
   final int totalTutorials;
   final double answersForgotten;
   final int forgottenPeriod;
+  final int totalSections;
+  final int completedSections;
 
   final TutorialProgress progress;
 
@@ -43,6 +45,8 @@ class Topic {
     required this.answersForgotten,
     required this.forgottenPeriod,
     required this.progress,
+    required this.totalSections,
+    required this.completedSections,
     this.tutorial = const [],
   });
 
@@ -54,8 +58,10 @@ class Topic {
       thumbnail: json['thumbnail'] as String? ?? '',
       completedTutorials: (json['completed'] as num?)?.toInt() ?? 0,
       totalTutorials: (json['tutorials'] as num?)?.toInt() ?? 0,
-      answersForgotten: (json['answersForgotten'] as num?)?.toDouble() ?? 0,
-      forgottenPeriod: (json['forgottenPeriod'] as num?)?.toInt() ?? 0,
+      answersForgotten: (json['answersforgotten'] as num?)?.toDouble() ?? 0,
+      forgottenPeriod: (json['forgottenperiod'] as num?)?.toInt() ?? 0,
+      totalSections: (json['totalsections'] as num?)?.toInt() ?? 0,
+      completedSections: (json['completedsections'] as num?)?.toInt() ?? 0,
       progress: TutorialProgress.fromJson(
         json['progress'] as Map<String, dynamic>,
         null,
@@ -68,10 +74,12 @@ class Topic {
       'title': title,
       'description': description,
       'thumbnail': thumbnail,
-      'completedTutorials': completedTutorials,
+      'completed': completedTutorials,
       'totalTutorials': totalTutorials,
-      'answersForgotten': answersForgotten,
+      'answersforgotten': answersForgotten,
       'forgottenperiod': forgottenPeriod,
+      'totalsections': totalSections,
+      'completedsections': completedSections,
       'progress': progress,
     };
   }

@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_eme_base/models/chat_message.dart' as socket_msg;
-import 'package:flutter_eme_base/models/chat_message.dart';
-import 'package:flutter_eme_base/models/topic.dart';
-import 'package:flutter_eme_base/services/auth_service.dart';
-import 'package:flutter_eme_base/services/chat_socket_service.dart';
-import 'package:flutter_eme_base/services/topic_service.dart';
-import 'package:flutter_eme_base/utils/log.dart';
-import 'package:flutter_eme_base/widgets/common_widgets.dart';
-import 'package:flutter_eme_base/widgets/fullscreen_mediaviewer.dart';
-import 'package:flutter_eme_base/widgets/asset_message_widget.dart';
+import 'package:eme_app_package/models/chat_message.dart' as socket_msg;
+import 'package:eme_app_package/models/chat_message.dart';
+import 'package:eme_app_package/models/topic.dart';
+import 'package:eme_app_package/services/auth_service.dart';
+import 'package:eme_app_package/services/chat_socket_service.dart';
+import 'package:eme_app_package/services/topic_service.dart';
+import 'package:eme_app_package/utils/log.dart';
+import 'package:eme_app_package/widgets/common_widgets.dart';
+import 'package:eme_app_package/widgets/fullscreen_mediaviewer.dart';
+import 'package:eme_app_package/widgets/asset_message_widget.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import '../models/tutor_channel.dart';

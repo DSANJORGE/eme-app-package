@@ -1,9 +1,9 @@
-import 'package:flutter_eme_base/l10n/app_localizations.dart';
-import 'package:flutter_eme_base/providers/workspace_provider.dart';
+import 'package:eme_app_package/l10n/app_localizations.dart';
+import 'package:eme_app_package/providers/workspace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_eme_base/models/topic.dart';
-import 'package:flutter_eme_base/widgets/common_widgets.dart';
+import 'package:eme_app_package/models/topic.dart';
+import 'package:eme_app_package/widgets/common_widgets.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import '../screens/topic_tutorials_screen.dart';
@@ -152,7 +152,10 @@ class TopicCard extends ConsumerWidget {
                               ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
-                                value: 0.25,
+                                value: topic.totalSections > 0
+                                    ? topic.completedSections /
+                                          topic.totalSections
+                                    : 0.0,
                                 color: Color(0xFF00E676),
                                 backgroundColor: Colors.white24,
                               ),

@@ -1,5 +1,5 @@
-name: flutter_eme_base
-description: "A new Flutter package project."
+name: eme_app_package
+description: "Flutter EME"
 publish_to: "none"
 version: 0.0.1
 homepage:
