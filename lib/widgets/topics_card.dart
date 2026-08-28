@@ -159,6 +159,14 @@ class TopicCard extends ConsumerWidget {
                                 color: Color(0xFF00E676),
                                 backgroundColor: Colors.white24,
                               ),
+                              Text(
+                                '${topic.completedSections} / ${topic.totalSections}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white54,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
