@@ -152,7 +152,10 @@ class TopicCard extends ConsumerWidget {
                               ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
-                                value: 0.25,
+                                value: topic.totalSections > 0
+                                    ? topic.completedSections /
+                                          topic.totalSections
+                                    : 0.0,
                                 color: Color(0xFF00E676),
                                 backgroundColor: Colors.white24,
                               ),

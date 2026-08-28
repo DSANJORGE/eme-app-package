@@ -76,6 +76,8 @@ class Tutorial {
   final String topicId;
   final double answersForgotten;
   final DateTime lastReviewed;
+  final int totalSections;
+  final int completedSections;
 
   TutorialProgress progress;
 
@@ -85,6 +87,8 @@ class Tutorial {
     required this.topicId,
     required this.progress,
     required this.answersForgotten,
+    required this.totalSections,
+    required this.completedSections,
     required this.lastReviewed,
   });
 
@@ -98,6 +102,8 @@ class Tutorial {
         null,
       ),
       answersForgotten: _parseDouble(json['answersforgotten']) ?? 0.0,
+      totalSections: (json['totalsections'] as num?)?.toInt() ?? 0,
+      completedSections: (json['completedsections'] as num?)?.toInt() ?? 0,
       lastReviewed: json['lastreviewed'] != null
           ? DateTime.tryParse(json['lastreviewed'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -111,6 +117,8 @@ class Tutorial {
       'entitytopicid': topicId,
       'progress': progress.toJson(),
       'answersforgotten': answersForgotten,
+      'totalsections': totalSections,
+      'completedsections': completedSections,
       'lastreviewed': lastReviewed.toIso8601String(),
     };
   }

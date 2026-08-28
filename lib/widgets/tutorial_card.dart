@@ -75,12 +75,33 @@ class _TutorialCardState extends State<TutorialCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 4),
-                  CommonWidgets.buildCompetenceBadge(
-                    efficiency: widget.tutorial.progress.getEfficiency(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sections Completed',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white54,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: widget.tutorial.totalSections > 0
+                              ? widget.tutorial.completedSections /
+                                    widget.tutorial.totalSections
+                              : 0.0,
+                          color: Color(0xFF00E676),
+                          backgroundColor: Colors.white24,
+                        ),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
+                  const SizedBox(width: 16),
 
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
