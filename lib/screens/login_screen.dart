@@ -485,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen>
                                           return l10n.pleaseEnterEmail;
                                         }
                                         if (!RegExp(
-                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$',
                                         ).hasMatch(val.trim())) {
                                           return l10n.pleaseEnterValidEmail;
                                         }
@@ -514,7 +514,7 @@ class _LoginScreenState extends State<LoginScreen>
                                           return l10n.pleaseEnterEmail;
                                         }
                                         if (!RegExp(
-                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$',
                                         ).hasMatch(val.trim())) {
                                           return l10n.pleaseEnterValidEmail;
                                         }
