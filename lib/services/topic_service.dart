@@ -291,11 +291,14 @@ class TopicService {
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
 
-      String body = 'context_tutorialid=$tutorialId';
-      body += '&functionname=chat_tutor_welcome';
-      body += '&currentscenario=chat_tutor';
-      body += '&channel=$channel';
-      body += '&context_skiploader=true';
+      // Map body so Dio percent-encodes values; hand-concat broke on &/=/%.
+      final body = {
+        'context_tutorialid': tutorialId,
+        'functionname': 'chat_tutor_welcome',
+        'currentscenario': 'chat_tutor',
+        'channel': channel,
+        'context_skiploader': 'true',
+      };
 
       final response = await _client.post(
         targetUrl,
@@ -346,13 +349,15 @@ class TopicService {
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
 
-      String body = 'context_tutorialid=$tutorialId';
-      body += '&functionname=chat_tutor_continue';
-      body += '&currentscenario=chat_tutor';
-      body += '&channel=$channel';
-      if (sectionId != null) body += '&context_sectionid=$sectionId';
-      if (componentId != null) body += '&context_componentid=$componentId';
-      body += '&context_skiploader=true';
+      final body = {
+        'context_tutorialid': tutorialId,
+        'functionname': 'chat_tutor_continue',
+        'currentscenario': 'chat_tutor',
+        'channel': '$channel', // was interpolated; null stays literal "null"
+        'context_sectionid': ?sectionId,
+        'context_componentid': ?componentId,
+        'context_skiploader': 'true',
+      };
 
       logPrint("Continuing to $targetUrl with: $body");
 
@@ -408,15 +413,17 @@ class TopicService {
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
 
-      String body = 'currentscenario=chat_tutor';
-      body += '&functionname=chat_tutor_answer';
-      body += '&channel=$channel';
-      body += '&context_questionid=$questionId';
-      body += '&context_selectedoption=$selectedOption';
-      body += '&context_confidence=$confidence';
-      body += '&context_sectionid=$sectionId';
-      body += '&context_componentid=$componentId';
-      body += '&context_skiploader=true';
+      final body = {
+        'currentscenario': 'chat_tutor',
+        'functionname': 'chat_tutor_answer',
+        'channel': channel,
+        'context_questionid': questionId,
+        'context_selectedoption': selectedOption,
+        'context_confidence': confidence,
+        'context_sectionid': sectionId,
+        'context_componentid': componentId,
+        'context_skiploader': 'true',
+      };
 
       final response = await _client.post(
         targetUrl,
@@ -468,14 +475,16 @@ class TopicService {
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
 
-      String body = 'currentscenario=chat_tutor';
-      body += '&functionname=chat_tutor_usercomment';
-      body += '&context_tutorialid=$tutorialId';
-      body += '&channel=$channel';
-      body += '&context_query=$message';
-      body += '&context_sectionid=$sectionId';
-      body += '&context_componentid=$componentId';
-      body += '&context_skiploader=true';
+      final body = {
+        'currentscenario': 'chat_tutor',
+        'functionname': 'chat_tutor_usercomment',
+        'context_tutorialid': tutorialId,
+        'channel': channel,
+        'context_query': message, // user free text — the original :475 bug
+        'context_sectionid': sectionId,
+        'context_componentid': componentId,
+        'context_skiploader': 'true',
+      };
 
       final response = await _client.post(
         targetUrl,

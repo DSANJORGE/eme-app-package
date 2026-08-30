@@ -1087,7 +1087,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final ws = workspaces[index];
-                        final isSelected = ws.id == activeWs.id;
+                        final isSelected =
+                            ws.id.toLowerCase() == activeWs.id.toLowerCase();
                         final color = ws.id == 'minsur'
                             ? const Color(0xFF0072FF)
                             : ws.id == 'eme'
@@ -1117,7 +1118,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             child: ListTile(
                               onTap: () async {
                                 Navigator.pop(sheetContext);
-                                await AuthService.switchWorkspace(ws);
+                                final success =
+                                    await AuthService.switchWorkspace(ws);
+                                if (!success) {
+                                  if (mounted) {
+                                    AppErrorHandler.showUserError(
+                                      this.context,
+                                      'Failed to switch to ${ws.name}',
+                                    );
+                                  }
+                                  return;
+                                }
                                 setState(() {
                                   _activeWorkSpace = ws;
                                   _loadTopics();
