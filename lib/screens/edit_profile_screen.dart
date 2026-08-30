@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:eme_app_package/eme_http.dart';
 import 'package:eme_app_package/l10n/app_localizations.dart';
-import 'package:eme_app_package/utils/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
@@ -69,54 +69,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
 
     try {
-      final mediaDbRoot = AuthService.mediaDBRoot;
-      final targetUrl =
-          '$mediaDbRoot/services/authentication/usersave.json?'
-          'save=true&'
-          'userid=${AuthService.userId}&'
-          'username=${AuthService.userId}&'
-          'field=firstName&firstName.value=${Uri.encodeComponent(_firstNameController.text)}&'
-          'field=lastName&lastName.value=${Uri.encodeComponent(_lastNameController.text)}&'
-          'field=email&email.value=${Uri.encodeComponent(_emailController.text)}'
-          '${_imageFile != null ? '&field=assetportrait' : ''}';
-
-      final formData = FormData();
-      if (_imageFile != null) {
-        formData.files.add(
-          MapEntry(
-            'file.assetportrait',
-            await MultipartFile.fromFile(_imageFile!.path),
-          ),
-        );
-      }
-
-      final response = await DioUtil.dio.post(
-        targetUrl,
-        data: formData,
-        options: Options(
-          headers: {
-            'X-tokentype': 'entermedia',
-            'X-token': AuthService.token ?? '',
-          },
-        ),
+      await AuthService.saveUserFields(
+        [
+          const MapEntry('field', 'firstName'),
+          MapEntry('firstName.value', _firstNameController.text),
+          const MapEntry('field', 'lastName'),
+          MapEntry('lastName.value', _lastNameController.text),
+          const MapEntry('field', 'email'),
+          MapEntry('email.value', _emailController.text),
+        ],
+        portrait: _imageFile == null
+            ? null
+            : await MultipartFile.fromFile(_imageFile!.path),
       );
 
-      if (response.statusCode == 200) {
-        // Refresh user data
-        await AuthService.fetchUser();
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          AppErrorHandler.showUserSuccess(
-            context,
-            l10n.profileUpdatedSuccessfully,
-          );
-          Navigator.pop(context);
-        }
-      } else {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          AppErrorHandler.showUserError(context, l10n.failedToUpdateProfile);
-        }
+      // Refresh user data
+      await AuthService.fetchUser();
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserSuccess(
+          context,
+          l10n.profileUpdatedSuccessfully,
+        );
+        Navigator.pop(context);
+      }
+    } on EmeHttpException {
+      // Already recorded inside EmeHttp.
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(context, l10n.failedToUpdateProfile);
       }
     } catch (e, stack) {
       AppErrorHandler.recordNonFatal(

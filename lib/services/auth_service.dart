@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:eme_app_package/eme_http.dart';
 import 'package:eme_app_package/utils/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eme_app_package/utils/log.dart';
@@ -11,6 +12,9 @@ import 'workspace_service.dart';
 
 class AuthService {
   static String get mediaDBRoot => WorkspaceService.currentMediaDBRoot;
+
+  /// The EnterMedia HTTP seam; swappable in tests.
+  static EmeHttp http = DioEmeHttp();
 
   static String? _token;
   static String? _refreshToken;
@@ -132,70 +136,65 @@ class AuthService {
   static Future<User?> fetchUser() async {
     if (_token == null || _token!.isEmpty) return null;
 
-    final url = '$mediaDBRoot/services/authentication/user.json';
+    const path = 'services/authentication/user.json';
     try {
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': _token!,
-          },
-        ),
-      );
+      final data = await http.getJson(path);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-
-        final userJson = data['user'] as Map<String, dynamic>;
-        _currentUser = User.fromJson(userJson);
-        if (_currentUser!.id.isNotEmpty) {
-          _userId = _currentUser!.id;
-        }
-        try {
-          final workspaceJson = data['servers'] as List<dynamic>;
-
-          List<Workspace> customWorkspaces = workspaceJson.map((ws) {
-            return Workspace.fromJson(ws);
-          }).toList();
-
-          WorkspaceService.addWorkspaces(customWorkspaces);
-        } catch (e, stack) {
-          logPrint('Failed to load workspaces: $e');
-          AppErrorHandler.recordNonFatal(
-            e,
-            stack,
-            reason: 'AuthService.fetchUser workspace parsing failed',
-          );
-        }
-
-        return _currentUser;
+      final userJson = data['user'] as Map<String, dynamic>;
+      _currentUser = User.fromJson(userJson);
+      if (_currentUser!.id.isNotEmpty) {
+        _userId = _currentUser!.id;
       }
+      try {
+        final workspaceJson = data['servers'] as List<dynamic>;
+
+        List<Workspace> customWorkspaces = workspaceJson.map((ws) {
+          return Workspace.fromJson(ws);
+        }).toList();
+
+        WorkspaceService.addWorkspaces(customWorkspaces);
+      } catch (e, stack) {
+        logPrint('Failed to load workspaces: $e');
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'AuthService.fetchUser workspace parsing failed',
+        );
+      }
+
+      return _currentUser;
     } catch (e, stack) {
       logPrint('Failed to fetch user');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'AuthService.fetchUser failed',
-        customKeys: {'url': url},
-      );
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'AuthService.fetchUser failed',
+          customKeys: {'url': path},
+        );
+      }
     }
     return null;
   }
 
-  static Future<Map<String, String>> getCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wsId = WorkspaceService.activeWorkspace.id;
-    _userId = prefs.getString('user_$wsId') ?? prefs.getString('user');
-    _token =
-        prefs.getString('entermediakey_$wsId') ??
-        prefs.getString('entermediakey');
-    return {'user': _userId ?? '', 'entermediakey': _token ?? ''};
-  }
+  /// usersave.json convenience shared by the profile, consent and compliance
+  /// screens. Throws EmeHttpException on failure (already recorded).
+  static Future<void> saveUserFields(
+    List<MapEntry<String, String>> fields, {
+    MultipartFile? portrait,
+  }) => http.post(
+    'services/authentication/usersave.json',
+    query: [
+      const MapEntry('save', 'true'),
+      MapEntry('userid', _userId ?? ''),
+      MapEntry('username', _userId ?? ''),
+      ...fields,
+      if (portrait != null) const MapEntry('field', 'assetportrait'),
+    ],
+    files: portrait == null
+        ? null
+        : [MapEntry('file.assetportrait', portrait)],
+  );
 
   static Future<void> saveCredentials(
     String userId,
@@ -322,188 +321,145 @@ class AuthService {
   static Future<bool> refreshAuthToken() async {
     if (_refreshToken == null) return false;
 
-    final url = '$mediaDBRoot/services/authentication/token.json';
-    final Map<String, String> body = {
-      'grant_type': 'refresh_token',
-      'refresh_token': _refreshToken!,
-    };
+    const path = 'services/authentication/token.json';
 
     try {
-      final response = await _dio.post(
-        url,
-        options: Options(contentType: Headers.formUrlEncodedContentType),
-        data: body,
-      );
+      final data = await http.postForm(path, [
+        const MapEntry('grant_type', 'refresh_token'),
+        MapEntry('refresh_token', _refreshToken!),
+      ], auth: EmeAuth.none);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = response.data is String
-            ? json.decode(response.data)
-            : response.data;
+      final userJson = data['user'] as Map<String, dynamic>?;
+      if (userJson == null) {
+        logPrint('Failed to refresh token: missing user in response');
+        return false;
+      }
 
-        final userJson = data['user'] as Map<String, dynamic>?;
-        if (userJson == null) {
-          logPrint('Failed to refresh token: missing user in response');
-          return false;
-        }
+      final key = data['access_token']?.toString() ?? '';
+      final newRefreshToken = data['refresh_token']?.toString();
+      final expiresIn = data['expires_in'] as int?;
+      DateTime? expiration;
+      if (expiresIn != null) {
+        expiration = DateTime.now().add(Duration(seconds: expiresIn));
+      }
 
-        final key = data['access_token']?.toString() ?? '';
-        final newRefreshToken = data['refresh_token']?.toString();
-        final expiresIn = data['expires_in'] as int?;
-        DateTime? expiration;
-        if (expiresIn != null) {
-          expiration = DateTime.now().add(Duration(seconds: expiresIn));
-        }
-
-        if (key.isNotEmpty && _userId != null) {
-          await saveCredentials(
-            _userId!,
-            key,
-            refreshToken: newRefreshToken ?? _refreshToken,
-            tokenExpiration: expiration,
-          );
-          return true;
-        }
+      if (key.isNotEmpty && _userId != null) {
+        await saveCredentials(
+          _userId!,
+          key,
+          refreshToken: newRefreshToken ?? _refreshToken,
+          tokenExpiration: expiration,
+        );
+        return true;
       }
     } catch (e, stack) {
       logPrint('Failed to refresh token: $e');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'AuthService.refreshAuthToken failed',
-        customKeys: {'url': url},
-      );
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'AuthService.refreshAuthToken failed',
+          customKeys: {'url': path},
+        );
+      }
     }
     return false;
   }
 
   static Future<void> loadWorkspaces() async {
-    final workspacesUrl = '$mediaDBRoot/services/server/list.json';
-
-    logPrint("fetching workspaces $workspacesUrl");
+    const path = 'services/server/list.json';
 
     try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final workspacesResponse = await _dio.get(
-        workspacesUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-entermediakey': credentials['entermediakey']!,
-            'X-userid': credentials['user']!,
-          },
-        ),
+      final workspacesData = await http.getJson(
+        path,
+        auth: EmeAuth.keyAndUser,
       );
 
-      if (workspacesResponse.statusCode == 200) {
-        final Map<String, dynamic> workspacesData =
-            workspacesResponse.data is String
-            ? json.decode(workspacesResponse.data)
-            : workspacesResponse.data;
+      final workspacesList = workspacesData['servers'] as List<dynamic>? ?? [];
 
-        final workspacesList =
-            workspacesData['servers'] as List<dynamic>? ?? [];
-
-        List<Workspace> customWorkspaces = workspacesList.map((ws) {
-          final root = (ws['mediadbroot'] as String).replaceAll(
-            RegExp(r'\/$'),
-            '',
-          );
-          return Workspace(
-            id: ws['id'] as String,
-            name: ws['name'] as String,
-            mediaDBRoot: root,
-            iconAsset: ws['iconasset'] as String?,
-          );
-        }).toList();
-        WorkspaceService.addWorkspaces(customWorkspaces);
-      }
+      List<Workspace> customWorkspaces = workspacesList.map((ws) {
+        final root = (ws['mediadbroot'] as String).replaceAll(
+          RegExp(r'\/$'),
+          '',
+        );
+        return Workspace(
+          id: ws['id'] as String,
+          name: ws['name'] as String,
+          mediaDBRoot: root,
+          iconAsset: ws['iconasset'] as String?,
+        );
+      }).toList();
+      WorkspaceService.addWorkspaces(customWorkspaces);
     } catch (e, stack) {
       logPrint('Failed to load workspaces: $e');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'AuthService.loadWorkspaces failed',
-        customKeys: {'url': workspacesUrl},
-      );
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'AuthService.loadWorkspaces failed',
+          customKeys: {'url': path},
+        );
+      }
     }
   }
 
   static Future<bool> loginWithOtp(String email, String otp) async {
-    final url = '$mediaDBRoot/services/authentication/token.json';
-    final Map<String, String> body = {
-      'grant_type': 'otp',
-      'email': email,
-      'code': otp,
-    };
+    const path = 'services/authentication/token.json';
 
     try {
-      final response = await _dio.post(
-        url,
-        options: Options(contentType: Headers.formUrlEncodedContentType),
-        data: body,
-      );
+      final data = await http.postForm(path, [
+        const MapEntry('grant_type', 'otp'),
+        MapEntry('email', email),
+        MapEntry('code', otp),
+      ], auth: EmeAuth.none);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-
-        final userJson = data['user'] as Map<String, dynamic>?;
-        if (userJson == null) {
-          throw Exception('Login response missing user');
-        }
-
-        final key = data['access_token']?.toString() ?? '';
-        final refreshToken = data['refresh_token']?.toString();
-        final expiresIn = data['expires_in'] as int?;
-        DateTime? expiration;
-        if (expiresIn != null) {
-          expiration = DateTime.now().add(Duration(seconds: expiresIn));
-        }
-
-        final userId = userJson['id']?.toString() ?? '';
-
-        if (key.isNotEmpty) {
-          await saveCredentials(
-            userId,
-            key,
-            refreshToken: refreshToken,
-            tokenExpiration: expiration,
-          );
-
-          await loadWorkspaces();
-
-          _currentUser = User.fromJson(userJson);
-
-          return true;
-        } else {
-          throw Exception('Login response missing access_token');
-        }
-      } else {
-        try {
-          final Map<String, dynamic> data = response.data is String
-              ? json.decode(response.data)
-              : response.data;
-          final errorMsg =
-              data['error_description']?.toString() ??
-              data['error']?.toString() ??
-              'Authentication failed';
-          throw Exception(errorMsg);
-        } catch (_) {
-          throw Exception(
-            'Authentication failed: Server returned status code ${response.statusCode}',
-          );
-        }
+      final userJson = data['user'] as Map<String, dynamic>?;
+      if (userJson == null) {
+        throw Exception('Login response missing user');
       }
+
+      final key = data['access_token']?.toString() ?? '';
+      final refreshToken = data['refresh_token']?.toString();
+      final expiresIn = data['expires_in'] as int?;
+      DateTime? expiration;
+      if (expiresIn != null) {
+        expiration = DateTime.now().add(Duration(seconds: expiresIn));
+      }
+
+      final userId = userJson['id']?.toString() ?? '';
+
+      if (key.isNotEmpty) {
+        await saveCredentials(
+          userId,
+          key,
+          refreshToken: refreshToken,
+          tokenExpiration: expiration,
+        );
+
+        await loadWorkspaces();
+
+        _currentUser = User.fromJson(userJson);
+
+        return true;
+      } else {
+        throw Exception('Login response missing access_token');
+      }
+    } on EmeHttpException catch (e) {
+      // Non-200: the module already recorded it; surface the server's message.
+      final body = e.body;
+      final errorMsg = body is Map
+          ? (body['error_description']?.toString() ?? body['error']?.toString())
+          : null;
+      throw Exception(
+        'Authentication failed: '
+        '${errorMsg ?? 'Server returned status code ${e.statusCode}'}',
+      );
     } catch (e, stack) {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
         reason: 'AuthService.loginWithOtp failed',
-        customKeys: {'email': email, 'url': url},
+        customKeys: {'email': email, 'url': path},
       );
       throw Exception(
         'Authentication failed: ${e.toString().replaceAll('Exception: ', '')}',

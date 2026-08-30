@@ -1,133 +1,64 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
+import 'package:eme_app_package/eme_http.dart';
 import 'package:eme_app_package/models/chat_message.dart';
-import 'package:eme_app_package/services/auth_service.dart';
-import 'package:eme_app_package/utils/dio.dart';
 import 'package:eme_app_package/utils/log.dart';
 import '../models/topic.dart';
 import '../models/tutor_channel.dart';
 import '../models/tutorial.dart';
 import '../utils/error_handler.dart';
 
-import 'workspace_service.dart';
-
+/// Parsing and flow only — transport, auth headers, encoding, decoding,
+/// logging and HTTP-error recording live behind [EmeHttp]. Catch blocks here
+/// record parse errors only; EmeHttpException is already recorded inside the
+/// module.
 class TopicService {
-  final Dio _client;
-  final String? _customMediaDBRoot;
+  final EmeHttp _http;
 
-  TopicService({Dio? client, String? mediaDBRoot})
-    : _client = client ?? DioUtil.dio,
-      _customMediaDBRoot = mediaDBRoot;
+  TopicService({EmeHttp? http}) : _http = http ?? DioEmeHttp();
 
-  String get mediaDBRoot =>
-      _customMediaDBRoot ?? WorkspaceService.currentMediaDBRoot;
+  static const _continuePath = 'services/module/entitytutorial/continue.json';
 
-  Future<List<Topic>> fetchTopics({bool fallbackToMock = true}) async {
-    final targetUrl = "$mediaDBRoot/services/module/entitytopic/topics.json";
-
+  Future<List<Topic>> fetchTopics() async {
+    const path = 'services/module/entitytopic/topics.json';
     try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-      final response = await _client.get(
-        targetUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = (response.data is String
-            ? json.decode(response.data)
-            : response.data);
-        List<dynamic> jsonList;
-
-        if (decoded is Map<String, dynamic>) {
-          jsonList = decoded['topics'] as List<dynamic>? ?? [];
-        } else {
-          throw FormatException('Unexpected response format from $targetUrl');
-        }
-
-        return jsonList
-            .map((item) => Topic.fromJson(item as Map<String, dynamic>))
-            .toList();
-      } else {
-        logPrint(
-          'Failed to fetch topics. Server returned HTTP ${response.statusCode}',
-        );
-        return [];
-      }
+      final data = await _http.getJson(path);
+      final jsonList = data['topics'] as List<dynamic>? ?? [];
+      return jsonList
+          .map((item) => Topic.fromJson(item as Map<String, dynamic>))
+          .toList();
     } catch (e, stack) {
-      logPrint('TopicService error fetching from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.fetchTopics failed',
-        customKeys: {'url': targetUrl},
-      );
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchTopics failed',
+          customKeys: {'url': path},
+        );
+      }
       return [];
     }
   }
 
   Future<List<Tutorial>> fetchTutorialsForTopic(String topicId) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/tutorials.json?entitytopic=$topicId";
-
+    const path = 'services/module/entitytutorial/tutorials.json';
     try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-      final response = await _client.get(
-        targetUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = (response.data is String
-            ? json.decode(response.data)
-            : response.data);
-        List<dynamic> jsonList;
-
-        if (decoded is List) {
-          jsonList = decoded;
-        } else if (decoded is Map<String, dynamic>) {
-          jsonList =
-              decoded['tutorials'] as List<dynamic>? ??
-              decoded['data'] as List<dynamic>? ??
-              [];
-        } else {
-          throw FormatException('Unexpected response format from $targetUrl');
-        }
-
-        return jsonList
-            .map((item) => Tutorial.fromJson(item as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw Exception(
-          'Failed to fetch tutorials. Server returned HTTP ${response.statusCode}',
+      final data = await _http.getJson(path, query: {'entitytopic': topicId});
+      // Bare-array responses arrive as {'data': [...]} per the EmeHttp contract.
+      final jsonList =
+          data['tutorials'] as List<dynamic>? ??
+          data['data'] as List<dynamic>? ??
+          [];
+      return jsonList
+          .map((item) => Tutorial.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e, stack) {
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchTutorialsForTopic failed',
+          customKeys: {'url': path, 'topicId': topicId},
         );
       }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutorials from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.fetchTutorialsForTopic failed',
-        customKeys: {'url': targetUrl, 'topicId': topicId},
-      );
       rethrow;
     }
   }
@@ -136,55 +67,29 @@ class TopicService {
     String tutorialId, {
     bool createNew = false,
   }) async {
-    String targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/tutorsession.json?dataid=$tutorialId";
-    if (createNew) targetUrl += "&createnew=$createNew";
-
+    const path = 'services/module/entitytutorial/tutorsession.json';
     try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-      final response = await _client.get(
-        targetUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-        ),
+      final data = await _http.getJson(
+        path,
+        query: {'dataid': tutorialId, if (createNew) 'createnew': 'true'},
       );
-
-      if (response.statusCode == 200) {
-        final decoded = (response.data is String
-            ? json.decode(response.data)
-            : response.data);
-        if (decoded is Map<String, dynamic>) {
-          final channel = decoded['channel'];
-          if (channel is Map<String, dynamic>) {
-            return TutorChannel.fromJson(channel);
-          }
-          if (!createNew) {
-            return await fetchTutorChannel(tutorialId, createNew: true);
-          }
-          return null;
-        } else {
-          throw FormatException('Unexpected response format from $targetUrl');
-        }
-      } else {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
+      final channel = data['channel'];
+      if (channel is Map<String, dynamic>) {
+        return TutorChannel.fromJson(channel);
+      }
+      if (!createNew) {
+        return await fetchTutorChannel(tutorialId, createNew: true);
+      }
+      return null;
+    } catch (e, stack) {
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchTutorChannel failed',
+          customKeys: {'url': path, 'tutorialId': tutorialId},
         );
       }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor channels from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.fetchTutorChannel failed',
-        customKeys: {'url': targetUrl, 'tutorialId': tutorialId},
-      );
       rethrow;
     }
   }
@@ -193,88 +98,56 @@ class TopicService {
     required String channelId,
     String? fromBeforeId,
   }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/tutorhistory.json?channel=$channelId${fromBeforeId != null ? '&fromid=$fromBeforeId' : ''}";
-
-    logPrint("fetchTutorHistory $targetUrl");
-
+    const path = 'services/module/entitytutorial/tutorhistory.json';
     try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-      final response = await _client.get(
-        targetUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-        ),
+      final data = await _http.getJson(
+        path,
+        query: {'channel': channelId, 'fromid': ?fromBeforeId},
       );
-
-      if (response.statusCode == 200) {
-        final decoded = (response.data is String
-            ? json.decode(response.data)
-            : response.data);
-        if (decoded is Map<String, dynamic>) {
-          final history = decoded['messages'] as dynamic;
-          logPrint("messages ${history.length}");
-          final List answers = decoded['answers'] is List
-              ? decoded['answers']
-              : [];
-          logPrint("answers ${answers.length}");
-          final List<ChatMessage> messages = [];
-          if (history is List) {
-            for (final item in history) {
-              try {
-                final message = ChatMessage.fromJson(item);
-                if (message.messageType.isQuestion) {
-                  final rawAnswer = answers.isEmpty
-                      ? null
-                      : answers.firstWhere(
-                          (a) => a['questionid'] == message.question?.id,
-                          orElse: () => null,
-                        );
-                  if (rawAnswer != null) {
-                    message.answer = Answer.fromJson(rawAnswer);
-                    message.interactive = false;
-                  }
-                }
-                messages.add(message);
-              } catch (e, stack) {
-                logPrint(e.toString());
-                logPrint(
-                  'TopicService error fetching tutor history from $targetUrl',
-                );
-                AppErrorHandler.recordNonFatal(
-                  e,
-                  stack,
-                  reason:
-                      'TopicService.fetchTutorHistory failed to parse chat message',
-                  customKeys: {'url': targetUrl, 'channelId': channelId},
-                );
+      final history = data['messages'] as dynamic;
+      logPrint("messages ${history.length}");
+      final List answers = data['answers'] is List ? data['answers'] : [];
+      logPrint("answers ${answers.length}");
+      final List<ChatMessage> messages = [];
+      if (history is List) {
+        for (final item in history) {
+          try {
+            final message = ChatMessage.fromJson(item);
+            if (message.messageType.isQuestion) {
+              final rawAnswer = answers.isEmpty
+                  ? null
+                  : answers.firstWhere(
+                      (a) => a['questionid'] == message.question?.id,
+                      orElse: () => null,
+                    );
+              if (rawAnswer != null) {
+                message.answer = Answer.fromJson(rawAnswer);
+                message.interactive = false;
               }
             }
+            messages.add(message);
+          } catch (e, stack) {
+            logPrint(e.toString());
+            AppErrorHandler.recordNonFatal(
+              e,
+              stack,
+              reason:
+                  'TopicService.fetchTutorHistory failed to parse chat message',
+              customKeys: {'url': path, 'channelId': channelId},
+            );
           }
-          return messages;
-        } else {
-          throw FormatException('Unexpected response format from $targetUrl');
         }
-      } else {
-        throw Exception(
-          'Failed to fetch tutor history. Server returned HTTP ${response.statusCode}',
+      }
+      return messages;
+    } catch (e, stack) {
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchTutorHistory failed',
+          customKeys: {'url': path, 'channelId': channelId},
         );
       }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor history from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.fetchTutorHistory failed',
-        customKeys: {'url': targetUrl, 'channelId': channelId},
-      );
       rethrow;
     }
   }
@@ -282,121 +155,29 @@ class TopicService {
   Future<void> startTutorial({
     required String tutorialId,
     required String channel,
-  }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
-
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-
-      // Map body so Dio percent-encodes values; hand-concat broke on &/=/%.
-      final body = {
-        'context_tutorialid': tutorialId,
-        'functionname': 'chat_tutor_welcome',
-        'currentscenario': 'chat_tutor',
-        'channel': channel,
-        'context_skiploader': 'true',
-      };
-
-      final response = await _client.post(
-        targetUrl,
-        data: body,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor channels from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.startTutorial failed',
-        customKeys: {
-          'url': targetUrl,
-          'tutorialId': tutorialId,
-          'channel': channel,
-        },
-      );
-      rethrow;
-    }
-  }
+  }) => _http.postForm(_continuePath, [
+    MapEntry('context_tutorialid', tutorialId),
+    const MapEntry('functionname', 'chat_tutor_welcome'),
+    const MapEntry('currentscenario', 'chat_tutor'),
+    MapEntry('channel', channel),
+    const MapEntry('context_skiploader', 'true'),
+  ]);
 
   Future<void> continueTutorial({
     required String tutorialId,
     String? channel,
     String? sectionId,
     String? componentId,
-  }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
-
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-
-      final body = {
-        'context_tutorialid': tutorialId,
-        'functionname': 'chat_tutor_continue',
-        'currentscenario': 'chat_tutor',
-        'channel': '$channel', // was interpolated; null stays literal "null"
-        'context_sectionid': ?sectionId,
-        'context_componentid': ?componentId,
-        'context_skiploader': 'true',
-      };
-
-      logPrint("Continuing to $targetUrl with: $body");
-
-      final response = await _client.post(
-        targetUrl,
-        data: body,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      if (kDebugMode) {
-        logPrint('TopicService error fetching tutor channels from $targetUrl');
-      }
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.continueTutorial failed',
-        customKeys: {
-          'url': targetUrl,
-          'tutorialId': tutorialId,
-          'channel': channel ?? '',
-        },
-      );
-      rethrow;
-    }
-  }
+  }) => _http.postForm(_continuePath, [
+    MapEntry('context_tutorialid', tutorialId),
+    const MapEntry('functionname', 'chat_tutor_continue'),
+    const MapEntry('currentscenario', 'chat_tutor'),
+    // '$channel': null stays the literal "null" the server has always seen.
+    MapEntry('channel', '$channel'),
+    if (sectionId != null) MapEntry('context_sectionid', sectionId),
+    if (componentId != null) MapEntry('context_componentid', componentId),
+    const MapEntry('context_skiploader', 'true'),
+  ]);
 
   Future<void> submitAnswer({
     required String channel,
@@ -405,60 +186,17 @@ class TopicService {
     required String confidence,
     required String sectionId,
     required String componentId,
-  }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-
-      final body = {
-        'currentscenario': 'chat_tutor',
-        'functionname': 'chat_tutor_answer',
-        'channel': channel,
-        'context_questionid': questionId,
-        'context_selectedoption': selectedOption,
-        'context_confidence': confidence,
-        'context_sectionid': sectionId,
-        'context_componentid': componentId,
-        'context_skiploader': 'true',
-      };
-
-      final response = await _client.post(
-        targetUrl,
-        data: body,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor channels from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.submitAnswer failed',
-        customKeys: {
-          'url': targetUrl,
-          'channel': channel,
-          'questionId': questionId,
-        },
-      );
-      rethrow;
-    }
-  }
+  }) => _http.postForm(_continuePath, [
+    const MapEntry('currentscenario', 'chat_tutor'),
+    const MapEntry('functionname', 'chat_tutor_answer'),
+    MapEntry('channel', channel),
+    MapEntry('context_questionid', questionId),
+    MapEntry('context_selectedoption', selectedOption),
+    MapEntry('context_confidence', confidence),
+    MapEntry('context_sectionid', sectionId),
+    MapEntry('context_componentid', componentId),
+    const MapEntry('context_skiploader', 'true'),
+  ]);
 
   Future<void> sendFollowUp({
     required String channel,
@@ -467,53 +205,14 @@ class TopicService {
     required String sectionId,
     required String componentId,
     required String tutorialId,
-  }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-
-      final body = {
-        'currentscenario': 'chat_tutor',
-        'functionname': 'chat_tutor_usercomment',
-        'context_tutorialid': tutorialId,
-        'channel': channel,
-        'context_query': message, // user free text — the original :475 bug
-        'context_sectionid': sectionId,
-        'context_componentid': componentId,
-        'context_skiploader': 'true',
-      };
-
-      final response = await _client.post(
-        targetUrl,
-        data: body,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor channels from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.sendFollowUp failed',
-        customKeys: {'url': targetUrl, 'channel': channel, 'message': message},
-      );
-      rethrow;
-    }
-  }
+  }) => _http.postForm(_continuePath, [
+    const MapEntry('currentscenario', 'chat_tutor'),
+    const MapEntry('functionname', 'chat_tutor_usercomment'),
+    MapEntry('context_tutorialid', tutorialId),
+    MapEntry('channel', channel),
+    MapEntry('context_query', message),
+    MapEntry('context_sectionid', sectionId),
+    MapEntry('context_componentid', componentId),
+    const MapEntry('context_skiploader', 'true'),
+  ]);
 }

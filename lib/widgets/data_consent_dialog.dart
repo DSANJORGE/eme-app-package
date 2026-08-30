@@ -1,8 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:eme_app_package/eme_app_package.dart';
 import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:eme_app_package/utils/dio.dart';
 
 class DataCollectionConsentDialog extends StatefulWidget {
   final VoidCallback onConsentGiven;
@@ -15,35 +13,15 @@ class DataCollectionConsentDialog extends StatefulWidget {
 
   static Future<bool> saveConsent(bool consented) async {
     try {
-      final mediaDbRoot = AuthService.mediaDBRoot;
-      final targetUrl =
-          '$mediaDbRoot/services/authentication/usersave.json?'
-          'save=true&'
-          'userid=${AuthService.userId}&'
-          'username=${AuthService.userId}&'
-          'field=dataconsent&dataconsent.value=${consented.toString()}';
-
-      final response = await DioUtil.dio.post(
-        targetUrl,
-        options: Options(
-          headers: {
-            'X-tokentype': 'entermedia',
-            'X-token': AuthService.token ?? '',
-          },
-        ),
-      );
-      if (response.statusCode != 200) {
-        return false;
-      }
+      await AuthService.saveUserFields([
+        const MapEntry('field', 'dataconsent'),
+        MapEntry('dataconsent.value', '$consented'),
+      ]);
       await AuthService.fetchUser();
       return true;
-    } catch (e, stack) {
+    } catch (e) {
+      // Already recorded inside EmeHttp.
       logPrint('Failed to save consent: $e');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'DataCollectionConsentDialog.saveConsent failed',
-      );
       return false;
     }
   }

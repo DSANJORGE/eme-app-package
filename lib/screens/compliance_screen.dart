@@ -1,8 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:eme_app_package/eme_app_package.dart';
 import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:eme_app_package/utils/dio.dart';
 import 'package:intl/intl.dart';
 import '../widgets/data_consent_dialog.dart';
 
@@ -115,37 +113,20 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 final hourValue = DateFormat('HH').format(now);
                 final minuteValue = DateFormat('mm').format(now);
 
-                final mediaDbRoot = AuthService.mediaDBRoot;
-                final targetUrl =
-                    '$mediaDbRoot/services/authentication/usersave.json?'
-                    'save=true&'
-                    'userid=${AuthService.userId}&'
-                    'username=${AuthService.userId}&'
-                    'field=datadeleterequested&'
-                    'datadeleterequested.value=$dateValue&'
-                    'datadeleterequested.hour=$hourValue&'
-                    'datadeleterequested.minute=$minuteValue';
-                await DioUtil.dio.post(
-                  targetUrl,
-                  options: Options(
-                    headers: {
-                      'X-tokentype': 'entermedia',
-                      'X-token': AuthService.token ?? '',
-                    },
-                  ),
-                );
+                await AuthService.saveUserFields([
+                  const MapEntry('field', 'datadeleterequested'),
+                  MapEntry('datadeleterequested.value', dateValue),
+                  MapEntry('datadeleterequested.hour', hourValue),
+                  MapEntry('datadeleterequested.minute', minuteValue),
+                ]);
                 if (mounted) {
                   AppErrorHandler.showUserSuccess(
                     context,
                     l10n.dataDeletionRequested,
                   );
                 }
-              } catch (e, stack) {
-                AppErrorHandler.recordNonFatal(
-                  e,
-                  stack,
-                  reason: 'ComplianceScreen delete progress cache failed',
-                );
+              } catch (_) {
+                // Already recorded inside EmeHttp.
                 if (mounted) {
                   AppErrorHandler.showUserError(
                     context,

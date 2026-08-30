@@ -2,6 +2,7 @@ export 'app_config.dart';
 export 'base_app.dart';
 
 // Services
+export 'eme_http.dart';
 export 'services/auth_service.dart';
 export 'services/workspace_service.dart';
 export 'services/deep_link_service.dart';
