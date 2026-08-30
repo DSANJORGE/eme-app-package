@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eme_app_package/utils/log.dart';
 import '../models/user.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
-import 'package:get/get.dart';
 import '../models/workspace.dart';
 import '../utils/error_handler.dart';
 import 'workspace_service.dart';
@@ -105,9 +104,7 @@ class AuthService {
 
     await WorkspaceService.setActiveWorkspace(workspace);
 
-    if (Get.isRegistered<OpenI>()) {
-      Get.find<OpenI>().updateSettings(workspace.toJson());
-    }
+    OpenI.instance?.updateSettings(workspace.toJson());
 
     if (childOfCurrentWorkspace &&
         currentUserId != null &&

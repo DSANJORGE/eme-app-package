@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:get/get.dart';
 import 'package:openinsitute_core/openinsitute_core.dart';
 import 'package:eme_app_package/utils/log.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -318,13 +317,14 @@ class ChatSocketService {
   }
 
   String _resolveUserId() {
-    return AuthService.userId!;
+    // Null on logout; connect() aborts on empty userId without rescheduling.
+    return AuthService.userId ?? '';
   }
 
   String _resolveBaseUrl() {
     try {
-      if (Get.isRegistered<OpenI>()) {
-        final oi = Get.find<OpenI>();
+      final oi = OpenI.instance;
+      if (oi != null) {
         final siteRoot = oi.settings.siteroot;
         final scheme = oi.settings.https ? 'wss' : 'ws';
         return '$scheme://$siteRoot/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';

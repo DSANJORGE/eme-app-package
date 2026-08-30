@@ -29,7 +29,6 @@ dependencies:
   openinsitute_core:
     path: packages/openinsitute_core
   logger: ^2.7.0
-  get: ^4.7.3
   app_links: ^6.3.2
   flutter_riverpod: ^2.6.1
   image_picker: ^1.2.3
