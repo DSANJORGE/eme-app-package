@@ -171,17 +171,21 @@ class _RehearseScreenState extends State<RehearseScreen> {
       );
 
       _historyChannels = result.history;
-      _activeTutorChannel = result.currentChannel;
-      _currentViewingChannel = _activeTutorChannel;
-      _tutorChannel = _activeTutorChannel;
+      _activeTutorChannel = result.activeChannel;
+      _currentViewingChannel = result.currentChannel ?? result.activeChannel;
+      _tutorChannel = _currentViewingChannel;
 
-      if (_activeTutorChannel == null) {
+      if (_currentViewingChannel == null) {
         setState(() {
           _stage = MessageStage.error;
           _isLoading = false;
         });
         return;
       }
+
+      final isViewingActive = _activeTutorChannel != null &&
+          _currentViewingChannel?.id == _activeTutorChannel!.id;
+      _isReadOnly = !isViewingActive;
 
       if (result.messages.isNotEmpty) {
         setState(() {
@@ -190,15 +194,21 @@ class _RehearseScreenState extends State<RehearseScreen> {
         });
       }
 
-      await _connectSocket(_activeTutorChannel!.id);
+      if (isViewingActive) {
+        await _connectSocket(_activeTutorChannel!.id);
 
-      if (_messages.isEmpty) {
-        await TopicService().startTutorial(
-          tutorialId: widget.tutorial.id,
-          channel: _activeTutorChannel!.id,
-        );
+        if (_messages.isEmpty) {
+          await TopicService().startTutorial(
+            tutorialId: widget.tutorial.id,
+            channel: _activeTutorChannel!.id,
+          );
+        } else {
+          _updateStageFromLastMessage();
+        }
       } else {
-        _updateStageFromLastMessage();
+        if (_messages.isNotEmpty) {
+          _updateStageFromLastMessage();
+        }
       }
 
       setState(() {
@@ -251,10 +261,15 @@ class _RehearseScreenState extends State<RehearseScreen> {
         channelId: historyChannel.id,
       );
 
-      logPrint('Tutor Result: ${result}');
+      logPrint('Tutor Result: $result');
 
-      if (result.history.isNotEmpty) {
-        _historyChannels = result.history;
+      _historyChannels = result.history;
+      if (result.activeChannel != null) {
+        _activeTutorChannel = result.activeChannel;
+      }
+      if (result.currentChannel != null) {
+        _currentViewingChannel = result.currentChannel;
+        _tutorChannel = result.currentChannel;
       }
 
       setState(() {
@@ -262,6 +277,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         _lastMessage = _messages.isNotEmpty ? _messages.last : null;
         _isLoading = false;
       });
+      _updateStageFromLastMessage();
       _scrollToBottom();
     } catch (e, stack) {
       AppErrorHandler.recordNonFatal(
@@ -308,9 +324,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
         channelId: _activeTutorChannel!.id,
       );
 
-      if (result.history.isNotEmpty) {
-        _historyChannels = result.history;
+      _historyChannels = result.history;
+      if (result.activeChannel != null) {
+        _activeTutorChannel = result.activeChannel;
       }
+      _currentViewingChannel = result.currentChannel ?? _activeTutorChannel;
+      _tutorChannel = _currentViewingChannel;
 
       if (result.messages.isNotEmpty) {
         setState(() {
@@ -2183,25 +2202,26 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                TextButton(
-                  onPressed: _switchToActiveSession,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                if (_activeTutorChannel != null)
+                  TextButton(
+                    onPressed: _switchToActiveSession,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.resumeActive,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF38B6FF),
-                      fontWeight: FontWeight.bold,
+                    child: Text(
+                      l10n.resumeActive,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF38B6FF),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

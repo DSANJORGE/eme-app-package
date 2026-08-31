@@ -13,12 +13,14 @@ import '../utils/error_handler.dart';
 import 'workspace_service.dart';
 
 class TutorHistoryResult {
-  final TutorChannel currentChannel;
+  final TutorChannel? currentChannel;
+  final TutorChannel? activeChannel;
   final List<TutorChannel> history;
   final List<ChatMessage> messages;
 
   TutorHistoryResult({
-    required this.currentChannel,
+    this.currentChannel,
+    this.activeChannel,
     this.history = const [],
     this.messages = const [],
   });
@@ -187,7 +189,14 @@ class TopicService {
             currentChannel = TutorChannel.fromJson(currentChannelData);
           }
 
-          // Parse history channels
+          // Parse activechannel
+          TutorChannel? activeChannel;
+          final activeChannelData = decoded['activechannel'];
+          if (activeChannelData is Map<String, dynamic>) {
+            activeChannel = TutorChannel.fromJson(activeChannelData);
+          }
+
+          // Parse history channels (finished channels only)
           final List<TutorChannel> historyChannels = [];
           final rawHistory = decoded['channelhistory'];
           if (rawHistory is List) {
@@ -234,7 +243,7 @@ class TopicService {
                       'TopicService.fetchTutorHistory failed to parse chat message',
                   customKeys: {
                     'url': targetUrl,
-                    'channelId': channelId!,
+                    'channelId': channelId ?? '',
                     'tutorialId': tutorialId,
                   },
                 );
@@ -242,7 +251,8 @@ class TopicService {
             }
           }
           return TutorHistoryResult(
-            currentChannel: currentChannel!,
+            currentChannel: currentChannel,
+            activeChannel: activeChannel,
             history: historyChannels,
             messages: messages,
           );
@@ -262,7 +272,7 @@ class TopicService {
         reason: 'TopicService.fetchTutorHistory failed',
         customKeys: {
           'url': targetUrl,
-          'channelId': channelId!,
+          'channelId': channelId ?? '',
           'tutorialId': tutorialId,
         },
       );
