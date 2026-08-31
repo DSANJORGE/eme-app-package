@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:eme_app_package/eme_http.dart';
 import 'package:eme_app_package/services/topic_service.dart';
+import 'package:eme_app_package/testing/fake_eme_http.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Internal-seam fake: captures what DioEmeHttp actually puts on the wire.
@@ -34,44 +35,6 @@ class FakeSession implements EmeSession {
   String? token = 't1';
   @override
   String? userId = 'u1';
-}
-
-/// Second adapter at the EmeHttp seam: services are tested through this,
-/// so they survive any DioEmeHttp refactor.
-class FakeEmeHttp implements EmeHttp {
-  final requests = <(String, Object?)>[];
-  final canned = <String, Map<String, dynamic>>{};
-
-  Map<String, dynamic> _lookup(String path, Object? detail) {
-    requests.add((path, detail));
-    final r = canned[path];
-    if (r == null) {
-      throw EmeHttpException(uri: Uri.parse(path), statusCode: 404);
-    }
-    return r;
-  }
-
-  @override
-  Future<Map<String, dynamic>> getJson(
-    String path, {
-    Map<String, String> query = const {},
-    EmeAuth auth = EmeAuth.token,
-  }) async => _lookup(path, query);
-
-  @override
-  Future<Map<String, dynamic>> postForm(
-    String path,
-    Iterable<MapEntry<String, String>> fields, {
-    EmeAuth auth = EmeAuth.token,
-  }) async => _lookup(path, fields.toList());
-
-  @override
-  Future<Map<String, dynamic>> post(
-    String path, {
-    Iterable<MapEntry<String, String>> query = const [],
-    List<MapEntry<String, MultipartFile>>? files,
-    EmeAuth auth = EmeAuth.token,
-  }) async => _lookup(path, query.toList());
 }
 
 void main() {
