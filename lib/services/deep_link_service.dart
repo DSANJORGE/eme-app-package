@@ -10,11 +10,6 @@ import 'workspace_service.dart';
 class DeepLinkService {
   static StreamSubscription<Uri>? _sub;
   static final AppLinks _appLinks = AppLinks();
-  static Map<String, String> _lastParameters = {};
-
-  /// Returns the last processed web or deep link parameters.
-  static Map<String, String> get lastParameters =>
-      Map.unmodifiable(_lastParameters);
 
   /// Initialize deep link listening.
   /// Calls [onWorkspaceOpened] when a valid workspace deep link is processed.
@@ -83,11 +78,6 @@ class DeepLinkService {
     );
   }
 
-  /// Helper to read and extract parameters directly from Web URL (`Uri.base`).
-  static Map<String, String> getWebParameters() {
-    return parseParametersFromUri(Uri.base);
-  }
-
   /// Extracts all query parameters, fragment parameters, and path parameters from a Uri into a normalized Map.
   static Map<String, String> parseParametersFromUri(Uri uri) {
     final Map<String, String> params = {};
@@ -139,44 +129,25 @@ class DeepLinkService {
       }
     }
 
-    // Workspace aliases: ws / id / name -> workspace
-    if (!normalized.containsKey('workspace')) {
-      if (normalized.containsKey('ws')) {
-        normalized['workspace'] = normalized['ws']!;
-      } else if (normalized.containsKey('id')) {
-        normalized['workspace'] = normalized['id']!;
-      } else if (normalized.containsKey('name')) {
-        normalized['workspace'] = normalized['name']!;
-      }
+    // Workspace alias: ws -> workspace. `id` / `name` dropped: `name` is read
+    // below as the workspace *display* name, and a generic `id=` from an
+    // unrelated link would hijack workspace selection.
+    if (!normalized.containsKey('workspace') && normalized.containsKey('ws')) {
+      normalized['workspace'] = normalized['ws']!;
     }
 
-    // User aliases: username / userId -> user
-    if (!normalized.containsKey('user')) {
-      if (normalized.containsKey('username')) {
-        normalized['user'] = normalized['username']!;
-      } else if (normalized.containsKey('userId')) {
-        normalized['user'] = normalized['userId']!;
-      }
+    // User alias: the server spells it `username` (see EnterMedia
+    // usermanager links). `userId` was never emitted.
+    if (!normalized.containsKey('user') &&
+        normalized.containsKey('username')) {
+      normalized['user'] = normalized['username']!;
     }
 
-    // Token aliases: token / key / apikey -> entermediakey
-    if (!normalized.containsKey('entermediakey')) {
-      if (normalized.containsKey('token')) {
-        normalized['entermediakey'] = normalized['token']!;
-      } else if (normalized.containsKey('key')) {
-        normalized['entermediakey'] = normalized['key']!;
-      } else if (normalized.containsKey('apikey')) {
-        normalized['entermediakey'] = normalized['apikey']!;
-      }
-    }
-
-    // OTP / temp login aliases: otp / code -> templogincode
-    if (!normalized.containsKey('templogincode')) {
-      if (normalized.containsKey('otp')) {
-        normalized['templogincode'] = normalized['otp']!;
-      } else if (normalized.containsKey('code')) {
-        normalized['templogincode'] = normalized['code']!;
-      }
+    // Token: magic-link emails emit `entermedia.key=` (sendmagiclinkemail.html),
+    // not token / key / apikey.
+    if (!normalized.containsKey('entermediakey') &&
+        normalized.containsKey('entermedia.key')) {
+      normalized['entermediakey'] = normalized['entermedia.key']!;
     }
 
     // 4. Extract path workspace if not already present
@@ -272,7 +243,6 @@ class DeepLinkService {
   }) async {
     logPrint('Handling deep link URI: $uri');
     final params = parseParametersFromUri(uri);
-    _lastParameters = params;
 
     if (params.isNotEmpty && onParametersReceived != null) {
       onParametersReceived(params);
