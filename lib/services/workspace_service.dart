@@ -171,25 +171,6 @@ class WorkspaceService {
     );
   }
 
-  static Future<void> setActiveWorkspaceByName(String name) async {
-    final lowerName = name.toLowerCase();
-    final found = _workspaces.firstWhere(
-      (w) =>
-          w.name.toLowerCase() == lowerName || w.id.toLowerCase() == lowerName,
-      orElse: () => _workspaces.first,
-    );
-    await setActiveWorkspace(found);
-  }
-
-  static Workspace getWorkspaceByName(String name) {
-    final lowerName = name.toLowerCase();
-    return _workspaces.firstWhere(
-      (w) =>
-          w.name.toLowerCase() == lowerName || w.id.toLowerCase() == lowerName,
-      orElse: () => _workspaces.first,
-    );
-  }
-
   /// Checks whether a workspace can be deleted.
   static bool canDeleteWorkspace(Workspace workspace) {
     return _workspaces.length > 1;

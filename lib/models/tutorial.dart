@@ -110,19 +110,6 @@ class Tutorial {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'entitytopicid': topicId,
-      'progress': progress.toJson(),
-      'answersforgotten': answersForgotten,
-      'totalsections': totalSections,
-      'completedsections': completedSections,
-      'lastreviewed': lastReviewed.toIso8601String(),
-    };
-  }
-
   int get forgottenPeriod {
     final normalizedFrom = DateTime(
       lastReviewed.year,
@@ -206,11 +193,6 @@ class McqQuestion {
 
     return 0;
   }
-
-  String get difficultyDisplay {
-    if (cognitiveLevel.isEmpty) return 'Beginner';
-    return cognitiveLevel[0].toUpperCase() + cognitiveLevel.substring(1);
-  }
 }
 
 class TutorialContent {
@@ -280,51 +262,6 @@ class TutorialSection {
       title: json['title'] as String? ?? '',
       contents: list,
     );
-  }
-
-  /// Merges consecutive text components in this section into single TutorialContent items.
-  List<TutorialContent> getMergedContents() {
-    final List<TutorialContent> merged = [];
-    StringBuffer? textBuffer;
-    List<String> ids = [];
-
-    void flushTextBuffer() {
-      if (textBuffer != null && textBuffer!.isNotEmpty) {
-        merged.add(
-          TutorialContent(
-            id: ids.join('_'),
-            componentContent: textBuffer!.toString(),
-            assetUrl: '',
-            assetThumbnail: '',
-            contentType: 'merged_text',
-            contentRole: '',
-          ),
-        );
-        textBuffer = null;
-        ids = [];
-      }
-    }
-
-    for (final item in contents) {
-      if (item.isText) {
-        String textContent = item.componentContent;
-        if (item.contentType == "heading") {
-          textContent = "<h1>$textContent</h1>";
-        }
-        textBuffer ??= StringBuffer();
-        if (textBuffer!.isNotEmpty) {
-          textBuffer!.write('\n');
-        }
-        textBuffer!.write(textContent);
-        ids.add(item.id);
-      } else {
-        flushTextBuffer();
-        merged.add(item);
-      }
-    }
-
-    flushTextBuffer();
-    return merged;
   }
 }
 

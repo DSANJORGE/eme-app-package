@@ -4,68 +4,6 @@ import 'package:eme_app_package/models/topic.dart';
 import 'package:eme_app_package/models/tutorial.dart';
 
 class CommonWidgets {
-  static Future<void> showInfoDialog({
-    required BuildContext context,
-    required String title,
-    required Widget description,
-    String? buttonText,
-  }) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(
-            child: ListBody(children: <Widget>[description]),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(buttonText ?? 'OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static Widget buildCompetenceBadge({required Efficiency efficiency}) {
-    Color color;
-    IconData icon;
-    if (efficiency == Efficiency.beginner) {
-      color = const Color(0xFFF50057);
-      icon = Icons.local_florist;
-    } else if (efficiency == Efficiency.competent) {
-      color = const Color(0xFF2196F3);
-      icon = Icons.stars;
-    } else {
-      color = const Color(0xFF38EF7D);
-      icon = Icons.emoji_events;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              efficiency.name.toUpperCase(),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   static Widget buildProgressColumn(
     TutorialProgress progress,
     Efficiency efficiency,

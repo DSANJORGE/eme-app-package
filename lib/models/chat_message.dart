@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:eme_app_package/utils/log.dart';
+import 'package:eme_app_package/models/tutorial.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
@@ -17,14 +18,8 @@ enum MessageType {
   progressupdate;
 
   bool get isQuestion => this == MessageType.question;
-  bool get isAsset => this == MessageType.asset;
   bool get isWelcome => this == MessageType.welcome;
-  bool get isText => this == MessageType.text;
-  bool get isAnswer => this == MessageType.answer;
-  bool get isAnswerEval => this == MessageType.answereval;
-  bool get isUserComment => this == MessageType.usercomment;
   bool get isEnd => this == MessageType.end;
-  bool get isAgentComment => this == MessageType.agentcomment;
   bool get isProgressUpdate => this == MessageType.progressupdate;
 
   factory MessageType.fromName(String name) {
@@ -45,7 +40,7 @@ class AgentContextValues {
   final bool? isCorrect;
   final Question? question;
   final Asset? asset;
-  final ProgressUpdate? progressUpdate;
+  final TutorialProgress? progressUpdate;
   bool? interactive = false;
 
   AgentContextValues({
@@ -61,11 +56,6 @@ class AgentContextValues {
     this.progressUpdate,
     this.interactive = false,
   });
-
-  // set interactive
-  void setInteractive(bool interactive) {
-    this.interactive = interactive;
-  }
 
   factory AgentContextValues.fromJson(Map<String, dynamic> json) {
     String? rawMessageType = json['messagetype']?.toString().toLowerCase();
@@ -88,9 +78,9 @@ class AgentContextValues {
           : null,
       asset: json['asset'] != null ? Asset.fromJson(json['asset']) : null,
       progressUpdate: json['progressupdate'] != null
-          ? ProgressUpdate.fromJson(json['progressupdate'])
+          ? TutorialProgress.fromJson(json['progressupdate'], null)
           : (messageType == MessageType.progressupdate
-                ? ProgressUpdate.fromJson(json)
+                ? TutorialProgress.fromJson(json, null)
                 : null),
       interactive: json['interactive'] == "yes" ? true : false,
     );
@@ -239,7 +229,7 @@ class ChatMessage {
   String? get componentId => contextValues.componentId;
   String? get componentType => contextValues.componentType;
   String? get textContent => contextValues.componentContent;
-  ProgressUpdate? get progressUpdate => contextValues.progressUpdate;
+  TutorialProgress? get progressUpdate => contextValues.progressUpdate;
   bool? get isCorrect => contextValues.isCorrect;
   bool get interactive => contextValues.interactive ?? false;
   set interactive(bool newInteractive) {
@@ -327,43 +317,14 @@ enum OptionsKey {
   optionE,
   optionF;
 
-  factory OptionsKey.fromString(String key) {
-    switch (key) {
-      case 'option_a':
-        return OptionsKey.optionA;
-      case 'option_b':
-        return OptionsKey.optionB;
-      case 'option_c':
-        return OptionsKey.optionC;
-      case 'option_d':
-        return OptionsKey.optionD;
-      case 'option_e':
-        return OptionsKey.optionE;
-      case 'option_f':
-        return OptionsKey.optionF;
-      default:
-        throw ArgumentError('Invalid OptionsKey: $key');
-    }
-  }
+  /// Wire format is `option_a`; enum names are `optionA`.
+  factory OptionsKey.fromString(String key) =>
+      values.asNameMap()['option${key.split('_').last.toUpperCase()}'] ??
+      (throw ArgumentError('Invalid OptionsKey: $key'));
 
-  String toStr() {
-    switch (this) {
-      case OptionsKey.optionA:
-        return 'option_a';
-      case OptionsKey.optionB:
-        return 'option_b';
-      case OptionsKey.optionC:
-        return 'option_c';
-      case OptionsKey.optionD:
-        return 'option_d';
-      case OptionsKey.optionE:
-        return 'option_e';
-      case OptionsKey.optionF:
-        return 'option_f';
-    }
-  }
+  String toStr() => 'option_${letter.toLowerCase()}';
 
-  String get letter => toStr().split('_').last.toUpperCase();
+  String get letter => name.substring('option'.length);
 }
 
 enum Confidence {
@@ -372,20 +333,9 @@ enum Confidence {
   mostlysure,
   confident;
 
-  factory Confidence.fromStr(String key) {
-    switch (key) {
-      case 'noidea':
-        return Confidence.noidea;
-      case 'notsure':
-        return Confidence.notsure;
-      case 'mostlysure':
-        return Confidence.mostlysure;
-      case 'confident':
-        return Confidence.confident;
-      default:
-        throw ArgumentError('Invalid Confidence: $key');
-    }
-  }
+  factory Confidence.fromStr(String key) =>
+      values.asNameMap()[key] ??
+      (throw ArgumentError('Invalid Confidence: $key'));
 
   String getLabel(AppLocalizations l10n) {
     switch (this) {
@@ -467,40 +417,6 @@ class Answer {
       'selectedoption': selectedOption?.toStr(),
       'confidence': confidence?.name,
       'iscorrect': isCorrect,
-    };
-  }
-}
-
-class ProgressUpdate {
-  final double beginnerProgress;
-  final double competentProgress;
-  final double expertProgress;
-
-  ProgressUpdate({
-    required this.beginnerProgress,
-    required this.competentProgress,
-    required this.expertProgress,
-  });
-
-  factory ProgressUpdate.fromJson(Map<String, dynamic> json) {
-    double parseDouble(dynamic value) {
-      if (value is num) return value.toDouble();
-      if (value is String) return double.tryParse(value) ?? 0.0;
-      return 0.0;
-    }
-
-    return ProgressUpdate(
-      beginnerProgress: parseDouble(json['beginnerprogress']),
-      competentProgress: parseDouble(json['competentprogress']),
-      expertProgress: parseDouble(json['expertprogress']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'beginnerprogress': beginnerProgress,
-      'competentprogress': competentProgress,
-      'expertprogress': expertProgress,
     };
   }
 }

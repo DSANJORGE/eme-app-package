@@ -29,23 +29,13 @@ class ChatSocketService {
   bool _isDisposed = false;
 
   SocketConnectionState _connectionState = SocketConnectionState.disconnected;
-  final StreamController<SocketConnectionState> _stateController =
-      StreamController<SocketConnectionState>.broadcast();
 
   final StreamController<ChatMessage> _messageController =
       StreamController<ChatMessage>.broadcast();
 
-  final StreamController<Map<String, dynamic>> _rawEventController =
-      StreamController<Map<String, dynamic>>.broadcast();
-
   // Getters
-  SocketConnectionState get connectionState => _connectionState;
-  Stream<SocketConnectionState> get connectionStateStream =>
-      _stateController.stream;
   Stream<ChatMessage> get messageStream => _messageController.stream;
-  Stream<Map<String, dynamic>> get rawEventStream => _rawEventController.stream;
   bool get isConnected => _connectionState == SocketConnectionState.connected;
-  String? get currentChannel => _channelId;
 
   /// Connect to Entermedia WebSocket Chat
   Future<void> connect({required String channel}) async {
@@ -64,9 +54,6 @@ class ChatSocketService {
 
     if (_connectionState == SocketConnectionState.connected ||
         _connectionState == SocketConnectionState.connecting) {
-      if (channel != _channelId) {
-        switchChannel(channel);
-      }
       return;
     }
 
@@ -77,13 +64,7 @@ class ChatSocketService {
     );
 
     try {
-      final wsUri = _buildWebSocketUri(
-        baseUrl: _baseUrl!,
-        sessionId: _sessionId!,
-        userId: _userId,
-        channel: _channelId,
-        entermediakey: _entermediakey,
-      );
+      final wsUri = _buildWebSocketUri();
 
       logPrint('ChatSocketService connecting to: $wsUri');
 
@@ -113,33 +94,6 @@ class ChatSocketService {
     }
   }
 
-  /// Send chat message
-  void sendMessage({
-    required String message,
-    String? channel,
-    String? replyToId,
-    String? command,
-    String? functionName,
-    MessageType? messageType,
-    Map<String, dynamic>? extraData,
-  }) {
-    final targetChannel = channel ?? _channelId;
-
-    final data = <String, dynamic>{
-      'message': message,
-      'channel': targetChannel,
-      'userid': _userId,
-      if (replyToId != null && replyToId.isNotEmpty) 'replytoid': replyToId,
-      if (command != null && command.isNotEmpty) 'command': command,
-      if (functionName != null && functionName.isNotEmpty)
-        'functionname': functionName,
-      if (messageType != null) 'messagetype': messageType.name,
-      ...?extraData,
-    };
-
-    sendRaw(data);
-  }
-
   /// Send raw map data over websocket
   void sendRaw(Map<String, dynamic> data) {
     if (_connectionState != SocketConnectionState.connected ||
@@ -165,16 +119,6 @@ class ChatSocketService {
     }
   }
 
-  /// Switch channel
-  void switchChannel(String channelId) {
-    if (_channelId == channelId) return;
-    _channelId = channelId;
-    // Reconnect to subscribe to new channel endpoint if needed
-    if (isConnected) {
-      disconnect(reconnect: true);
-    }
-  }
-
   /// Handle incoming message from socket stream
   void _onMessageReceived(dynamic rawData) {
     try {
@@ -191,7 +135,6 @@ class ChatSocketService {
       final decoded = json.decode(strData);
 
       void processMessage(Map<String, dynamic> data) {
-        _rawEventController.add(data);
         final chatMessage = ChatMessage.fromJson(data);
         _messageController.add(chatMessage);
       }
@@ -305,10 +248,7 @@ class ChatSocketService {
   }
 
   void _updateState(SocketConnectionState newState) {
-    if (_connectionState != newState) {
-      _connectionState = newState;
-      _stateController.add(newState);
-    }
+    _connectionState = newState;
   }
 
   String _generateSessionId() {
@@ -322,21 +262,13 @@ class ChatSocketService {
   }
 
   String _resolveBaseUrl() {
-    try {
-      final oi = OpenI.instance;
-      if (oi != null) {
-        final siteRoot = oi.settings.siteroot;
-        final scheme = oi.settings.https ? 'wss' : 'ws';
-        return '$scheme://$siteRoot/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';
-      }
-    } catch (e, stack) {
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'ChatSocketService _resolveBaseUrl failed',
-      );
+    final oi = OpenI.instance;
+    if (oi == null) {
+      throw Exception('chat_socket_url not found in app settings');
     }
-    throw Exception('chat_socket_url not found in app settings');
+    // siteroot is `host[:port]`.
+    return '${oi.settings.https ? 'wss' : 'ws'}://${oi.settings.siteroot}'
+        '/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';
   }
 
   String? _resolveToken() {
@@ -346,37 +278,16 @@ class ChatSocketService {
     return null;
   }
 
-  Uri _buildWebSocketUri({
-    required String baseUrl,
-    required String sessionId,
-    required String userId,
-    String? channel,
-    String? entermediakey,
-  }) {
-    final httpUri = Uri.parse(baseUrl);
-    final wsScheme = (httpUri.scheme == 'https' || httpUri.scheme == 'wss')
-        ? 'wss'
-        : 'ws';
-
-    final path = httpUri.path.endsWith('/ChatConnection')
-        ? httpUri.path
-        : '/entermedia/services/websocket/org/entermediadb/websocket/chat/ChatConnection';
-
-    final queryParameters = <String, String>{
-      'sessionid': sessionId,
-      'userid': userId,
-      if (channel != null && channel.isNotEmpty) 'channel': channel,
-      'channeltype': 'agenttutorchat',
-      if (entermediakey != null && entermediakey.isNotEmpty)
-        'entermedia.key': entermediakey,
-    };
-
-    return Uri(
-      scheme: wsScheme,
-      host: httpUri.host,
-      port: httpUri.hasPort ? httpUri.port : null,
-      path: path,
-      queryParameters: queryParameters,
+  Uri _buildWebSocketUri() {
+    final key = _entermediakey;
+    return Uri.parse(_baseUrl!).replace(
+      queryParameters: <String, String>{
+        'sessionid': _sessionId!,
+        'userid': _userId,
+        if (_channelId.isNotEmpty) 'channel': _channelId,
+        'channeltype': 'agenttutorchat',
+        if (key != null && key.isNotEmpty) 'entermedia.key': key,
+      },
     );
   }
 }

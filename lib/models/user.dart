@@ -48,24 +48,4 @@ class User {
       'dataconsent': dataConsent,
     };
   }
-
-  User copyWith({
-    String? id,
-    String? firstName,
-    String? lastName,
-    String? screenName,
-    String? assetPortrait,
-    String? email,
-    bool? dataConsent,
-  }) {
-    return User(
-      id: id ?? this.id,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      screenName: screenName ?? this.screenName,
-      assetPortrait: assetPortrait ?? this.assetPortrait,
-      email: email ?? this.email,
-      dataConsent: dataConsent ?? this.dataConsent,
-    );
-  }
 }
