@@ -143,12 +143,16 @@ class McqQuestion {
   final String correctOption;
   final String cognitiveLevel;
 
+  /// Why the correct option is correct; empty when the server omits it.
+  final String rationale;
+
   McqQuestion({
     required this.id,
     required this.question,
     required this.options,
     required this.correctOption,
     required this.cognitiveLevel,
+    this.rationale = '',
   });
 
   factory McqQuestion.fromJson(Map<String, dynamic> json) {
@@ -174,8 +178,10 @@ class McqQuestion {
           '',
       cognitiveLevel:
           json['cognitivelevel'] as String? ??
+          json['mcqcognitivelevel'] as String? ??
           json['cognitive_level'] as String? ??
           'beginner',
+      rationale: json['rationale'] as String? ?? '',
     );
   }
 
@@ -322,10 +328,42 @@ class TutorialSection {
   }
 }
 
+/// One MCQ with the section it belongs to — a question's id is unique only
+/// within its section, so both are needed to answer it.
+class SectionQuestion {
+  final TutorialSection section;
+  final McqQuestion question;
+
+  /// The content row the question was attached to, i.e. the component id the
+  /// answer write path reports against.
+  final String contentId;
+
+  SectionQuestion({
+    required this.section,
+    required this.question,
+    required this.contentId,
+  });
+}
+
 class TutorialDetail {
   final List<TutorialSection> sections;
 
   TutorialDetail({required this.sections});
+
+  /// Every MCQ in reading order. Reads `mcq` rows only: the server echoes a
+  /// question onto the paragraph and asset rows around it, so walking every
+  /// row that merely has a `question` key yields the same question several
+  /// times over.
+  List<SectionQuestion> get mcqQuestions => [
+    for (final section in sections)
+      for (final content in section.contents)
+        if (content.isMcq && content.question != null)
+          SectionQuestion(
+            section: section,
+            question: content.question!,
+            contentId: content.id,
+          ),
+  ];
 
   factory TutorialDetail.fromJson(Map<String, dynamic> json) {
     final rawSections = json['sections'] as List<dynamic>? ?? [];

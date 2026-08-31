@@ -63,6 +63,39 @@ class TopicService {
     }
   }
 
+  /// The whole tutorial in one batch: sections with their content, including
+  /// MCQs that carry their own [McqQuestion.correctOption]. Unlike the live
+  /// tutor flow — where questions arrive over the socket without an answer
+  /// key — this lets a caller judge answers locally.
+  ///
+  /// Note the query parameter is `entitytutorial`; `dataid` returns HTTP 500
+  /// here, unlike the other entitytutorial endpoints. `sections` sits beside
+  /// `tutorial` in the response, which is what [TutorialDetail.fromJson]
+  /// already expects. Questions ride along on related paragraph and asset
+  /// rows too, so read them from `contenttype: mcq` rows only — and note a
+  /// question's id is unique within its section, not across the tutorial.
+  Future<TutorialDetail?> fetchTutorialDetail(String tutorialId) async {
+    const path = 'services/module/entitytutorial/tutorial.json';
+    try {
+      final data = await _http.getJson(
+        path,
+        query: {'entitytutorial': tutorialId},
+      );
+      if (data['sections'] is! List) return null;
+      return TutorialDetail.fromJson(data);
+    } catch (e, stack) {
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchTutorialDetail failed',
+          customKeys: {'url': path, 'tutorialId': tutorialId},
+        );
+      }
+      rethrow;
+    }
+  }
+
   Future<TutorChannel?> fetchTutorChannel(
     String tutorialId, {
     bool createNew = false,
