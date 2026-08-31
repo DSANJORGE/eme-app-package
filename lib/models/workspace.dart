@@ -144,8 +144,13 @@ class Workspace {
   }
 
   factory Workspace.fromJson(Map<String, dynamic> json) {
+    // 'mediadb' is what toJson writes: without it a persisted workspace does
+    // not survive its own round trip and WorkspaceService silently skips it.
     final rawRoot =
-        json['mediaDBRoot'] as String? ?? json['mediadbroot'] as String? ?? '';
+        json['mediaDBRoot'] as String? ??
+        json['mediadbroot'] as String? ??
+        json['mediadb'] as String? ??
+        '';
     final httpsParam =
         json['https']?.toString().toLowerCase() ??
         json['ssl']?.toString().toLowerCase();
