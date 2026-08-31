@@ -128,10 +128,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 await DioUtil.dio.post(
                   targetUrl,
                   options: Options(
-                    headers: {
-                      'X-tokentype': 'entermedia',
-                      'X-token': AuthService.token ?? '',
-                    },
+                    headers: {'Authorization': 'Bearer ${AuthService.token}'},
                   ),
                 );
                 if (mounted) {

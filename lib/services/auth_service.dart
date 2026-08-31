@@ -143,8 +143,8 @@ class AuthService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': _token!,
+
+            'Authorization': 'Bearer ${_token!}',
           },
         ),
       );
@@ -393,7 +393,7 @@ class AuthService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
+
             'X-entermediakey': credentials['entermediakey']!,
             'X-userid': credentials['user']!,
           },

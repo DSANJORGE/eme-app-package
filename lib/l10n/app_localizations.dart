@@ -1222,6 +1222,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} Day Streak'**
   String streakDays(String count);
+
+  /// Title for session history modal sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Session History'**
+  String get sessionHistory;
+
+  /// Label for active session
+  ///
+  /// In en, this message translates to:
+  /// **'Active Session'**
+  String get activeSession;
+
+  /// Section header for past sessions
+  ///
+  /// In en, this message translates to:
+  /// **'Past Sessions'**
+  String get pastSessions;
+
+  /// Label for a past session
+  ///
+  /// In en, this message translates to:
+  /// **'Past Session'**
+  String get pastSession;
+
+  /// Empty state message when there are no past sessions
+  ///
+  /// In en, this message translates to:
+  /// **'No previous sessions found'**
+  String get noPreviousSessions;
+
+  /// Banner message when viewing a past session in read-only mode
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing past session'**
+  String get viewingPastSession;
+
+  /// Button to switch back to active chat session
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Active'**
+  String get resumeActive;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

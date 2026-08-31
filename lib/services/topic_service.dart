@@ -12,6 +12,18 @@ import '../utils/error_handler.dart';
 
 import 'workspace_service.dart';
 
+class TutorHistoryResult {
+  final TutorChannel currentChannel;
+  final List<TutorChannel> history;
+  final List<ChatMessage> messages;
+
+  TutorHistoryResult({
+    required this.currentChannel,
+    this.history = const [],
+    this.messages = const [],
+  });
+}
+
 class TopicService {
   final Dio _client;
   final String? _customMediaDBRoot;
@@ -36,8 +48,7 @@ class TopicService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
         ),
       );
@@ -89,8 +100,8 @@ class TopicService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+
+            'Authorization': 'Bearer $token',
           },
         ),
       );
@@ -132,84 +143,34 @@ class TopicService {
     }
   }
 
-  Future<TutorChannel?> fetchTutorChannel(
-    String tutorialId, {
-    bool createNew = false,
+  Future<TutorHistoryResult> fetchTutorHistory({
+    required String tutorialId,
+    String? channelId,
   }) async {
-    String targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/tutorsession.json?dataid=$tutorialId";
-    if (createNew) targetUrl += "&createnew=$createNew";
-
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-      final response = await _client.get(
-        targetUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
-          },
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = (response.data is String
-            ? json.decode(response.data)
-            : response.data);
-        if (decoded is Map<String, dynamic>) {
-          final channel = decoded['channel'];
-          if (channel is Map<String, dynamic>) {
-            return TutorChannel.fromJson(channel);
-          }
-          if (!createNew) {
-            return await fetchTutorChannel(tutorialId, createNew: true);
-          }
-          return null;
-        } else {
-          throw FormatException('Unexpected response format from $targetUrl');
-        }
-      } else {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      logPrint('TopicService error fetching tutor channels from $targetUrl');
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.fetchTutorChannel failed',
-        customKeys: {'url': targetUrl, 'tutorialId': tutorialId},
-      );
-      rethrow;
+    final queryParams = <String>[];
+    queryParams.add("dataid=$tutorialId");
+    if (channelId != null && channelId.isNotEmpty) {
+      queryParams.add("channel=$channelId");
     }
-  }
+    final queryString = queryParams.isNotEmpty
+        ? '?${queryParams.join('&')}'
+        : '';
 
-  Future<List<ChatMessage>> fetchTutorHistory({
-    required String channelId,
-    String? fromBeforeId,
-  }) async {
     final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/tutorhistory.json?channel=$channelId${fromBeforeId != null ? '&fromid=$fromBeforeId' : ''}";
-
-    logPrint("fetchTutorHistory $targetUrl");
+        "$mediaDBRoot/services/module/entitytutorial/tutorhistory.json$queryString";
 
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
       final String token = credentials['entermediakey']!;
-      final response = await _client.get(
+
+      final response = await _client.post(
         targetUrl,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
         ),
       );
@@ -219,8 +180,26 @@ class TopicService {
             ? json.decode(response.data)
             : response.data);
         if (decoded is Map<String, dynamic>) {
+          // Parse currentchannel
+          TutorChannel? currentChannel;
+          final currentChannelData = decoded['currentchannel'];
+          if (currentChannelData is Map<String, dynamic>) {
+            currentChannel = TutorChannel.fromJson(currentChannelData);
+          }
+
+          // Parse history channels
+          final List<TutorChannel> historyChannels = [];
+          final rawHistory = decoded['channelhistory'];
+          if (rawHistory is List) {
+            for (final item in rawHistory) {
+              if (item is Map<String, dynamic>) {
+                historyChannels.add(TutorChannel.fromJson(item));
+              }
+            }
+          }
+
           final history = decoded['messages'] as dynamic;
-          logPrint("messages ${history.length}");
+          logPrint("messages ${history is List ? history.length : 0}");
           final List answers = decoded['answers'] is List
               ? decoded['answers']
               : [];
@@ -253,12 +232,20 @@ class TopicService {
                   stack,
                   reason:
                       'TopicService.fetchTutorHistory failed to parse chat message',
-                  customKeys: {'url': targetUrl, 'channelId': channelId},
+                  customKeys: {
+                    'url': targetUrl,
+                    'channelId': channelId!,
+                    'tutorialId': tutorialId,
+                  },
                 );
               }
             }
           }
-          return messages;
+          return TutorHistoryResult(
+            currentChannel: currentChannel!,
+            history: historyChannels,
+            messages: messages,
+          );
         } else {
           throw FormatException('Unexpected response format from $targetUrl');
         }
@@ -273,7 +260,11 @@ class TopicService {
         e,
         stack,
         reason: 'TopicService.fetchTutorHistory failed',
-        customKeys: {'url': targetUrl, 'channelId': channelId},
+        customKeys: {
+          'url': targetUrl,
+          'channelId': channelId!,
+          'tutorialId': tutorialId,
+        },
       );
       rethrow;
     }
@@ -304,8 +295,7 @@ class TopicService {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
           contentType: Headers.formUrlEncodedContentType,
         ),
@@ -363,8 +353,7 @@ class TopicService {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
           contentType: Headers.formUrlEncodedContentType,
         ),
@@ -425,8 +414,7 @@ class TopicService {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
           contentType: Headers.formUrlEncodedContentType,
         ),
@@ -484,8 +472,7 @@ class TopicService {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
-            'X-tokentype': 'entermedia',
-            'X-token': token,
+            'Authorization': 'Bearer $token',
           },
           contentType: Headers.formUrlEncodedContentType,
         ),

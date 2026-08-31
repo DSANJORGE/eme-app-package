@@ -47,6 +47,10 @@ class RehearseScreen extends StatefulWidget {
 class _RehearseScreenState extends State<RehearseScreen> {
   bool _isLoading = true;
   TutorChannel? _tutorChannel;
+  TutorChannel? _activeTutorChannel;
+  TutorChannel? _currentViewingChannel;
+  List<TutorChannel> _historyChannels = [];
+  bool _isReadOnly = false;
   StreamSubscription<socket_msg.ChatMessage>? _socketSubscription;
 
   final ScrollController _scrollController = ScrollController();
@@ -67,19 +71,110 @@ class _RehearseScreenState extends State<RehearseScreen> {
     _loadTutorialDetail();
   }
 
+  Future<void> _connectSocket(String channelId) async {
+    await ChatSocketService().connect(channel: channelId);
+    _socketSubscription?.cancel();
+    _socketSubscription = ChatSocketService().messageStream.listen((
+      incomingMsg,
+    ) {
+      logPrint("ChatSocketService incomingMsg: ${incomingMsg.toJson()}");
+      if (incomingMsg.isKeepAlive || incomingMsg.isMessageRemoved) return;
+      if (!mounted || _isReadOnly) return;
+
+      if (incomingMsg.messageType.isProgressUpdate) {
+        setState(() {
+          widget.tutorial.progress = TutorialProgress.fromJson(
+            incomingMsg.progressUpdate?.toJson() ?? {},
+            widget.tutorial.progress,
+          );
+        });
+        logPrint(
+          'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
+        );
+        return;
+      } else if (incomingMsg.messageType.isEnd) {
+        setState(() {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        });
+        return;
+      }
+
+      setState(() {
+        _messages.add(incomingMsg);
+        _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        _lastMessage = _messages.last;
+
+        if (_lastMessage!.messageType.isWelcome) {
+          _stage = MessageStage.ready;
+        } else if (_lastMessage!.messageType.isQuestion) {
+          _tempSelectedAnswerIndex = null;
+          _tempConfidenceLevel = null;
+          _stage = MessageStage.selectOption;
+        } else if (_lastMessage!.messageType.isEnd) {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        } else {
+          _stage = MessageStage.explainAndFollowup;
+        }
+      });
+      _scrollToBottom();
+    });
+  }
+
+  void _updateStageFromLastMessage() {
+    logPrint('Last message: ${_lastMessage?.messageType}');
+    if (_lastMessage != null) {
+      if (_lastMessage!.messageType.isWelcome) {
+        setState(() {
+          _stage = MessageStage.ready;
+        });
+      } else if (_lastMessage!.messageType.isQuestion) {
+        final answer = _lastMessage!.answer;
+        if (answer == null) {
+          _tempSelectedAnswerIndex = null;
+          _tempConfidenceLevel = null;
+          setState(() {
+            _stage = MessageStage.selectOption;
+          });
+        } else {
+          setState(() {
+            _stage = MessageStage.explainAndFollowup;
+          });
+        }
+      } else if (_lastMessage!.messageType.isEnd) {
+        setState(() {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        });
+      } else {
+        setState(() {
+          _stage = MessageStage.explainAndFollowup;
+        });
+      }
+    }
+  }
+
   Future<void> _loadTutorialDetail() async {
     setState(() {
       _isLoading = true;
+      _isReadOnly = false;
     });
 
     try {
       _messages.clear();
       _lastMessage = null;
 
-      final channel = await TopicService().fetchTutorChannel(
-        widget.tutorial.id,
+      final result = await TopicService().fetchTutorHistory(
+        tutorialId: widget.tutorial.id,
       );
-      if (channel == null) {
+
+      _historyChannels = result.history;
+      _activeTutorChannel = result.currentChannel;
+      _currentViewingChannel = _activeTutorChannel;
+      _tutorChannel = _activeTutorChannel;
+
+      if (_activeTutorChannel == null) {
         setState(() {
           _stage = MessageStage.error;
           _isLoading = false;
@@ -87,113 +182,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
         return;
       }
 
-      _tutorChannel = channel;
-
-      if (_tutorChannel != null) {
-        final messageHistory = await TopicService().fetchTutorHistory(
-          channelId: _tutorChannel!.id,
-        );
-
-        if (messageHistory.isNotEmpty) {
-          setState(() {
-            _messages.addAll(messageHistory);
-            _lastMessage = _messages.last;
-          });
-        }
-        await ChatSocketService().connect(channel: _tutorChannel!.id);
-        _socketSubscription?.cancel();
-        _socketSubscription = ChatSocketService().messageStream.listen((
-          incomingMsg,
-        ) {
-          logPrint("ChatSocketService incomingMsg: ${incomingMsg.toJson()}");
-          if (incomingMsg.isKeepAlive || incomingMsg.isMessageRemoved) return;
-          if (!mounted) return;
-
-          if (incomingMsg.messageType.isProgressUpdate) {
-            setState(() {
-              widget.tutorial.progress = TutorialProgress.fromJson(
-                incomingMsg.progressUpdate?.toJson() ?? {},
-                widget.tutorial.progress,
-              );
-            });
-            logPrint(
-              'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
-            );
-            return;
-          } else if (incomingMsg.messageType.isEnd) {
-            setState(() {
-              _stage = MessageStage.finished;
-              _isFinished = true;
-            });
-            return;
-          }
-
-          setState(() {
-            _messages.add(incomingMsg);
-            _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-            _lastMessage = _messages.last;
-
-            if (_lastMessage!.messageType.isWelcome) {
-              setState(() {
-                _stage = MessageStage.ready;
-              });
-            } else if (_lastMessage!.messageType.isQuestion) {
-              setState(() {
-                _tempSelectedAnswerIndex = null;
-                _tempConfidenceLevel = null;
-                _stage = MessageStage.selectOption;
-              });
-            } else if (_lastMessage!.messageType.isEnd) {
-              setState(() {
-                _stage = MessageStage.finished;
-                _isFinished = true;
-              });
-            } else {
-              setState(() {
-                _stage = MessageStage.explainAndFollowup;
-              });
-            }
-          });
-          _scrollToBottom();
+      if (result.messages.isNotEmpty) {
+        setState(() {
+          _messages.addAll(result.messages);
+          _lastMessage = _messages.last;
         });
+      }
 
-        if (_messages.isEmpty) {
-          await TopicService().startTutorial(
-            tutorialId: widget.tutorial.id,
-            channel: _tutorChannel!.id,
-          );
-        } else {
-          logPrint('Last message: ${_lastMessage?.messageType}');
-          if (_lastMessage != null) {
-            if (_lastMessage!.messageType.isWelcome) {
-              setState(() {
-                _stage = MessageStage.ready;
-              });
-            } else if (_lastMessage!.messageType.isQuestion) {
-              final answer = _lastMessage!.answer;
-              if (answer == null) {
-                _tempSelectedAnswerIndex = null;
-                _tempConfidenceLevel = null;
-                setState(() {
-                  _stage = MessageStage.selectOption;
-                });
-              } else {
-                setState(() {
-                  _stage = MessageStage.explainAndFollowup;
-                });
-              }
-            } else if (_lastMessage!.messageType.isEnd) {
-              setState(() {
-                _stage = MessageStage.finished;
-                _isFinished = true;
-              });
-            } else {
-              setState(() {
-                _stage = MessageStage.explainAndFollowup;
-              });
-            }
-          }
-        }
+      await _connectSocket(_activeTutorChannel!.id);
+
+      if (_messages.isEmpty) {
+        await TopicService().startTutorial(
+          tutorialId: widget.tutorial.id,
+          channel: _activeTutorChannel!.id,
+        );
+      } else {
+        _updateStageFromLastMessage();
       }
 
       setState(() {
@@ -204,7 +208,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _loadTutorialSession failed',
+        reason: 'RehearseScreen _loadTutorialDetail failed',
         customKeys: {'tutorialId': widget.tutorial.id},
       );
       if (mounted) {
@@ -219,6 +223,469 @@ class _RehearseScreenState extends State<RehearseScreen> {
         _stage = MessageStage.error;
       });
     }
+  }
+
+  Future<void> _loadHistoryChannel(TutorChannel historyChannel) async {
+    if (_activeTutorChannel != null &&
+        historyChannel.id == _activeTutorChannel!.id) {
+      await _switchToActiveSession();
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _isReadOnly = true;
+      _currentViewingChannel = historyChannel;
+      _tutorChannel = historyChannel;
+      _messages.clear();
+      _lastMessage = null;
+    });
+
+    _socketSubscription?.cancel();
+    _socketSubscription = null;
+
+    try {
+      final result = await TopicService().fetchTutorHistory(
+        tutorialId: widget.tutorial.id,
+        channelId: historyChannel.id,
+      );
+
+      logPrint('Tutor Result: ${result}');
+
+      if (result.history.isNotEmpty) {
+        _historyChannels = result.history;
+      }
+
+      setState(() {
+        _messages.addAll(result.messages);
+        _lastMessage = _messages.isNotEmpty ? _messages.last : null;
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _loadHistoryChannel failed',
+        customKeys: {
+          'tutorialId': widget.tutorial.id,
+          'channelId': historyChannel.id,
+        },
+      );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(
+          context,
+          l10n.failedToLoadTutorialSession,
+        );
+      }
+      setState(() {
+        _isLoading = false;
+        _stage = MessageStage.error;
+      });
+    }
+  }
+
+  Future<void> _switchToActiveSession() async {
+    if (_activeTutorChannel == null) {
+      await _loadTutorialDetail();
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _isReadOnly = false;
+      _currentViewingChannel = _activeTutorChannel;
+      _tutorChannel = _activeTutorChannel;
+      _messages.clear();
+      _lastMessage = null;
+    });
+
+    try {
+      final result = await TopicService().fetchTutorHistory(
+        tutorialId: widget.tutorial.id,
+        channelId: _activeTutorChannel!.id,
+      );
+
+      if (result.history.isNotEmpty) {
+        _historyChannels = result.history;
+      }
+
+      if (result.messages.isNotEmpty) {
+        setState(() {
+          _messages.addAll(result.messages);
+          _lastMessage = _messages.last;
+        });
+      }
+
+      await _connectSocket(_activeTutorChannel!.id);
+
+      if (_messages.isEmpty) {
+        await TopicService().startTutorial(
+          tutorialId: widget.tutorial.id,
+          channel: _activeTutorChannel!.id,
+        );
+      } else {
+        _updateStageFromLastMessage();
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e, stack) {
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'RehearseScreen _switchToActiveSession failed',
+        customKeys: {
+          'tutorialId': widget.tutorial.id,
+          'channelId': _activeTutorChannel?.id ?? '',
+        },
+      );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        AppErrorHandler.showUserError(
+          context,
+          l10n.failedToLoadTutorialSession,
+        );
+      }
+      setState(() {
+        _isLoading = false;
+        _stage = MessageStage.error;
+      });
+    }
+  }
+
+  void _showHistorySheet() {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        final hasActive = _activeTutorChannel != null;
+        final isViewingActive = !_isReadOnly;
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF161C24),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            border: Border(top: BorderSide(color: Colors.white12, width: 1)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF38B6FF,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.history_rounded,
+                            color: Color(0xFF38B6FF),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.sessionHistory,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white60,
+                      ),
+                      onPressed: () => Navigator.pop(sheetContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Active Session option
+                if (hasActive) ...[
+                  Material(
+                    color: isViewingActive
+                        ? const Color(0xFF1E2638)
+                        : const Color(0xFF0F1319),
+                    borderRadius: BorderRadius.circular(14),
+                    clipBehavior: Clip.antiAlias,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isViewingActive
+                              ? const Color(0xFF38EF7D).withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.06),
+                          width: isViewingActive ? 1.5 : 1,
+                        ),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        leading: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(
+                              0xFF38EF7D,
+                            ).withValues(alpha: 0.15),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: Color(0xFF38EF7D),
+                            size: 18,
+                          ),
+                        ),
+                        title: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _activeTutorChannel!.name.isNotEmpty
+                                    ? _activeTutorChannel!.name
+                                    : l10n.activeSession,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF38EF7D,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                l10n.activeSession,
+                                style: const TextStyle(
+                                  color: Color(0xFF38EF7D),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Text(
+                          _activeTutorChannel!.date.isNotEmpty
+                              ? _activeTutorChannel!.date
+                              : _activeTutorChannel!.id,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: isViewingActive
+                            ? const Icon(
+                                Icons.check_circle_rounded,
+                                color: Color(0xFF38EF7D),
+                                size: 20,
+                              )
+                            : const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white38,
+                                size: 14,
+                              ),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          if (!isViewingActive) {
+                            _switchToActiveSession();
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Past Sessions header
+                Text(
+                  l10n.pastSessions,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Past Sessions List
+                if (_historyChannels.isEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 28,
+                      horizontal: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F1319),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.history_toggle_off_rounded,
+                          size: 32,
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.noPreviousSessions,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _historyChannels.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final channel = _historyChannels[index];
+                        final isCurrentChannel =
+                            _isReadOnly &&
+                            _currentViewingChannel?.id == channel.id;
+
+                        final displayName = channel.name.isNotEmpty
+                            ? channel.name
+                            : "${l10n.pastSession} #${index + 1}";
+
+                        final displayDate = channel.date.isNotEmpty
+                            ? channel.date
+                            : (channel.refreshDate.isNotEmpty
+                                  ? channel.refreshDate
+                                  : channel.id);
+
+                        return Material(
+                          color: isCurrentChannel
+                              ? const Color(0xFF1E2638)
+                              : const Color(0xFF0F1319),
+                          borderRadius: BorderRadius.circular(14),
+                          clipBehavior: Clip.antiAlias,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isCurrentChannel
+                                    ? const Color(
+                                        0xFF38B6FF,
+                                      ).withValues(alpha: 0.5)
+                                    : Colors.white.withValues(alpha: 0.05),
+                                width: isCurrentChannel ? 1.5 : 1,
+                              ),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 2,
+                              ),
+                              leading: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.history_rounded,
+                                  color: Colors.white70,
+                                  size: 18,
+                                ),
+                              ),
+                              title: Text(
+                                displayName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                // displayDate,
+                                channel.id,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 11,
+                                ),
+                              ),
+                              trailing: isCurrentChannel
+                                  ? const Icon(
+                                      Icons.visibility_rounded,
+                                      color: Color(0xFF38B6FF),
+                                      size: 18,
+                                    )
+                                  : const Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: Colors.white24,
+                                      size: 12,
+                                    ),
+                              onTap: () {
+                                Navigator.pop(sheetContext);
+                                _loadHistoryChannel(channel);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -1094,7 +1561,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     bool showAvatar = true,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final bool isInteractive = message.interactive;
+    final bool isInteractive = !_isReadOnly && message.interactive;
 
     OptionsKey? selectedOpt;
     if (message.answer?.selectedOption != null) {
@@ -1231,7 +1698,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildBottomPanel(ChatMessage? message) {
-    if (message == null) {
+    if (_isReadOnly || message == null) {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
@@ -1660,9 +2127,89 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: _showHistorySheet,
+                icon: Icon(
+                  Icons.history_rounded,
+                  color: _isReadOnly ? const Color(0xFF38B6FF) : Colors.white,
+                  size: 22,
+                ),
+                tooltip: l10n.sessionHistory,
+                style: IconButton.styleFrom(
+                  backgroundColor: _isReadOnly
+                      ? const Color(0xFF38B6FF).withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.04),
+                  padding: const EdgeInsets.all(12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: _isReadOnly
+                          ? const Color(0xFF38B6FF).withValues(alpha: 0.4)
+                          : Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+
+        if (_isReadOnly)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF38B6FF).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFF38B6FF).withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.visibility_outlined,
+                  size: 16,
+                  color: Color(0xFF38B6FF),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "${l10n.viewingPastSession}: ${_currentViewingChannel?.name.isNotEmpty == true ? _currentViewingChannel!.name : l10n.pastSession}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton(
+                  onPressed: _switchToActiveSession,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.resumeActive,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF38B6FF),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
         // Chat Conversation Log Area
         Expanded(

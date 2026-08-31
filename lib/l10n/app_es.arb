@@ -187,5 +187,12 @@
     "noMistakesToRedo": "¡Todo al día! No hay errores por revisar.",
     "practiceNow": "Practicar Ahora",
     "allMistakesCleared": "¡Todos los errores corregidos! ¡Excelente trabajo!",
-    "streakDays": "Racha de {count} Días"
+    "streakDays": "Racha de {count} Días",
+    "sessionHistory": "Historial de Sesiones",
+    "activeSession": "Sesión Activa",
+    "pastSessions": "Sesiones Anteriores",
+    "pastSession": "Sesión Anterior",
+    "noPreviousSessions": "No se encontraron sesiones anteriores",
+    "viewingPastSession": "Viendo sesión anterior",
+    "resumeActive": "Reanudar Activa"
 }

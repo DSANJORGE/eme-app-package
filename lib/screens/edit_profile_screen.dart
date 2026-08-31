@@ -94,10 +94,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         targetUrl,
         data: formData,
         options: Options(
-          headers: {
-            'X-tokentype': 'entermedia',
-            'X-token': AuthService.token ?? '',
-          },
+          headers: {'Authorization': 'Bearer ${AuthService.token}'},
         ),
       );
 

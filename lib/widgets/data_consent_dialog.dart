@@ -26,10 +26,7 @@ class DataCollectionConsentDialog extends StatefulWidget {
       final response = await DioUtil.dio.post(
         targetUrl,
         options: Options(
-          headers: {
-            'X-tokentype': 'entermedia',
-            'X-token': AuthService.token ?? '',
-          },
+          headers: {'Authorization': 'Bearer ${AuthService.token ?? ""}'},
         ),
       );
       if (response.statusCode != 200) {
