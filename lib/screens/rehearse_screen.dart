@@ -13,6 +13,7 @@ import 'package:eme_app_package/utils/log.dart';
 import 'package:eme_app_package/widgets/common_widgets.dart';
 import 'package:eme_app_package/widgets/fullscreen_mediaviewer.dart';
 import 'package:eme_app_package/widgets/asset_message_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import '../models/tutor_channel.dart';
@@ -503,15 +504,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
                             ),
                           ],
                         ),
-                        subtitle: Text(
-                          _activeTutorChannel!.date.isNotEmpty
-                              ? _activeTutorChannel!.date
-                              : _activeTutorChannel!.id,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 12,
-                          ),
-                        ),
                         trailing: isViewingActive
                             ? const Icon(
                                 Icons.check_circle_rounded,
@@ -599,9 +591,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
                             : "${l10n.pastSession} #${index + 1}";
 
                         final displayDate = channel.date.isNotEmpty
-                            ? channel.date
+                            ? DateFormat(
+                                'MMM dd, y, h:mm a',
+                              ).format(DateTime.parse(channel.date))
                             : (channel.refreshDate.isNotEmpty
-                                  ? channel.refreshDate
+                                  ? DateFormat('MMM dd, y, h:mm a').format(
+                                      DateTime.parse(channel.refreshDate),
+                                    )
                                   : channel.id);
 
                         return Material(
@@ -642,7 +638,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                 ),
                               ),
                               title: Text(
-                                displayName,
+                                displayDate,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -651,11 +647,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
-                                // displayDate,
-                                channel.id,
+                                displayName,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 11,
+                                  fontSize: 12,
                                 ),
                               ),
                               trailing: isCurrentChannel
