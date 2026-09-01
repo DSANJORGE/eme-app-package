@@ -16,7 +16,8 @@ import 'utils/log.dart';
 ///   every call (switchWorkspace-safe). Absolute URLs are rejected (assert):
 ///   the module only talks to the workspace host, so the token cannot leak to
 ///   Asset.url hosts.
-/// - Auth: [EmeAuth.token] (default) sends X-tokentype/X-token.
+/// - Auth: [EmeAuth.token] (default) sends `Authorization: Bearer <token>`
+///   (server refactored to Bearer upstream, 2026-08-31).
 ///   [EmeAuth.none] for pre-auth calls — refresh/login cannot recurse.
 ///   [EmeAuth.keyAndUser] for the legacy X-entermediakey/X-userid variant.
 /// - Query and form VALUES are percent-encoded here; callers pass raw strings.
@@ -151,12 +152,10 @@ class DioEmeHttp implements EmeHttp {
     EmeAuth.none => {'Accept': 'application/json'},
     EmeAuth.token => {
       'Accept': 'application/json',
-      'X-tokentype': 'entermedia',
-      'X-token': _session.token ?? '',
+      'Authorization': 'Bearer ${_session.token ?? ''}',
     },
     EmeAuth.keyAndUser => {
       'Accept': 'application/json',
-      'X-tokentype': 'entermedia',
       'X-entermediakey': _session.token ?? '',
       'X-userid': _session.userId ?? '',
     },

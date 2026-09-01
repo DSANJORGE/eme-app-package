@@ -50,7 +50,7 @@ void main() {
     );
   });
 
-  test('token auth sends X- headers and percent-encodes query values',
+  test('token auth sends a Bearer header and percent-encodes query values',
       () async {
     await http.getJson('services/x.json', query: {'q': 'a&b=c d'});
     final r = adapter.last!;
@@ -58,14 +58,14 @@ void main() {
       r.uri.toString(),
       'https://em.example.org/mediadb/services/x.json?q=a%26b%3Dc+d',
     );
-    expect(r.headers['X-tokentype'], 'entermedia');
-    expect(r.headers['X-token'], 't1');
+    expect(r.headers['Authorization'], 'Bearer t1');
   });
 
   test('EmeAuth.none sends no auth headers; keyAndUser sends the legacy pair',
       () async {
     await http.getJson('a.json', auth: EmeAuth.none);
     expect(adapter.last!.headers.keys.where((k) => k.startsWith('X-')), isEmpty);
+    expect(adapter.last!.headers.containsKey('Authorization'), isFalse);
 
     await http.getJson('a.json', auth: EmeAuth.keyAndUser);
     expect(adapter.last!.headers['X-entermediakey'], 't1');

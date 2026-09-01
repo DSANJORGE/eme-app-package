@@ -10,6 +10,24 @@ import '../utils/error_handler.dart';
 /// logging and HTTP-error recording live behind [EmeHttp]. Catch blocks here
 /// record parse errors only; EmeHttpException is already recorded inside the
 /// module.
+
+/// One tutorhistory.json response: the channel being viewed, the channel the
+/// tutor is live on (they differ when browsing a finished session read-only),
+/// the finished-channel history, and the viewed channel's messages.
+class TutorHistoryResult {
+  final TutorChannel? currentChannel;
+  final TutorChannel? activeChannel;
+  final List<TutorChannel> history;
+  final List<ChatMessage> messages;
+
+  TutorHistoryResult({
+    this.currentChannel,
+    this.activeChannel,
+    this.history = const [],
+    this.messages = const [],
+  });
+}
+
 class TopicService {
   final EmeHttp _http;
 
@@ -96,49 +114,35 @@ class TopicService {
     }
   }
 
-  Future<TutorChannel?> fetchTutorChannel(
-    String tutorialId, {
-    bool createNew = false,
-  }) async {
-    const path = 'services/module/entitytutorial/tutorsession.json';
-    try {
-      final data = await _http.getJson(
-        path,
-        query: {'dataid': tutorialId, if (createNew) 'createnew': 'true'},
-      );
-      final channel = data['channel'];
-      if (channel is Map<String, dynamic>) {
-        return TutorChannel.fromJson(channel);
-      }
-      if (!createNew) {
-        return await fetchTutorChannel(tutorialId, createNew: true);
-      }
-      return null;
-    } catch (e, stack) {
-      if (e is! EmeHttpException) {
-        AppErrorHandler.recordNonFatal(
-          e,
-          stack,
-          reason: 'TopicService.fetchTutorChannel failed',
-          customKeys: {'url': path, 'tutorialId': tutorialId},
-        );
-      }
-      rethrow;
-    }
-  }
-
-  Future<List<ChatMessage>> fetchTutorHistory({
-    required String channelId,
-    String? fromBeforeId,
+  /// The endpoint is a POST with its parameters in the query string; no
+  /// channelId means "the tutorial's active session".
+  Future<TutorHistoryResult> fetchTutorHistory({
+    required String tutorialId,
+    String? channelId,
   }) async {
     const path = 'services/module/entitytutorial/tutorhistory.json';
     try {
-      final data = await _http.getJson(
+      final data = await _http.post(
         path,
-        query: {'channel': channelId, 'fromid': ?fromBeforeId},
+        query: [
+          MapEntry('dataid', tutorialId),
+          if (channelId != null && channelId.isNotEmpty)
+            MapEntry('channel', channelId),
+        ],
       );
+
+      TutorChannel? channelFrom(String key) {
+        final raw = data[key];
+        return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
+      }
+
+      final historyChannels = <TutorChannel>[
+        for (final item in data['channelhistory'] as List<dynamic>? ?? [])
+          if (item is Map<String, dynamic>) TutorChannel.fromJson(item),
+      ];
+
       final history = data['messages'] as dynamic;
-      logPrint("messages ${history.length}");
+      logPrint("messages ${history is List ? history.length : 0}");
       final List answers = data['answers'] is List ? data['answers'] : [];
       logPrint("answers ${answers.length}");
       final List<ChatMessage> messages = [];
@@ -166,19 +170,32 @@ class TopicService {
               stack,
               reason:
                   'TopicService.fetchTutorHistory failed to parse chat message',
-              customKeys: {'url': path, 'channelId': channelId},
+              customKeys: {
+                'url': path,
+                'channelId': channelId ?? '',
+                'tutorialId': tutorialId,
+              },
             );
           }
         }
       }
-      return messages;
+      return TutorHistoryResult(
+        currentChannel: channelFrom('currentchannel'),
+        activeChannel: channelFrom('activechannel'),
+        history: historyChannels,
+        messages: messages,
+      );
     } catch (e, stack) {
       if (e is! EmeHttpException) {
         AppErrorHandler.recordNonFatal(
           e,
           stack,
           reason: 'TopicService.fetchTutorHistory failed',
-          customKeys: {'url': path, 'channelId': channelId},
+          customKeys: {
+            'url': path,
+            'channelId': channelId ?? '',
+            'tutorialId': tutorialId,
+          },
         );
       }
       rethrow;

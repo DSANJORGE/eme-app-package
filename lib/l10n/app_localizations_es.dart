@@ -613,4 +613,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String streakDays(String count) {
     return 'Racha de $count Días';
   }
+
+  @override
+  String get sessionHistory => 'Historial de Sesiones';
+
+  @override
+  String get activeSession => 'Sesión Activa';
+
+  @override
+  String get pastSessions => 'Sesiones Anteriores';
+
+  @override
+  String get pastSession => 'Sesión Anterior';
+
+  @override
+  String get noPreviousSessions => 'No se encontraron sesiones anteriores';
+
+  @override
+  String get viewingPastSession => 'Viendo sesión anterior';
+
+  @override
+  String get resumeActive => 'Reanudar Activa';
 }

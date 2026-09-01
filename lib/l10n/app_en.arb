@@ -694,5 +694,33 @@
 				"type": "String"
 			}
 		}
+	},
+	"sessionHistory": "Session History",
+	"@sessionHistory": {
+		"description": "Title for session history modal sheet"
+	},
+	"activeSession": "Active Session",
+	"@activeSession": {
+		"description": "Label for active session"
+	},
+	"pastSessions": "Past Sessions",
+	"@pastSessions": {
+		"description": "Section header for past sessions"
+	},
+	"pastSession": "Past Session",
+	"@pastSession": {
+		"description": "Label for a past session"
+	},
+	"noPreviousSessions": "No previous sessions found",
+	"@noPreviousSessions": {
+		"description": "Empty state message when there are no past sessions"
+	},
+	"viewingPastSession": "Viewing past session",
+	"@viewingPastSession": {
+		"description": "Banner message when viewing a past session in read-only mode"
+	},
+	"resumeActive": "Resume Active",
+	"@resumeActive": {
+		"description": "Button to switch back to active chat session"
 	}
 }
