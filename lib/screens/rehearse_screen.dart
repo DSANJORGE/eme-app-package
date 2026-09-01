@@ -58,6 +58,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   final TextEditingController _followUpController = TextEditingController();
 
   bool _isFinished = false;
+  Timer? _responseTimer;
 
   // Chat state
   final List<ChatMessage> _messages = [];
@@ -70,6 +71,18 @@ class _RehearseScreenState extends State<RehearseScreen> {
   void initState() {
     super.initState();
     _loadTutorialDetail();
+  }
+
+  void _startResponseTimeoutTimer() {
+    _responseTimer?.cancel();
+    _responseTimer = Timer(const Duration(seconds: 15), () {
+      if (!mounted) return;
+      if (_stage.isLoading) {
+        setState(() {
+          _updateStageFromLastMessage();
+        });
+      }
+    });
   }
 
   Future<void> _connectSocket(String channelId) async {
@@ -94,6 +107,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         );
         return;
       } else if (incomingMsg.messageType.isEnd) {
+        _responseTimer?.cancel();
         setState(() {
           _stage = MessageStage.finished;
           _isFinished = true;
@@ -101,6 +115,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         return;
       }
 
+      _responseTimer?.cancel();
       setState(() {
         _messages.add(incomingMsg);
         _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -157,6 +172,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Future<void> _loadTutorialDetail() async {
+    _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
       _isReadOnly = false;
@@ -183,7 +199,8 @@ class _RehearseScreenState extends State<RehearseScreen> {
         return;
       }
 
-      final isViewingActive = _activeTutorChannel != null &&
+      final isViewingActive =
+          _activeTutorChannel != null &&
           _currentViewingChannel?.id == _activeTutorChannel!.id;
       _isReadOnly = !isViewingActive;
 
@@ -243,6 +260,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
       return;
     }
 
+    _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
       _isReadOnly = true;
@@ -309,6 +327,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
       return;
     }
 
+    _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
       _isReadOnly = false;
@@ -704,6 +723,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
   @override
   void dispose() {
+    _responseTimer?.cancel();
     _socketSubscription?.cancel();
     _scrollController.dispose();
     _followUpController.dispose();
@@ -748,13 +768,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
     });
   }
 
-  void _submitAnswer() {
-    setState(() {
-      _stage = MessageStage.loading;
-    });
+  void _submitAnswer() async {
     if (_tutorChannel == null ||
         _tempSelectedAnswerIndex == null ||
-        _tempConfidenceLevel == null) {
+        _tempConfidenceLevel == null ||
+        _lastMessage?.question == null) {
       setState(() {
         _stage = MessageStage.error;
       });
@@ -762,7 +780,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     }
 
     setState(() {
-      _stage = MessageStage.explainAndFollowup;
+      _stage = MessageStage.loading;
       final question = _lastMessage!.question;
       if (question != null) {
         if (question.answer != null) {
@@ -777,9 +795,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
         _lastMessage!.interactive = false;
       }
     });
+    _startResponseTimeoutTimer();
 
     try {
-      TopicService().submitAnswer(
+      await TopicService().submitAnswer(
         questionId: _lastMessage!.question!.id,
         selectedOption: _tempSelectedAnswerIndex!.toStr(),
         confidence: _tempConfidenceLevel!.name,
@@ -788,6 +807,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         componentId: _messages.last.componentId!,
       );
     } catch (e, stack) {
+      _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
         e,
         stack,
@@ -796,6 +816,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserError(context, l10n.failedToSubmitAnswer);
+        setState(() {
+          _updateStageFromLastMessage();
+        });
       }
     }
   }
@@ -818,8 +841,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
           createdAt: DateTime.now().toLocal(),
         ),
       );
+      _stage = MessageStage.loading;
     });
     _scrollToBottom();
+    _startResponseTimeoutTimer();
 
     try {
       await TopicService().sendFollowUp(
@@ -831,6 +856,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         message: text,
       );
     } catch (e, stack) {
+      _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
         e,
         stack,
@@ -839,6 +865,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserError(context, l10n.failedToSendFollowUp);
+        setState(() {
+          _updateStageFromLastMessage();
+        });
       }
     }
   }
@@ -848,6 +877,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     setState(() {
       _stage = MessageStage.loading;
     });
+    _startResponseTimeoutTimer();
     logPrint(
       "continue From SECTION: ${_lastMessage!.sectionId} and COMPONENT: ${_lastMessage!.componentId}",
     );
@@ -859,6 +889,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         componentId: restart ? null : _lastMessage!.componentId,
       );
     } catch (e, stack) {
+      _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
         e,
         stack,
@@ -867,6 +898,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         AppErrorHandler.showUserError(context, l10n.failedToContinueTutorial);
+        setState(() {
+          _updateStageFromLastMessage();
+        });
       }
     }
     _scrollToBottom();
