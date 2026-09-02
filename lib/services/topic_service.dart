@@ -202,6 +202,23 @@ class TopicService {
     }
   }
 
+  /// The tutorial's tutor channel, creating one when [createNew] is set.
+  /// On minsur (2026-09-02) `tutorhistory.json?dataid=` answers without
+  /// `activechannel` even when a session exists; this endpoint still
+  /// returns it.
+  Future<TutorChannel?> fetchTutorSession(
+    String tutorialId, {
+    bool createNew = false,
+  }) async {
+    const path = 'services/module/entitytutorial/tutorsession.json';
+    final data = await _http.getJson(
+      path,
+      query: {'dataid': tutorialId, if (createNew) 'createnew': 'true'},
+    );
+    final raw = data['channel'];
+    return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
+  }
+
   Future<void> startTutorial({
     required String tutorialId,
     required String channel,
