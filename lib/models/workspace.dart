@@ -181,7 +181,8 @@ class Workspace {
     'id': id,
     'name': name,
     'mediadb': mediaDBRoot,
-    'siteroot': '${uri.host}${uri.hasPort ? ': ${uri.port}' : ''}',
+    'catalogid': '${uri.pathSegments[0]}/catalog',
+    'siteroot': '${uri.host}${uri.hasPort ? ':${uri.port}' : ''}',
     'https': uri.scheme == 'https',
     if (_iconAsset != null) 'iconAsset': _iconAsset,
   };

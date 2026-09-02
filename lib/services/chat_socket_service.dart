@@ -29,6 +29,8 @@ class ChatSocketService {
   String? _entermediakey;
   bool _isDisposed = false;
 
+  String _catalogId = '';
+
   SocketConnectionState _connectionState = SocketConnectionState.disconnected;
   final StreamController<SocketConnectionState> _stateController =
       StreamController<SocketConnectionState>.broadcast();
@@ -57,6 +59,8 @@ class ChatSocketService {
 
     _userId = _resolveUserId();
     _entermediakey = _resolveToken();
+
+    _catalogId = _resolveCatalogId();
 
     if (_userId.isEmpty) {
       logPrint('ChatSocketService: cannot connect without a valid userId');
@@ -121,6 +125,7 @@ class ChatSocketService {
     String? replyToId,
     String? command,
     String? functionName,
+    String? nextFunctionName,
     MessageType? messageType,
     Map<String, dynamic>? extraData,
   }) {
@@ -129,14 +134,19 @@ class ChatSocketService {
     final data = <String, dynamic>{
       'message': message,
       'channel': targetChannel,
-      'userid': _userId,
+      'user': _userId,
+      'catalogid': _catalogId,
       if (replyToId != null && replyToId.isNotEmpty) 'replytoid': replyToId,
       if (command != null && command.isNotEmpty) 'command': command,
       if (functionName != null && functionName.isNotEmpty)
         'functionname': functionName,
+      if (nextFunctionName != null && nextFunctionName.isNotEmpty)
+        'nextfunctionname': nextFunctionName,
       if (messageType != null) 'messagetype': messageType.name,
       ...?extraData,
     };
+
+    logPrint('ChatSocketService sendMessage: $data');
 
     sendRaw(data);
   }
@@ -319,6 +329,14 @@ class ChatSocketService {
 
   String _resolveUserId() {
     return AuthService.userId!;
+  }
+
+  String _resolveCatalogId() {
+    if (Get.isRegistered<OpenI>()) {
+      final oi = Get.find<OpenI>();
+      return oi.settings.catalogId;
+    }
+    throw Exception('catalogid not found in app settings');
   }
 
   String _resolveBaseUrl() {

@@ -15,11 +15,13 @@ import 'package:openinsitute_core/services/oi_chat_manager.dart';
 class AppSettings {
   String mediadb;
   String siteroot;
+  String catalogId;
   bool https;
 
   AppSettings({
     required this.mediadb,
     required this.siteroot,
+    required this.catalogId,
     required this.https,
   });
 
@@ -27,6 +29,7 @@ class AppSettings {
     return AppSettings(
       mediadb: json['mediadb'] ?? '',
       siteroot: json['siteroot'] ?? '',
+      catalogId: json['catalogid'] ?? '',
       https: json['https'] ?? false,
     );
   }

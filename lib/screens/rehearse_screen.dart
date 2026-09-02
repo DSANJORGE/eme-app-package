@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:eme_app_package/l10n/app_localizations.dart';
@@ -6,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:eme_app_package/models/chat_message.dart' as socket_msg;
 import 'package:eme_app_package/models/chat_message.dart';
 import 'package:eme_app_package/models/topic.dart';
-import 'package:eme_app_package/services/auth_service.dart';
+// import 'package:eme_app_package/services/auth_service.dart';
 import 'package:eme_app_package/services/chat_socket_service.dart';
 import 'package:eme_app_package/services/topic_service.dart';
 import 'package:eme_app_package/utils/log.dart';
@@ -117,8 +118,21 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
       _responseTimer?.cancel();
       setState(() {
-        _messages.add(incomingMsg);
-        _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        final existingMessage = _messages.firstWhere(
+          (m) => m.messageId == incomingMsg.messageId,
+          orElse: () => incomingMsg,
+        );
+        if (existingMessage != incomingMsg) {
+          final index = _messages.indexWhere(
+            (m) => m.messageId == incomingMsg.messageId,
+          );
+          if (index != -1) {
+            _messages[index] = incomingMsg;
+          }
+        } else {
+          _messages.add(incomingMsg);
+          _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        }
         _lastMessage = _messages.last;
 
         if (_lastMessage!.messageType.isWelcome) {
@@ -779,33 +793,45 @@ class _RehearseScreenState extends State<RehearseScreen> {
       return;
     }
 
-    setState(() {
-      _stage = MessageStage.loading;
-      final question = _lastMessage!.question;
-      if (question != null) {
-        if (question.answer != null) {
-          question.answer!.setSelectedOption(_tempSelectedAnswerIndex!);
-          question.answer!.setConfidence(_tempConfidenceLevel!);
-        } else {
-          question.answer = Answer(
-            selectedOption: _tempSelectedAnswerIndex,
-            confidence: _tempConfidenceLevel,
-          );
-        }
-        _lastMessage!.interactive = false;
-      }
-    });
+    // setState(() {
+    //   _stage = MessageStage.loading;
+    //   final question = _lastMessage!.question;
+    //   if (question != null) {
+    //     if (question.answer != null) {
+    //       question.answer!.setSelectedOption(_tempSelectedAnswerIndex!);
+    //       question.answer!.setConfidence(_tempConfidenceLevel!);
+    //     } else {
+    //       question.answer = Answer(
+    //         selectedOption: _tempSelectedAnswerIndex,
+    //         confidence: _tempConfidenceLevel,
+    //       );
+    //     }
+    //     _lastMessage!.interactive = false;
+    //   }
+    // });
     _startResponseTimeoutTimer();
 
     try {
-      await TopicService().submitAnswer(
-        questionId: _lastMessage!.question!.id,
-        selectedOption: _tempSelectedAnswerIndex!.toStr(),
-        confidence: _tempConfidenceLevel!.name,
-        channel: _messages.last.channel,
-        sectionId: _messages.last.sectionId!,
-        componentId: _messages.last.componentId!,
-      );
+      if (ChatSocketService().isConnected) {
+        ChatSocketService().sendMessage(
+          message:
+              "Answer: ${_tempSelectedAnswerIndex!.toStr()}, Confidence: ${_tempConfidenceLevel!.name}",
+          channel: _activeTutorChannel!.id,
+          functionName: 'chat_tutor_answer',
+          nextFunctionName: 'chat_tutor_progress',
+          command: "messagereceived",
+          extraData: {
+            'agentcontext': jsonEncode({
+              'questionid': _lastMessage!.question!.id,
+              'selectedoption': _tempSelectedAnswerIndex!.toStr(),
+              'confidence': _tempConfidenceLevel!.name,
+              'tutorialid': widget.tutorial.id,
+              'sectionid': _messages.last.sectionId,
+              'componentid': _messages.last.componentId,
+            }),
+          },
+        );
+      }
     } catch (e, stack) {
       _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
@@ -827,34 +853,40 @@ class _RehearseScreenState extends State<RehearseScreen> {
     if (_lastMessage == null) return;
     final text = _followUpController.text.trim();
     if (text.isEmpty) return;
+    if (text.length < 5) {
+      if (mounted) {
+        AppErrorHandler.showUserError(
+          context,
+          'Message must be at least 5 characters long',
+        );
+      }
+      return;
+    }
     _followUpController.clear();
 
-    final userMsgId = 'user_comment_${DateTime.now().millisecondsSinceEpoch}';
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          messageId: userMsgId,
-          userId: AuthService.userId ?? 'user',
-          message: text,
-          channel: _lastMessage!.channel,
-          createdAt: DateTime.now().toLocal(),
-        ),
-      );
-      _stage = MessageStage.loading;
-    });
-    _scrollToBottom();
-    _startResponseTimeoutTimer();
+    // final userMsgId = 'user_comment_${DateTime.now().millisecondsSinceEpoch}';
 
     try {
-      await TopicService().sendFollowUp(
-        messageId: userMsgId,
-        tutorialId: widget.tutorial.id,
-        channel: _lastMessage!.channel,
-        sectionId: _lastMessage!.sectionId!,
-        componentId: _lastMessage!.componentId!,
-        message: text,
-      );
+      setState(() {
+        _stage = MessageStage.loading;
+      });
+      _scrollToBottom();
+      _startResponseTimeoutTimer();
+      if (ChatSocketService().isConnected) {
+        ChatSocketService().sendMessage(
+          message: text,
+          channel: _activeTutorChannel!.id,
+          functionName: 'chat_tutor_usercomment',
+          command: "messagereceived",
+          extraData: {
+            'agentcontext': jsonEncode({
+              'tutorialId': widget.tutorial.id,
+              'sectionId': _messages.last.sectionId,
+              'componentId': _messages.last.componentId,
+            }),
+          },
+        );
+      }
     } catch (e, stack) {
       _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
