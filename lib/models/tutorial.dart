@@ -221,7 +221,12 @@ class TutorialContent {
   factory TutorialContent.fromJson(Map<String, dynamic> json) {
     return TutorialContent(
       id: json['id'] as String? ?? '',
-      componentContent: json['componentcontent'] as String? ?? '',
+      // tutorial.json rows carry `content`; the tutor stream says
+      // `componentcontent`.
+      componentContent:
+          json['componentcontent'] as String? ??
+          json['content'] as String? ??
+          '',
       assetUrl: json['asseturl'] as String? ?? '',
       assetThumbnail: json['assetthumbnail'] as String? ?? '',
       contentType:
@@ -275,10 +280,16 @@ class SectionQuestion {
   /// answer write path reports against.
   final String contentId;
 
+  /// The question's picture: the `asset` row (`contentrole: featureimage`)
+  /// the server places before every MCQ, tagged with the same question id.
+  /// Its `assetUrl` is a site-relative path served without auth.
+  final TutorialContent? image;
+
   SectionQuestion({
     required this.section,
     required this.question,
     required this.contentId,
+    this.image,
   });
 }
 
@@ -299,6 +310,14 @@ class TutorialDetail {
             section: section,
             question: content.question!,
             contentId: content.id,
+            image: section.contents
+                .where(
+                  (c) =>
+                      c.isAsset &&
+                      c.assetUrl.isNotEmpty &&
+                      c.question?.id == content.question!.id,
+                )
+                .firstOrNull,
           ),
   ];
 

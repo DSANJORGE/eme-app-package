@@ -164,6 +164,16 @@ void main() {
       expect(first.section.id, isNot(last.section.id));
     });
 
+    test('pairs each MCQ with the asset row tagged with its question', () async {
+      http.canned[path] = _detailPayload;
+
+      final mcqs = (await service.fetchTutorialDetail('TUT1'))!.mcqQuestions;
+
+      expect(mcqs[0].image?.assetUrl, '/img/a.jpg');
+      expect(mcqs[1].image, isNull); // no asset row for question 2
+      expect(mcqs[2].image, isNull); // same id as q1, other section
+    });
+
     test('maps the answer key to an index over key-sorted options', () async {
       http.canned[path] = _detailPayload;
 
