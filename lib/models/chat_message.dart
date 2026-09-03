@@ -129,6 +129,7 @@ class ChatMessage {
   final String? message;
   final String? command;
   final String? replyToId;
+  final String? messageType;
   final DateTime createdAt;
   final AgentContextValues? agentContextValues;
 
@@ -139,6 +140,7 @@ class ChatMessage {
     this.message,
     this.command,
     this.replyToId,
+    this.messageType = 'message',
     required this.createdAt,
     this.agentContextValues,
   });
@@ -188,6 +190,7 @@ class ChatMessage {
       message: json['message']?.toString() ?? '',
       command: json['command']?.toString(),
       replyToId: (json['replytoid'] ?? json['replyToId'])?.toString(),
+      messageType: json['messagetype']?.toString() ?? 'message',
       createdAt: parsedCreatedAt,
       agentContextValues: agentContextValues,
     );
@@ -201,6 +204,7 @@ class ChatMessage {
       if (message != null) 'message': message,
       if (command != null) 'command': command,
       if (replyToId != null) 'replytoid': replyToId,
+      if (messageType != null) 'messagetype': messageType,
       'createdat': createdAt.toIso8601String(),
       'agentcontextvalues': agentContextValues?.toJson(),
     };
@@ -255,6 +259,7 @@ class ChatMessage {
     String? message,
     String? command,
     String? replyToId,
+    String? messageType,
     DateTime? createdAt,
     AgentContextValues? agentContextValues,
   }) {
@@ -265,6 +270,7 @@ class ChatMessage {
       message: message ?? this.message,
       command: command ?? this.command,
       replyToId: replyToId ?? this.replyToId,
+      messageType: messageType ?? this.messageType,
       createdAt: createdAt ?? this.createdAt,
       agentContextValues: agentContextValues ?? this.agentContextValues,
     );

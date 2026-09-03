@@ -96,7 +96,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (incomingMsg.isKeepAlive || incomingMsg.isMessageRemoved) return;
       if (!mounted || _isReadOnly) return;
 
-      if (incomingMsg.messageRenderType.isAnswer) {
+      if (incomingMsg.messageType == "system") {
         return;
       }
       if (incomingMsg.messageRenderType.isProgressUpdate) {
