@@ -283,8 +283,7 @@ class TopicService {
     required String tutorialId,
     required String channel,
   }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
+    final targetUrl = "$mediaDBRoot/services/module/entitytutorial/start.json";
 
     try {
       final Map<String, String> credentials =

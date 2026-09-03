@@ -9,7 +9,6 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/daily_challenge.dart';
-import '../models/mistake_item.dart';
 import '../models/topic.dart';
 import '../models/workspace.dart';
 import '../providers/workspace_provider.dart';
@@ -18,7 +17,6 @@ import '../services/topic_service.dart';
 import '../services/workspace_service.dart';
 import '../widgets/daily_challenge_section.dart';
 import '../widgets/data_consent_dialog.dart';
-import '../widgets/mistakes_section.dart';
 import 'compliance_screen.dart';
 import 'profile_screen.dart';
 import '../utils/error_handler.dart';
@@ -48,13 +46,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   String selectedTab = 'Catalog';
 
   late List<DailyChallengeItem> _dailyChallenges;
-  late List<MistakeItem> _mistakes;
 
   @override
   void initState() {
     super.initState();
     _dailyChallenges = _initDailyChallenges();
-    _mistakes = _initMistakes();
     _loadTopics();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DataCollectionConsentDialog.showIfNeeded(context);
@@ -104,65 +100,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return list;
   }
 
-  List<MistakeItem> _initMistakes() {
-    return [
-      MistakeItem(
-        id: 'm1',
-        topicTitle: 'Algebra & Calculus',
-        question:
-            'What is the derivative of f(x) = 3x² + 5x - 4 with respect to x?',
-        options: ['6x + 5', '3x + 5', '6x² + 5', '6x - 4'],
-        correctOptionIndex: 0,
-        explanation:
-            'Applying the power rule d/dx[xⁿ] = n·xⁿ⁻¹, the derivative of 3x² is 6x and 5x is 5. Constant 4 becomes 0.',
-      ),
-      MistakeItem(
-        id: 'm2',
-        topicTitle: 'Language & Grammar',
-        question:
-            'Identify the sentence that uses the subjunctive mood correctly:',
-        options: [
-          'If I was you, I would take the offer.',
-          'If I were you, I would accept the opportunity.',
-          'I wish I was taller.',
-          'He acts like he was the owner.',
-        ],
-        correctOptionIndex: 1,
-        explanation:
-            'In contrary-to-fact conditional clauses, "were" is used for the subjunctive mood with singular subjects ("If I were you").',
-      ),
-      MistakeItem(
-        id: 'm3',
-        topicTitle: 'Physics & Circuits',
-        question:
-            'When an additional parallel resistor is connected in an active circuit, the total equivalent resistance:',
-        options: [
-          'Increases',
-          'Decreases',
-          'Remains unchanged',
-          'Becomes zero',
-        ],
-        correctOptionIndex: 1,
-        explanation:
-            'In parallel circuits, 1/R_eq = 1/R1 + 1/R2. Adding more pathways reduces overall total resistance and increases total current.',
-      ),
-    ];
-  }
-
   void _onChallengeCompleted(DailyChallengeItem item) {
     setState(() {
       item.complete();
     });
-  }
-
-  void _onMistakeResolved(MistakeItem mistake) {
-    setState(() {
-      mistake.isResolved = true;
-    });
-  }
-
-  void _onAllMistakesResolved() {
-    setState(() {});
   }
 
   void _loadTopics() {
@@ -232,14 +173,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             DailyChallengeSection(
                               challenges: _dailyChallenges,
                               onChallengeCompleted: _onChallengeCompleted,
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Mistakes Section
-                            MistakesSection(
-                              mistakes: _mistakes,
-                              onMistakeResolved: _onMistakeResolved,
-                              onAllMistakesResolved: _onAllMistakesResolved,
                             ),
                             const SizedBox(height: 28),
 
