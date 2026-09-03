@@ -126,7 +126,7 @@ class ChatSocketService {
     String? command,
     String? functionName,
     String? nextFunctionName,
-    MessageType? messageType,
+    String? messageType,
     Map<String, dynamic>? extraData,
   }) {
     final targetChannel = channel ?? _channelId;
@@ -142,7 +142,7 @@ class ChatSocketService {
         'functionname': functionName,
       if (nextFunctionName != null && nextFunctionName.isNotEmpty)
         'nextfunctionname': nextFunctionName,
-      if (messageType != null) 'messagetype': messageType.name,
+      if (messageType != null) 'messagetype': messageType,
       ...?extraData,
     };
 

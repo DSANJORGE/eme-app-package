@@ -96,7 +96,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (incomingMsg.isKeepAlive || incomingMsg.isMessageRemoved) return;
       if (!mounted || _isReadOnly) return;
 
-      if (incomingMsg.messageType.isProgressUpdate) {
+      if (incomingMsg.messageRenderType.isAnswer) {
+        return;
+      }
+      if (incomingMsg.messageRenderType.isProgressUpdate) {
         setState(() {
           widget.tutorial.progress = TutorialProgress.fromJson(
             incomingMsg.progressUpdate?.toJson() ?? {},
@@ -107,7 +110,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
           'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
         );
         return;
-      } else if (incomingMsg.messageType.isEnd) {
+      } else if (incomingMsg.messageRenderType.isEnd) {
         _responseTimer?.cancel();
         setState(() {
           _stage = MessageStage.finished;
@@ -135,13 +138,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
         }
         _lastMessage = _messages.last;
 
-        if (_lastMessage!.messageType.isWelcome) {
+        if (_lastMessage!.messageRenderType.isWelcome) {
           _stage = MessageStage.ready;
-        } else if (_lastMessage!.messageType.isQuestion) {
+        } else if (_lastMessage!.messageRenderType.isQuestion) {
           _tempSelectedAnswerIndex = null;
           _tempConfidenceLevel = null;
           _stage = MessageStage.selectOption;
-        } else if (_lastMessage!.messageType.isEnd) {
+        } else if (_lastMessage!.messageRenderType.isEnd) {
           _stage = MessageStage.finished;
           _isFinished = true;
         } else {
@@ -153,13 +156,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   void _updateStageFromLastMessage() {
-    logPrint('Last message: ${_lastMessage?.messageType}');
+    logPrint('Last message: ${_lastMessage?.messageRenderType}');
     if (_lastMessage != null) {
-      if (_lastMessage!.messageType.isWelcome) {
+      if (_lastMessage!.messageRenderType.isWelcome) {
         setState(() {
           _stage = MessageStage.ready;
         });
-      } else if (_lastMessage!.messageType.isQuestion) {
+      } else if (_lastMessage!.messageRenderType.isQuestion) {
         final answer = _lastMessage!.answer;
         if (answer == null) {
           _tempSelectedAnswerIndex = null;
@@ -172,7 +175,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             _stage = MessageStage.explainAndFollowup;
           });
         }
-      } else if (_lastMessage!.messageType.isEnd) {
+      } else if (_lastMessage!.messageRenderType.isEnd) {
         setState(() {
           _stage = MessageStage.finished;
           _isFinished = true;
@@ -793,22 +796,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
       return;
     }
 
-    // setState(() {
-    //   _stage = MessageStage.loading;
-    //   final question = _lastMessage!.question;
-    //   if (question != null) {
-    //     if (question.answer != null) {
-    //       question.answer!.setSelectedOption(_tempSelectedAnswerIndex!);
-    //       question.answer!.setConfidence(_tempConfidenceLevel!);
-    //     } else {
-    //       question.answer = Answer(
-    //         selectedOption: _tempSelectedAnswerIndex,
-    //         confidence: _tempConfidenceLevel,
-    //       );
-    //     }
-    //     _lastMessage!.interactive = false;
-    //   }
-    // });
+    setState(() {
+      _stage = MessageStage.loading;
+      final question = _lastMessage!.question;
+      if (question != null) {
+        if (question.answer != null) {
+          question.answer!.setSelectedOption(_tempSelectedAnswerIndex!);
+          question.answer!.setConfidence(_tempConfidenceLevel!);
+        } else {
+          question.answer = Answer(
+            selectedOption: _tempSelectedAnswerIndex,
+            confidence: _tempConfidenceLevel,
+          );
+        }
+        _lastMessage!.interactive = false;
+      }
+    });
     _startResponseTimeoutTimer();
 
     try {
@@ -820,8 +823,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
           functionName: 'chat_tutor_answer',
           nextFunctionName: 'chat_tutor_progress',
           command: "messagereceived",
+          messageType: 'system',
           extraData: {
             'agentcontext': jsonEncode({
+              'messagerendertype': 'answer',
               'questionid': _lastMessage!.question!.id,
               'selectedoption': _tempSelectedAnswerIndex!.toStr(),
               'confidence': _tempConfidenceLevel!.name,
@@ -880,6 +885,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
           command: "messagereceived",
           extraData: {
             'agentcontext': jsonEncode({
+              'messagerendertype': 'usercomment',
               'tutorialId': widget.tutorial.id,
               'sectionId': _messages.last.sectionId,
               'componentId': _messages.last.componentId,
@@ -914,12 +920,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
       "continue From SECTION: ${_lastMessage!.sectionId} and COMPONENT: ${_lastMessage!.componentId}",
     );
     try {
-      await TopicService().continueTutorial(
-        tutorialId: widget.tutorial.id,
-        channel: _lastMessage!.channel,
-        sectionId: restart ? null : _lastMessage!.sectionId,
-        componentId: restart ? null : _lastMessage!.componentId,
-      );
+      if (ChatSocketService().isConnected) {
+        ChatSocketService().sendMessage(
+          message: "",
+          channel: _activeTutorChannel!.id,
+          functionName: 'chat_tutor_continue',
+          command: "messagereceived",
+          messageType: 'system',
+          extraData: {
+            'agentcontext': jsonEncode({
+              'tutorialid': widget.tutorial.id,
+              'sectionid': _messages.last.sectionId,
+              'componentid': _messages.last.componentId,
+            }),
+          },
+        );
+      }
     } catch (e, stack) {
       _responseTimer?.cancel();
       AppErrorHandler.recordNonFatal(
@@ -1434,21 +1450,21 @@ class _RehearseScreenState extends State<RehearseScreen> {
     bool isLast, {
     bool showAvatar = true,
   }) {
-    switch (message.messageType) {
-      case MessageType.usercomment:
+    switch (message.messageRenderType) {
+      case MessageRenderType.usercomment:
         return [_buildUserCommentMessage(message, showAvatar: showAvatar)];
-      case MessageType.agentcomment:
+      case MessageRenderType.agentcomment:
         return [_buildAgentCommentMessage(message, showAvatar: showAvatar)];
-      case MessageType.end:
+      case MessageRenderType.end:
         return [_buildEndMessage(message, showAvatar: showAvatar)];
-      case MessageType.question:
+      case MessageRenderType.question:
         return [_buildQuestionMessage(message, isLast, showAvatar: showAvatar)];
-      case MessageType.asset:
+      case MessageRenderType.asset:
         return [_buildAssetMessage(message, showAvatar: showAvatar)];
-      case MessageType.answereval:
+      case MessageRenderType.answereval:
         return [_buildAnswerEvalMessage(message, showAvatar: showAvatar)];
-      case MessageType.welcome:
-      case MessageType.text:
+      case MessageRenderType.welcome:
+      case MessageRenderType.text:
       default:
         return [_buildTextMessage(message, showAvatar: showAvatar)];
     }

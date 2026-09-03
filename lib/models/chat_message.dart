@@ -4,7 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
 
-enum MessageType {
+enum MessageRenderType {
   welcome,
   text,
   question,
@@ -16,27 +16,27 @@ enum MessageType {
   agentcomment,
   progressupdate;
 
-  bool get isQuestion => this == MessageType.question;
-  bool get isAsset => this == MessageType.asset;
-  bool get isWelcome => this == MessageType.welcome;
-  bool get isText => this == MessageType.text;
-  bool get isAnswer => this == MessageType.answer;
-  bool get isAnswerEval => this == MessageType.answereval;
-  bool get isUserComment => this == MessageType.usercomment;
-  bool get isEnd => this == MessageType.end;
-  bool get isAgentComment => this == MessageType.agentcomment;
-  bool get isProgressUpdate => this == MessageType.progressupdate;
+  bool get isQuestion => this == MessageRenderType.question;
+  bool get isAsset => this == MessageRenderType.asset;
+  bool get isWelcome => this == MessageRenderType.welcome;
+  bool get isText => this == MessageRenderType.text;
+  bool get isAnswer => this == MessageRenderType.answer;
+  bool get isAnswerEval => this == MessageRenderType.answereval;
+  bool get isUserComment => this == MessageRenderType.usercomment;
+  bool get isEnd => this == MessageRenderType.end;
+  bool get isAgentComment => this == MessageRenderType.agentcomment;
+  bool get isProgressUpdate => this == MessageRenderType.progressupdate;
 
-  factory MessageType.fromName(String name) {
-    return MessageType.values.firstWhere(
+  factory MessageRenderType.fromName(String name) {
+    return MessageRenderType.values.firstWhere(
       (element) => element.name.toLowerCase() == name.toLowerCase(),
-      orElse: () => MessageType.text,
+      orElse: () => MessageRenderType.text,
     );
   }
 }
 
 class AgentContextValues {
-  final MessageType messageType;
+  final MessageRenderType messageRenderType;
   final String? tutorialId;
   final String? sectionId;
   final String? componentId;
@@ -49,7 +49,7 @@ class AgentContextValues {
   bool? interactive = false;
 
   AgentContextValues({
-    this.messageType = MessageType.text,
+    this.messageRenderType = MessageRenderType.text,
     this.tutorialId = "",
     this.sectionId = "",
     this.componentId = "",
@@ -68,15 +68,17 @@ class AgentContextValues {
   }
 
   factory AgentContextValues.fromJson(Map<String, dynamic> json) {
-    String? rawMessageType = json['messagetype']?.toString().toLowerCase();
+    String? rawMessageRenderType = json['messagerendertype']
+        ?.toString()
+        .toLowerCase();
 
-    final messageType = MessageType.values.firstWhere(
-      (element) => element.name.toLowerCase() == rawMessageType,
-      orElse: () => MessageType.text,
+    final messageRenderType = MessageRenderType.values.firstWhere(
+      (element) => element.name.toLowerCase() == rawMessageRenderType,
+      orElse: () => MessageRenderType.text,
     );
 
     return AgentContextValues(
-      messageType: messageType,
+      messageRenderType: messageRenderType,
       tutorialId: json['tutorialid']?.toString(),
       sectionId: json['sectionid']?.toString(),
       componentId: json['componentid']?.toString(),
@@ -89,7 +91,7 @@ class AgentContextValues {
       asset: json['asset'] != null ? Asset.fromJson(json['asset']) : null,
       progressUpdate: json['progressupdate'] != null
           ? ProgressUpdate.fromJson(json['progressupdate'])
-          : (messageType == MessageType.progressupdate
+          : (messageRenderType == MessageRenderType.progressupdate
                 ? ProgressUpdate.fromJson(json)
                 : null),
       interactive: json['interactive'] == "yes" ? true : false,
@@ -98,7 +100,7 @@ class AgentContextValues {
 
   Map<String, dynamic> toJson() {
     return {
-      'messagetype': messageType.name,
+      'messagerendertype': messageRenderType.name,
       'tutorialid': tutorialId,
       'sectionid': sectionId,
       'componentid': componentId,
@@ -113,7 +115,7 @@ class AgentContextValues {
   }
 
   String? get text {
-    if (messageType.isQuestion) {
+    if (messageRenderType.isQuestion) {
       return question!.question;
     }
     return componentContent;
@@ -223,7 +225,7 @@ class ChatMessage {
   AgentContextValues get contextValues =>
       agentContextValues ?? AgentContextValues.fromJson({});
 
-  MessageType get messageType => contextValues.messageType;
+  MessageRenderType get messageRenderType => contextValues.messageRenderType;
   Question? get question => contextValues.question;
 
   Answer? get answer => question?.answer;

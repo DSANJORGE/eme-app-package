@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:eme_app_package/models/chat_message.dart';
 import 'package:eme_app_package/services/auth_service.dart';
@@ -218,7 +217,7 @@ class TopicService {
             for (final item in history) {
               try {
                 final message = ChatMessage.fromJson(item);
-                if (message.messageType.isQuestion) {
+                if (message.messageRenderType.isQuestion) {
                   final rawAnswer = answers.isEmpty
                       ? null
                       : answers.firstWhere(
@@ -326,66 +325,6 @@ class TopicService {
           'url': targetUrl,
           'tutorialId': tutorialId,
           'channel': channel,
-        },
-      );
-      rethrow;
-    }
-  }
-
-  Future<void> continueTutorial({
-    required String tutorialId,
-    String? channel,
-    String? sectionId,
-    String? componentId,
-  }) async {
-    final targetUrl =
-        "$mediaDBRoot/services/module/entitytutorial/continue.json";
-
-    try {
-      final Map<String, String> credentials =
-          await AuthService.getCredentials();
-      final String token = credentials['entermediakey']!;
-
-      String body = 'context_tutorialid=$tutorialId';
-      body += '&functionname=chat_tutor_continue';
-      body += '&currentscenario=chat_tutor';
-      body += '&channel=$channel';
-      if (sectionId != null) body += '&context_sectionid=$sectionId';
-      if (componentId != null) body += '&context_componentid=$componentId';
-      body += '&context_skiploader=true';
-
-      logPrint("Continuing to $targetUrl with: $body");
-
-      final response = await _client.post(
-        targetUrl,
-        data: body,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to fetch tutor channels. Server returned HTTP ${response.statusCode}',
-        );
-      }
-    } catch (e, stack) {
-      if (kDebugMode) {
-        logPrint('TopicService error fetching tutor channels from $targetUrl');
-      }
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'TopicService.continueTutorial failed',
-        customKeys: {
-          'url': targetUrl,
-          'tutorialId': tutorialId,
-          'channel': channel ?? '',
         },
       );
       rethrow;
