@@ -8,7 +8,6 @@ import 'package:eme_app_package/widgets/topics_card.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/daily_challenge.dart';
 import '../models/topic.dart';
 import '../models/workspace.dart';
 import '../providers/workspace_provider.dart';
@@ -45,64 +44,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Workspace _activeWorkSpace = WorkspaceService.activeWorkspace;
   String selectedTab = 'Catalog';
 
-  late List<DailyChallengeItem> _dailyChallenges;
-
   @override
   void initState() {
     super.initState();
-    _dailyChallenges = _initDailyChallenges();
     _loadTopics();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DataCollectionConsentDialog.showIfNeeded(context);
-    });
-  }
-
-  List<DailyChallengeItem> _initDailyChallenges() {
-    final now = DateTime.now();
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final List<DailyChallengeItem> list = [];
-
-    for (int i = 6; i >= 1; i--) {
-      final date = now.subtract(Duration(days: i));
-      final dayLabel = weekdays[date.weekday - 1];
-      final dateLabel = '${date.month}/${date.day}';
-      final isCompleted = (i == 6 || i == 5 || i == 4 || i == 2);
-      final completedQuestions = isCompleted ? 5 : (i == 3 ? 3 : 2);
-
-      list.add(
-        DailyChallengeItem(
-          id: 'day-$i',
-          date: date,
-          dayLabel: dayLabel,
-          dateLabel: dateLabel,
-          title: 'Daily Practice • $dayLabel',
-          totalQuestions: 5,
-          completedQuestions: completedQuestions,
-          isToday: false,
-        ),
-      );
-    }
-
-    // Today
-    list.add(
-      DailyChallengeItem(
-        id: 'today',
-        date: now,
-        dayLabel: 'Today',
-        dateLabel: '${now.month}/${now.day}',
-        title: 'Sunday, August 27',
-        totalQuestions: 20,
-        completedQuestions: 3,
-        isToday: true,
-      ),
-    );
-
-    return list;
-  }
-
-  void _onChallengeCompleted(DailyChallengeItem item) {
-    setState(() {
-      item.complete();
     });
   }
 
@@ -169,11 +116,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // // Daily Challenge Section
-                            DailyChallengeSection(
-                              challenges: _dailyChallenges,
-                              onChallengeCompleted: _onChallengeCompleted,
-                            ),
+                            // Daily Challenge Section
+                            const DailyChallengeSection(),
                             const SizedBox(height: 28),
 
                             // Section Title

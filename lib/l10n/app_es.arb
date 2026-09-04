@@ -194,5 +194,14 @@
     "pastSession": "Sesión Anterior",
     "noPreviousSessions": "No se encontraron sesiones anteriores",
     "viewingPastSession": "Viendo sesión anterior",
-    "resumeActive": "Reanudar Activa"
+    "resumeActive": "Reanudar Activa",
+    "youFinishedTodaysChallenge": "¡Terminaste el reto de hoy!",
+    "dailyChallengeHistory": "Historial de Retos Diarios",
+    "previousChallenges": "Retos Anteriores",
+    "viewingPastChallenge": "Viendo reto anterior",
+    "resumeTodaysChallenge": "Reanudar Reto de Hoy",
+    "noPreviousChallenges": "No se encontraron retos anteriores",
+    "todaysChallengeActive": "Reto de Hoy",
+    "noDailyChallengeForDate": "No hay desafío diario disponible",
+    "noDailyChallengeForDateDesc": "No hay ningún desafío disponible para esta fecha."
 }

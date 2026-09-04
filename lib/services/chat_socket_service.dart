@@ -142,7 +142,7 @@ class ChatSocketService {
         'functionname': functionName,
       if (nextFunctionName != null && nextFunctionName.isNotEmpty)
         'nextfunctionname': nextFunctionName,
-      if (messageType != null) 'messagetype': messageType,
+      'messagetype': ?messageType,
       ...?extraData,
     };
 

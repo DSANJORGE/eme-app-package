@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:eme_app_package/models/chat_message.dart';
 import 'package:eme_app_package/services/auth_service.dart';
 import 'package:eme_app_package/utils/dio.dart';
@@ -16,12 +17,16 @@ class TutorHistoryResult {
   final TutorChannel? activeChannel;
   final List<TutorChannel> history;
   final List<ChatMessage> messages;
+  final bool isDailyChallenge;
+  final String? sectionId;
 
   TutorHistoryResult({
     this.currentChannel,
     this.activeChannel,
     this.history = const [],
     this.messages = const [],
+    this.isDailyChallenge = false,
+    this.sectionId,
   });
 }
 
@@ -160,6 +165,8 @@ class TopicService {
     final targetUrl =
         "$mediaDBRoot/services/module/entitytutorial/tutorhistory.json$queryString";
 
+    logPrint('Fetching $targetUrl');
+
     try {
       final Map<String, String> credentials =
           await AuthService.getCredentials();
@@ -273,6 +280,186 @@ class TopicService {
           'url': targetUrl,
           'channelId': channelId ?? '',
           'tutorialId': tutorialId,
+        },
+      );
+      rethrow;
+    }
+  }
+
+  Future<TutorHistoryResult> fetchDailyChallenge({
+    required DateTime challengeDate,
+  }) async {
+    final targetUrl =
+        "$mediaDBRoot/services/module/entitytutorial/dailychallenge.json?date=${DateFormat("yyyy-MM-dd").format(challengeDate)}";
+
+    try {
+      final Map<String, String> credentials =
+          await AuthService.getCredentials();
+      final String token = credentials['entermediakey']!;
+
+      final response = await _client.post(
+        targetUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = (response.data is String
+            ? json.decode(response.data)
+            : response.data);
+
+        if (decoded is Map<String, dynamic>) {
+          TutorChannel? currentChannel;
+          final currentChannelData = decoded['currentchannel'];
+          if (currentChannelData is Map<String, dynamic>) {
+            currentChannel = TutorChannel.fromJson(currentChannelData);
+          }
+
+          String sectionId = '';
+          if (decoded['dailychallenge'] is Map<String, dynamic>) {
+            final dailyChallenge =
+                decoded['dailychallenge'] as Map<String, dynamic>;
+            sectionId = dailyChallenge['sectionid'] ?? '';
+          }
+
+          TutorChannel? activeChannel;
+          final activeChannelData = decoded['activechannel'];
+          if (activeChannelData is Map<String, dynamic>) {
+            activeChannel = TutorChannel.fromJson(activeChannelData);
+          }
+
+          final List<TutorChannel> historyChannels = [];
+          final rawHistory = decoded['channelhistory'];
+          if (rawHistory is List) {
+            for (final item in rawHistory) {
+              if (item is Map<String, dynamic>) {
+                historyChannels.add(TutorChannel.fromJson(item));
+              }
+            }
+          }
+
+          final history = decoded['messages'] as dynamic;
+          final List answers = decoded['answers'] is List
+              ? decoded['answers']
+              : [];
+          final List<ChatMessage> messages = [];
+          if (history is List) {
+            for (final item in history) {
+              try {
+                final message = ChatMessage.fromJson(item);
+                if (message.messageRenderType.isQuestion) {
+                  final rawAnswer = answers.isEmpty
+                      ? null
+                      : answers.firstWhere(
+                          (a) => a['questionid'] == message.question?.id,
+                          orElse: () => null,
+                        );
+                  if (rawAnswer != null) {
+                    message.answer = Answer.fromJson(rawAnswer);
+                    message.interactive = false;
+                  }
+                }
+                messages.add(message);
+              } catch (e, stack) {
+                logPrint(e.toString());
+                AppErrorHandler.recordNonFatal(
+                  e,
+                  stack,
+                  reason:
+                      'TopicService.fetchDailyChallenge failed to parse chat message',
+                  customKeys: {
+                    'url': targetUrl,
+                    'challengeDate': challengeDate,
+                  },
+                );
+              }
+            }
+          }
+          return TutorHistoryResult(
+            currentChannel: currentChannel,
+            activeChannel: activeChannel,
+            history: historyChannels,
+            messages: messages,
+            isDailyChallenge: true,
+            sectionId: sectionId,
+          );
+        } else {
+          throw FormatException('Unexpected response format from $targetUrl');
+        }
+      } else {
+        throw Exception(
+          'Failed to fetch daily challenge history. Server returned HTTP ${response.statusCode}',
+        );
+      }
+    } catch (e, stack) {
+      logPrint(
+        'TopicService error fetching daily challenge history from $targetUrl',
+      );
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.fetchDailyChallenge failed',
+        customKeys: {'url': targetUrl, 'challengeDate': challengeDate},
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> startDailyChallenge({
+    required String channel,
+    required DateTime challengeDate,
+    required String sectionId,
+  }) async {
+    final targetUrl = "$mediaDBRoot/services/module/entitytutorial/start.json";
+
+    try {
+      final Map<String, String> credentials =
+          await AuthService.getCredentials();
+      final String token = credentials['entermediakey']!;
+
+      String body = 'functionname=chat_tutor_welcome';
+      body += '&currentscenario=chat_tutor';
+      body += '&context_isdailychallenge=true';
+      body += '&channel=$channel';
+      body += '&sectionid=$sectionId';
+      body += '&context_sectionid=$sectionId';
+      body += '&context_skiploader=true';
+
+      logPrint(body);
+
+      final response = await _client.post(
+        targetUrl,
+        data: body,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed to start daily challenge. Server returned HTTP ${response.statusCode}',
+        );
+      }
+    } catch (e, stack) {
+      logPrint('TopicService error starting daily challenge at $targetUrl');
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'TopicService.startDailyChallenge failed',
+        customKeys: {
+          'url': targetUrl,
+          'challengeDate': challengeDate.toIso8601String(),
+          'channel': channel,
         },
       );
       rethrow;

@@ -9,9 +9,11 @@ export 'services/deep_link_service.dart';
 // Models
 export 'models/workspace.dart';
 
+// Screens
+export 'screens/daily_challenge_screen.dart';
+
 // Utils
 export 'utils/error_handler.dart';
 export 'utils/log.dart';
 
 // You can add more exports here as needed
-

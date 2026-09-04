@@ -1264,6 +1264,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume Active'**
   String get resumeActive;
+
+  /// Message displayed when the user finishes today's daily challenge
+  ///
+  /// In en, this message translates to:
+  /// **'You finished today\'s challenge'**
+  String get youFinishedTodaysChallenge;
+
+  /// Title for the daily challenge history modal sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Challenge History'**
+  String get dailyChallengeHistory;
+
+  /// Section header for past daily challenges
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Challenges'**
+  String get previousChallenges;
+
+  /// Banner message when viewing a past daily challenge in read-only mode
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing past challenge'**
+  String get viewingPastChallenge;
+
+  /// Button to switch back to today's active challenge
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Today\'s Challenge'**
+  String get resumeTodaysChallenge;
+
+  /// Empty state message when no previous challenges are available
+  ///
+  /// In en, this message translates to:
+  /// **'No previous challenges found'**
+  String get noPreviousChallenges;
+
+  /// Label for today's active challenge item
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Challenge'**
+  String get todaysChallengeActive;
+
+  /// Title displayed when no daily challenge exists for the selected date
+  ///
+  /// In en, this message translates to:
+  /// **'No Daily Challenge Available'**
+  String get noDailyChallengeForDate;
+
+  /// Explanation displayed when no daily challenge exists for the selected date
+  ///
+  /// In en, this message translates to:
+  /// **'There is no challenge available for this date.'**
+  String get noDailyChallengeForDateDesc;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

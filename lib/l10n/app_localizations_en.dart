@@ -634,4 +634,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resumeActive => 'Resume Active';
+
+  @override
+  String get youFinishedTodaysChallenge => 'You finished today\'s challenge';
+
+  @override
+  String get dailyChallengeHistory => 'Daily Challenge History';
+
+  @override
+  String get previousChallenges => 'Previous Challenges';
+
+  @override
+  String get viewingPastChallenge => 'Viewing past challenge';
+
+  @override
+  String get resumeTodaysChallenge => 'Resume Today\'s Challenge';
+
+  @override
+  String get noPreviousChallenges => 'No previous challenges found';
+
+  @override
+  String get todaysChallengeActive => 'Today\'s Challenge';
+
+  @override
+  String get noDailyChallengeForDate => 'No Daily Challenge Available';
+
+  @override
+  String get noDailyChallengeForDateDesc => 'There is no challenge available for this date.';
 }

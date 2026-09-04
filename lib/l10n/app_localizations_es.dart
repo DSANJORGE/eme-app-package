@@ -634,4 +634,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get resumeActive => 'Reanudar Activa';
+
+  @override
+  String get youFinishedTodaysChallenge => '¡Terminaste el reto de hoy!';
+
+  @override
+  String get dailyChallengeHistory => 'Historial de Retos Diarios';
+
+  @override
+  String get previousChallenges => 'Retos Anteriores';
+
+  @override
+  String get viewingPastChallenge => 'Viendo reto anterior';
+
+  @override
+  String get resumeTodaysChallenge => 'Reanudar Reto de Hoy';
+
+  @override
+  String get noPreviousChallenges => 'No se encontraron retos anteriores';
+
+  @override
+  String get todaysChallengeActive => 'Reto de Hoy';
+
+  @override
+  String get noDailyChallengeForDate => 'No hay desafío diario disponible';
+
+  @override
+  String get noDailyChallengeForDateDesc => 'No hay ningún desafío disponible para esta fecha.';
 }
