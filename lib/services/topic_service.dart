@@ -284,12 +284,14 @@ class TopicService {
     return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
   }
 
-  /// start.json, not continue.json: the welcome turn moved to its own
-  /// endpoint upstream (2026-09-03).
+  /// Upstream moved the welcome turn to start.json (2026-09-03), but that
+  /// endpoint is 404 on both servers this fork targets — local
+  /// eme-server-minsur and minsur.genailabs.tech (checked 2026-09-04).
+  /// Stays on continue.json until they carry it.
   Future<void> startTutorial({
     required String tutorialId,
     required String channel,
-  }) => _http.postForm(_startPath, [
+  }) => _http.postForm(_continuePath, [
     MapEntry('context_tutorialid', tutorialId),
     const MapEntry('functionname', 'chat_tutor_welcome'),
     const MapEntry('currentscenario', 'chat_tutor'),
