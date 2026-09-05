@@ -28,6 +28,8 @@ class ChatSocketService {
   String? _entermediakey;
   bool _isDisposed = false;
 
+  String _catalogId = '';
+
   SocketConnectionState _connectionState = SocketConnectionState.disconnected;
 
   final StreamController<ChatMessage> _messageController =
@@ -46,6 +48,8 @@ class ChatSocketService {
 
     _userId = _resolveUserId();
     _entermediakey = _resolveToken();
+
+    _catalogId = _resolveCatalogId();
 
     if (_userId.isEmpty) {
       logPrint('ChatSocketService: cannot connect without a valid userId');
@@ -92,6 +96,39 @@ class ChatSocketService {
       );
       _handleDisconnectAndReconnect();
     }
+  }
+
+  /// Send chat message
+  void sendMessage({
+    required String message,
+    String? channel,
+    String? replyToId,
+    String? command,
+    String? functionName,
+    String? nextFunctionName,
+    String? messageType,
+    Map<String, dynamic>? extraData,
+  }) {
+    final targetChannel = channel ?? _channelId;
+
+    final data = <String, dynamic>{
+      'message': message,
+      'channel': targetChannel,
+      'user': _userId,
+      'catalogid': _catalogId,
+      if (replyToId != null && replyToId.isNotEmpty) 'replytoid': replyToId,
+      if (command != null && command.isNotEmpty) 'command': command,
+      if (functionName != null && functionName.isNotEmpty)
+        'functionname': functionName,
+      if (nextFunctionName != null && nextFunctionName.isNotEmpty)
+        'nextfunctionname': nextFunctionName,
+      'messagetype': ?messageType,
+      ...?extraData,
+    };
+
+    logPrint('ChatSocketService sendMessage: $data');
+
+    sendRaw(data);
   }
 
   /// Send raw map data over websocket
@@ -259,6 +296,15 @@ class ChatSocketService {
   String _resolveUserId() {
     // Null on logout; connect() aborts on empty userId without rescheduling.
     return AuthService.userId ?? '';
+  }
+
+  String _resolveCatalogId() {
+    // Upstream reads this out of GetX; this fork registers OpenI itself.
+    final oi = OpenI.instance;
+    if (oi == null) {
+      throw Exception('catalogid not found in app settings');
+    }
+    return oi.settings.catalogId;
   }
 
   String _resolveBaseUrl() {

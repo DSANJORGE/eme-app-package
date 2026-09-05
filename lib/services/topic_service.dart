@@ -1,6 +1,7 @@
 import 'package:eme_app_package/eme_http.dart';
 import 'package:eme_app_package/models/chat_message.dart';
 import 'package:eme_app_package/utils/log.dart';
+import 'package:intl/intl.dart';
 import '../models/topic.dart';
 import '../models/tutor_channel.dart';
 import '../models/tutorial.dart';
@@ -11,14 +12,20 @@ import '../utils/error_handler.dart';
 /// record parse errors only; EmeHttpException is already recorded inside the
 /// module.
 
-/// One tutorhistory.json response: the channel being viewed, the channel the
-/// tutor is live on (they differ when browsing a finished session read-only),
-/// the finished-channel history, and the viewed channel's messages.
+/// One tutorhistory.json (or dailychallenge.json) response: the channel being
+/// viewed, the channel the tutor is live on (they differ when browsing a
+/// finished session read-only), the finished-channel history, and the viewed
+/// channel's messages.
 class TutorHistoryResult {
   final TutorChannel? currentChannel;
   final TutorChannel? activeChannel;
   final List<TutorChannel> history;
   final List<ChatMessage> messages;
+
+  /// Daily challenge only: set by [TopicService.fetchDailyChallenge], with
+  /// the section the challenge draws its questions from.
+  final bool isDailyChallenge;
+  final String? sectionId;
 
   /// The learner's recorded answers on the current channel, oldest first,
   /// as the server sends them: questionid, section, tutorial, iscorrect
@@ -31,6 +38,8 @@ class TutorHistoryResult {
     this.history = const [],
     this.messages = const [],
     this.answers = const [],
+    this.isDailyChallenge = false,
+    this.sectionId,
   });
 }
 
@@ -40,6 +49,7 @@ class TopicService {
   TopicService({EmeHttp? http}) : _http = http ?? DioEmeHttp();
 
   static const _continuePath = 'services/module/entitytutorial/continue.json';
+  static const _startPath = 'services/module/entitytutorial/start.json';
 
   Future<List<Topic>> fetchTopics() async {
     const path = 'services/module/entitytopic/topics.json';
@@ -136,64 +146,10 @@ class TopicService {
             MapEntry('channel', channelId),
         ],
       );
-
-      TutorChannel? channelFrom(String key) {
-        final raw = data[key];
-        return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
-      }
-
-      final historyChannels = <TutorChannel>[
-        for (final item in data['channelhistory'] as List<dynamic>? ?? [])
-          if (item is Map<String, dynamic>) TutorChannel.fromJson(item),
-      ];
-
-      final history = data['messages'] as dynamic;
-      logPrint("messages ${history is List ? history.length : 0}");
-      final List answers = data['answers'] is List ? data['answers'] : [];
-      logPrint("answers ${answers.length}");
-      final List<ChatMessage> messages = [];
-      if (history is List) {
-        for (final item in history) {
-          try {
-            final message = ChatMessage.fromJson(item);
-            if (message.messageType.isQuestion) {
-              final rawAnswer = answers.isEmpty
-                  ? null
-                  : answers.firstWhere(
-                      (a) => a['questionid'] == message.question?.id,
-                      orElse: () => null,
-                    );
-              if (rawAnswer != null) {
-                message.answer = Answer.fromJson(rawAnswer);
-                message.interactive = false;
-              }
-            }
-            messages.add(message);
-          } catch (e, stack) {
-            logPrint(e.toString());
-            AppErrorHandler.recordNonFatal(
-              e,
-              stack,
-              reason:
-                  'TopicService.fetchTutorHistory failed to parse chat message',
-              customKeys: {
-                'url': path,
-                'channelId': channelId ?? '',
-                'tutorialId': tutorialId,
-              },
-            );
-          }
-        }
-      }
-      return TutorHistoryResult(
-        currentChannel: channelFrom('currentchannel'),
-        activeChannel: channelFrom('activechannel'),
-        history: historyChannels,
-        messages: messages,
-        answers: [
-          for (final a in data['answers'] as List<dynamic>? ?? [])
-            if (a is Map<String, dynamic>) a,
-        ],
+      return _toHistory(
+        data,
+        path: path,
+        keys: {'channelId': channelId ?? '', 'tutorialId': tutorialId},
       );
     } catch (e, stack) {
       if (e is! EmeHttpException) {
@@ -210,6 +166,105 @@ class TopicService {
       }
       rethrow;
     }
+  }
+
+  /// The day's challenge — same channel/message shape as
+  /// [fetchTutorHistory], plus the section its questions come from.
+  Future<TutorHistoryResult> fetchDailyChallenge({
+    required DateTime challengeDate,
+  }) async {
+    const path = 'services/module/entitytutorial/dailychallenge.json';
+    final date = DateFormat('yyyy-MM-dd').format(challengeDate);
+    try {
+      final data = await _http.post(path, query: [MapEntry('date', date)]);
+      final challenge = data['dailychallenge'];
+      return _toHistory(
+        data,
+        path: path,
+        keys: {'challengeDate': date},
+        isDailyChallenge: true,
+        sectionId: challenge is Map<String, dynamic>
+            ? challenge['sectionid']?.toString() ?? ''
+            : '',
+      );
+    } catch (e, stack) {
+      if (e is! EmeHttpException) {
+        AppErrorHandler.recordNonFatal(
+          e,
+          stack,
+          reason: 'TopicService.fetchDailyChallenge failed',
+          customKeys: {'url': path, 'challengeDate': date},
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// Channels, messages and the learner's recorded answers, folded into each
+  /// question message. Shared by [fetchTutorHistory] and
+  /// [fetchDailyChallenge] — the two endpoints answer in the same shape.
+  TutorHistoryResult _toHistory(
+    Map<String, dynamic> data, {
+    required String path,
+    required Map<String, String> keys,
+    bool isDailyChallenge = false,
+    String? sectionId,
+  }) {
+    TutorChannel? channelFrom(String key) {
+      final raw = data[key];
+      return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
+    }
+
+    final historyChannels = <TutorChannel>[
+      for (final item in data['channelhistory'] as List<dynamic>? ?? [])
+        if (item is Map<String, dynamic>) TutorChannel.fromJson(item),
+    ];
+
+    final raw = data['messages'] as dynamic;
+    logPrint("messages ${raw is List ? raw.length : 0}");
+    final answers = <Map<String, dynamic>>[
+      for (final a in data['answers'] as List<dynamic>? ?? [])
+        if (a is Map<String, dynamic>) a,
+    ];
+    logPrint("answers ${answers.length}");
+
+    final messages = <ChatMessage>[];
+    if (raw is List) {
+      for (final item in raw) {
+        try {
+          final message = ChatMessage.fromJson(item);
+          if (message.messageRenderType.isQuestion) {
+            final rawAnswer = answers.firstWhere(
+              (a) => a['questionid'] == message.question?.id,
+              orElse: () => const {},
+            );
+            if (rawAnswer.isNotEmpty) {
+              message.answer = Answer.fromJson(rawAnswer);
+              message.interactive = false;
+            }
+          }
+          messages.add(message);
+        } catch (e, stack) {
+          logPrint(e.toString());
+          AppErrorHandler.recordNonFatal(
+            e,
+            stack,
+            reason: 'TopicService parsing a chat message failed',
+            customKeys: {'url': path, ...keys},
+          );
+        }
+      }
+    }
+
+    return TutorHistoryResult(
+      currentChannel: channelFrom('currentchannel'),
+      activeChannel: channelFrom('activechannel'),
+      history: historyChannels,
+      messages: messages,
+      answers: answers,
+      isDailyChallenge: isDailyChallenge,
+      sectionId: sectionId,
+    );
   }
 
   /// The tutorial's tutor channel, creating one when [createNew] is set.
@@ -229,10 +284,12 @@ class TopicService {
     return raw is Map<String, dynamic> ? TutorChannel.fromJson(raw) : null;
   }
 
+  /// start.json, not continue.json: the welcome turn moved to its own
+  /// endpoint upstream (2026-09-03).
   Future<void> startTutorial({
     required String tutorialId,
     required String channel,
-  }) => _http.postForm(_continuePath, [
+  }) => _http.postForm(_startPath, [
     MapEntry('context_tutorialid', tutorialId),
     const MapEntry('functionname', 'chat_tutor_welcome'),
     const MapEntry('currentscenario', 'chat_tutor'),
@@ -240,19 +297,19 @@ class TopicService {
     const MapEntry('context_skiploader', 'true'),
   ]);
 
-  Future<void> continueTutorial({
-    required String tutorialId,
-    String? channel,
-    String? sectionId,
-    String? componentId,
-  }) => _http.postForm(_continuePath, [
-    MapEntry('context_tutorialid', tutorialId),
-    const MapEntry('functionname', 'chat_tutor_continue'),
+  /// Same welcome turn as [startTutorial], flagged as the daily challenge
+  /// and anchored on a section instead of a tutorial.
+  Future<void> startDailyChallenge({
+    required String channel,
+    required DateTime challengeDate,
+    required String sectionId,
+  }) => _http.postForm(_startPath, [
+    const MapEntry('functionname', 'chat_tutor_welcome'),
     const MapEntry('currentscenario', 'chat_tutor'),
-    // '$channel': null stays the literal "null" the server has always seen.
-    MapEntry('channel', '$channel'),
-    if (sectionId != null) MapEntry('context_sectionid', sectionId),
-    if (componentId != null) MapEntry('context_componentid', componentId),
+    const MapEntry('context_isdailychallenge', 'true'),
+    MapEntry('channel', channel),
+    MapEntry('sectionid', sectionId),
+    MapEntry('context_sectionid', sectionId),
     const MapEntry('context_skiploader', 'true'),
   ]);
 

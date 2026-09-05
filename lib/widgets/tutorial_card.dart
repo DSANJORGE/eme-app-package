@@ -101,6 +101,15 @@ class _TutorialCardState extends State<TutorialCard>
                               color: Color(0xFF00E676),
                               backgroundColor: Colors.white24,
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${widget.tutorial.completedSections} / ${widget.tutorial.totalSections}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),

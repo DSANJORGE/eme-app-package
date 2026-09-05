@@ -6,47 +6,33 @@ import 'package:eme_app_package/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:eme_app_package/models/chat_message.dart' as socket_msg;
 import 'package:eme_app_package/models/chat_message.dart';
-import 'package:eme_app_package/models/topic.dart';
-// import 'package:eme_app_package/services/auth_service.dart';
 import 'package:eme_app_package/services/chat_socket_service.dart';
 import 'package:eme_app_package/services/topic_service.dart';
 import 'package:eme_app_package/utils/log.dart';
-import 'package:eme_app_package/widgets/common_widgets.dart';
 import 'package:eme_app_package/widgets/fullscreen_mediaviewer.dart';
 import 'package:eme_app_package/widgets/asset_message_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import '../models/tutor_channel.dart';
-import '../models/tutorial.dart';
 import '../utils/error_handler.dart';
+import 'rehearse_screen.dart';
 
-enum MessageStage {
-  loading,
-  error,
-  ready,
-  selectOption,
-  finished,
-  explainAndFollowup;
+class DailyChallengeScreen extends StatefulWidget {
+  final DateTime challengeDate;
+  final VoidCallback? onCompleted;
 
-  bool get isLoading => this == MessageStage.loading;
-  bool get isError => this == MessageStage.error;
-  bool get isReady => this == MessageStage.ready;
-  bool get isSelectOption => this == MessageStage.selectOption;
-  bool get isFinished => this == MessageStage.finished;
-  bool get isExplainAndFollowup => this == MessageStage.explainAndFollowup;
-}
-
-class RehearseScreen extends StatefulWidget {
-  final Tutorial tutorial;
-
-  const RehearseScreen({super.key, required this.tutorial});
+  const DailyChallengeScreen({
+    super.key,
+    required this.challengeDate,
+    this.onCompleted,
+  });
 
   @override
-  State<RehearseScreen> createState() => _RehearseScreenState();
+  State<DailyChallengeScreen> createState() => _DailyChallengeScreenState();
 }
 
-class _RehearseScreenState extends State<RehearseScreen> {
+class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   bool _isLoading = true;
   TutorChannel? _tutorChannel;
   TutorChannel? _activeTutorChannel;
@@ -67,11 +53,32 @@ class _RehearseScreenState extends State<RehearseScreen> {
   OptionsKey? _tempSelectedAnswerIndex;
   Confidence? _tempConfidenceLevel;
   MessageStage _stage = MessageStage.loading;
+  String? _sectionId;
+
+  DateTime get _challengeDate => widget.challengeDate;
+  bool get _isToday {
+    final now = DateTime.now();
+    return _challengeDate.year == now.year &&
+        _challengeDate.month == now.month &&
+        _challengeDate.day == now.day;
+  }
+
+  String get _challengeDateStr =>
+      DateFormat('yyyy-MM-dd').format(_challengeDate);
+
+  bool get _isChallengeFinished =>
+      _isFinished ||
+      _stage.isFinished ||
+      _messages.any((m) => m.messageRenderType.isEnd);
 
   @override
   void initState() {
     super.initState();
-    _loadTutorialDetail();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadChallengeDetail();
+      }
+    });
   }
 
   void _startResponseTimeoutTimer() {
@@ -92,7 +99,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     _socketSubscription = ChatSocketService().messageStream.listen((
       incomingMsg,
     ) {
-      logPrint("ChatSocketService incomingMsg: ${incomingMsg.toJson()}");
+      logPrint("DailyChallenge ChatSocket incoming: ${incomingMsg.toJson()}");
       if (incomingMsg.isKeepAlive || incomingMsg.isMessageRemoved) return;
       if (!mounted || _isReadOnly) return;
 
@@ -100,18 +107,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
         return;
       }
       if (incomingMsg.messageRenderType.isProgressUpdate) {
-        setState(() {
-          widget.tutorial.progress = TutorialProgress.fromJson(
-            incomingMsg.progressUpdate?.toJson() ?? {},
-            widget.tutorial.progress,
-          );
-        });
-        logPrint(
-          'Update TutorialProgress: ${widget.tutorial.progress.toJson()}',
-        );
         return;
       } else if (incomingMsg.messageRenderType.isEnd) {
         _responseTimer?.cancel();
+        _markCompleted();
         setState(() {
           _stage = MessageStage.finished;
           _isFinished = true;
@@ -145,6 +144,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
           _tempConfidenceLevel = null;
           _stage = MessageStage.selectOption;
         } else if (_lastMessage!.messageRenderType.isEnd) {
+          _markCompleted();
           _stage = MessageStage.finished;
           _isFinished = true;
         } else {
@@ -155,8 +155,20 @@ class _RehearseScreenState extends State<RehearseScreen> {
     });
   }
 
+  void _markCompleted() {
+    widget.onCompleted?.call();
+  }
+
   void _updateStageFromLastMessage() {
     logPrint('Last message: ${_lastMessage?.messageRenderType}');
+    if (_messages.any((m) => m.messageRenderType.isEnd)) {
+      _markCompleted();
+      setState(() {
+        _stage = MessageStage.finished;
+        _isFinished = true;
+      });
+      return;
+    }
     if (_lastMessage != null) {
       if (_lastMessage!.messageRenderType.isWelcome) {
         setState(() {
@@ -176,6 +188,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
           });
         }
       } else if (_lastMessage!.messageRenderType.isEnd) {
+        _markCompleted();
         setState(() {
           _stage = MessageStage.finished;
           _isFinished = true;
@@ -188,7 +201,15 @@ class _RehearseScreenState extends State<RehearseScreen> {
     }
   }
 
-  Future<void> _loadTutorialDetail() async {
+  Future<void> _startChallenge() async {
+    await TopicService().startDailyChallenge(
+      channel: _currentViewingChannel!.id,
+      challengeDate: _challengeDate,
+      sectionId: _sectionId!,
+    );
+  }
+
+  Future<void> _loadChallengeDetail() async {
     _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
@@ -199,9 +220,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
       _messages.clear();
       _lastMessage = null;
 
-      final result = await TopicService().fetchTutorHistory(
-        tutorialId: widget.tutorial.id,
+      final result = await TopicService().fetchDailyChallenge(
+        challengeDate: _challengeDate,
       );
+      _sectionId = result.sectionId;
 
       _historyChannels = result.history;
       _activeTutorChannel = result.activeChannel;
@@ -210,16 +232,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
       if (_currentViewingChannel == null) {
         setState(() {
-          _stage = MessageStage.error;
           _isLoading = false;
         });
         return;
       }
 
-      final isViewingActive =
-          _activeTutorChannel != null &&
-          _currentViewingChannel?.id == _activeTutorChannel!.id;
-      _isReadOnly = !isViewingActive;
+      final isToday = _isToday;
+      _isReadOnly = !isToday;
 
       if (result.messages.isNotEmpty) {
         setState(() {
@@ -228,14 +247,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
         });
       }
 
-      if (isViewingActive) {
-        await _connectSocket(_activeTutorChannel!.id);
+      final isFinished = _messages.any((m) => m.messageRenderType.isEnd) ||
+          (_historyChannels.any((c) => c.id == _currentViewingChannel?.id)) ||
+          (_activeTutorChannel == null &&
+              _currentViewingChannel != null &&
+              _messages.isNotEmpty);
 
+      if (isFinished) {
+        _markCompleted();
+        setState(() {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        });
+      } else if (isToday) {
+        await _connectSocket(_currentViewingChannel!.id);
         if (_messages.isEmpty) {
-          await TopicService().startTutorial(
-            tutorialId: widget.tutorial.id,
-            channel: _activeTutorChannel!.id,
-          );
+          await _startChallenge();
         } else {
           _updateStageFromLastMessage();
         }
@@ -253,15 +280,17 @@ class _RehearseScreenState extends State<RehearseScreen> {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _loadTutorialDetail failed',
-        customKeys: {'tutorialId': widget.tutorial.id},
+        reason: 'DailyChallengeScreen _loadChallengeDetail failed',
+        customKeys: {'challengeDate': _challengeDate.toIso8601String()},
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(
-          context,
-          l10n.failedToLoadTutorialSession,
-        );
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(
+            context,
+            l10n.failedToLoadTutorialSession,
+          );
+        }
       }
       setState(() {
         _isLoading = false;
@@ -271,16 +300,28 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Future<void> _loadHistoryChannel(TutorChannel historyChannel) async {
-    if (_activeTutorChannel != null &&
-        historyChannel.id == _activeTutorChannel!.id) {
-      await _switchToActiveSession();
-      return;
+    DateTime? channelDate;
+    if (historyChannel.dataId.isNotEmpty) {
+      try {
+        channelDate = DateTime.parse(historyChannel.dataId);
+      } catch (_) {}
     }
+    if (channelDate == null && historyChannel.date.isNotEmpty) {
+      try {
+        channelDate = DateTime.parse(historyChannel.date);
+      } catch (_) {}
+    }
+    channelDate ??= _challengeDate;
+
+    final isToday =
+        channelDate.year == DateTime.now().year &&
+        channelDate.month == DateTime.now().month &&
+        channelDate.day == DateTime.now().day;
 
     _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
-      _isReadOnly = true;
+      _isReadOnly = !isToday;
       _currentViewingChannel = historyChannel;
       _tutorChannel = historyChannel;
       _messages.clear();
@@ -291,12 +332,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
     _socketSubscription = null;
 
     try {
-      final result = await TopicService().fetchTutorHistory(
-        tutorialId: widget.tutorial.id,
-        channelId: historyChannel.id,
+      final result = await TopicService().fetchDailyChallenge(
+        challengeDate: channelDate,
       );
-
-      logPrint('Tutor Result: $result');
+      logPrint('result: ${result.toString()}');
+      _sectionId = result.sectionId;
 
       _historyChannels = result.history;
       if (result.activeChannel != null) {
@@ -312,24 +352,48 @@ class _RehearseScreenState extends State<RehearseScreen> {
         _lastMessage = _messages.isNotEmpty ? _messages.last : null;
         _isLoading = false;
       });
-      _updateStageFromLastMessage();
+
+      final isFinished = _messages.any((m) => m.messageRenderType.isEnd) ||
+          !isToday ||
+          (_historyChannels.any((c) => c.id == _currentViewingChannel?.id));
+
+      if (isFinished) {
+        setState(() {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        });
+      } else if (isToday && _currentViewingChannel != null) {
+        await _connectSocket(_currentViewingChannel!.id);
+        if (_messages.isEmpty) {
+          await _startChallenge();
+        } else {
+          _updateStageFromLastMessage();
+        }
+      } else {
+        if (_messages.isNotEmpty) {
+          _updateStageFromLastMessage();
+        }
+      }
+
       _scrollToBottom();
     } catch (e, stack) {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _loadHistoryChannel failed',
+        reason: 'DailyChallengeScreen _loadHistoryChannel failed',
         customKeys: {
-          'tutorialId': widget.tutorial.id,
+          'challengeDate': channelDate.toIso8601String(),
           'channelId': historyChannel.id,
         },
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(
-          context,
-          l10n.failedToLoadTutorialSession,
-        );
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(
+            context,
+            l10n.failedToLoadTutorialSession,
+          );
+        }
       }
       setState(() {
         _isLoading = false;
@@ -339,11 +403,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Future<void> _switchToActiveSession() async {
-    if (_activeTutorChannel == null) {
-      await _loadTutorialDetail();
-      return;
-    }
-
     _responseTimer?.cancel();
     setState(() {
       _isLoading = true;
@@ -355,16 +414,14 @@ class _RehearseScreenState extends State<RehearseScreen> {
     });
 
     try {
-      final result = await TopicService().fetchTutorHistory(
-        tutorialId: widget.tutorial.id,
-        channelId: _activeTutorChannel!.id,
+      final result = await TopicService().fetchDailyChallenge(
+        challengeDate: DateTime.now(),
       );
+      _sectionId = result.sectionId;
 
       _historyChannels = result.history;
-      if (result.activeChannel != null) {
-        _activeTutorChannel = result.activeChannel;
-      }
-      _currentViewingChannel = result.currentChannel ?? _activeTutorChannel;
+      _activeTutorChannel = result.activeChannel;
+      _currentViewingChannel = result.currentChannel ?? result.activeChannel;
       _tutorChannel = _currentViewingChannel;
 
       if (result.messages.isNotEmpty) {
@@ -374,15 +431,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
         });
       }
 
-      await _connectSocket(_activeTutorChannel!.id);
+      final isFinished = _messages.any((m) => m.messageRenderType.isEnd) ||
+          (_historyChannels.any((c) => c.id == _currentViewingChannel?.id));
 
-      if (_messages.isEmpty) {
-        await TopicService().startTutorial(
-          tutorialId: widget.tutorial.id,
-          channel: _activeTutorChannel!.id,
-        );
-      } else {
-        _updateStageFromLastMessage();
+      if (isFinished) {
+        setState(() {
+          _stage = MessageStage.finished;
+          _isFinished = true;
+        });
+      } else if (_currentViewingChannel != null) {
+        await _connectSocket(_currentViewingChannel!.id);
+
+        if (_messages.isEmpty) {
+          await _startChallenge();
+        } else {
+          _updateStageFromLastMessage();
+        }
       }
 
       setState(() {
@@ -393,18 +457,17 @@ class _RehearseScreenState extends State<RehearseScreen> {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _switchToActiveSession failed',
-        customKeys: {
-          'tutorialId': widget.tutorial.id,
-          'channelId': _activeTutorChannel?.id ?? '',
-        },
+        reason: 'DailyChallengeScreen _switchToActiveSession failed',
+        customKeys: {'channelId': _activeTutorChannel?.id ?? ''},
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(
-          context,
-          l10n.failedToLoadTutorialSession,
-        );
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(
+            context,
+            l10n.failedToLoadTutorialSession,
+          );
+        }
       }
       setState(() {
         _isLoading = false;
@@ -413,7 +476,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
     }
   }
 
-  void _showHistorySheet() {
+  void _showCalendarHistorySheet() {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
@@ -449,19 +512,19 @@ class _RehearseScreenState extends State<RehearseScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: const Color(
-                              0xFF38B6FF,
+                              0xFFFF9100,
                             ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
-                            Icons.history_rounded,
-                            color: Color(0xFF38B6FF),
+                            Icons.calendar_month_rounded,
+                            color: Color(0xFFFF9100),
                             size: 20,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          l10n.sessionHistory,
+                          l10n.dailyChallengeHistory,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -481,7 +544,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Active Session option
+                // Active / Today's Challenge option
                 if (hasActive) ...[
                   Material(
                     color: isViewingActive
@@ -494,7 +557,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isViewingActive
-                              ? const Color(0xFF38EF7D).withValues(alpha: 0.5)
+                              ? const Color(0xFFFF9100).withValues(alpha: 0.6)
                               : Colors.white.withValues(alpha: 0.06),
                           width: isViewingActive ? 1.5 : 1,
                         ),
@@ -510,14 +573,14 @@ class _RehearseScreenState extends State<RehearseScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: const Color(
-                              0xFF38EF7D,
+                              0xFFFF9100,
                             ).withValues(alpha: 0.15),
                           ),
                           alignment: Alignment.center,
                           child: const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            color: Color(0xFF38EF7D),
-                            size: 18,
+                            Icons.bolt_rounded,
+                            color: Color(0xFFFF9100),
+                            size: 20,
                           ),
                         ),
                         title: Row(
@@ -526,7 +589,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                               child: Text(
                                 _activeTutorChannel!.name.isNotEmpty
                                     ? _activeTutorChannel!.name
-                                    : l10n.activeSession,
+                                    : l10n.todaysChallengeActive,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -543,14 +606,14 @@ class _RehearseScreenState extends State<RehearseScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(
-                                  0xFF38EF7D,
+                                  0xFFFF9100,
                                 ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 l10n.activeSession,
                                 style: const TextStyle(
-                                  color: Color(0xFF38EF7D),
+                                  color: Color(0xFFFF9100),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -562,7 +625,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         trailing: isViewingActive
                             ? const Icon(
                                 Icons.check_circle_rounded,
-                                color: Color(0xFF38EF7D),
+                                color: Color(0xFFFF9100),
                                 size: 20,
                               )
                             : const Icon(
@@ -582,9 +645,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   const SizedBox(height: 16),
                 ],
 
-                // Past Sessions header
+                // Previous Challenges header
                 Text(
-                  l10n.pastSessions,
+                  l10n.previousChallenges,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 12,
@@ -594,7 +657,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Past Sessions List
+                // Previous Challenges List (Read-only)
                 if (_historyChannels.isEmpty) ...[
                   Container(
                     width: double.infinity,
@@ -613,13 +676,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.history_toggle_off_rounded,
+                          Icons.event_busy_rounded,
                           size: 32,
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          l10n.noPreviousSessions,
+                          l10n.noPreviousChallenges,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 13,
@@ -647,10 +710,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
                         final displayDate = channel.date.isNotEmpty
                             ? DateFormat(
-                                'MMM dd, y, h:mm a',
+                                'EEE, MMM dd, y',
                               ).format(DateTime.parse(channel.date))
                             : (channel.refreshDate.isNotEmpty
-                                  ? DateFormat('MMM dd, y, h:mm a').format(
+                                  ? DateFormat('EEE, MMM dd, y').format(
                                       DateTime.parse(channel.refreshDate),
                                     )
                                   : channel.id);
@@ -667,7 +730,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                               border: Border.all(
                                 color: isCurrentChannel
                                     ? const Color(
-                                        0xFF38B6FF,
+                                        0xFFFF9100,
                                       ).withValues(alpha: 0.5)
                                     : Colors.white.withValues(alpha: 0.05),
                                 width: isCurrentChannel ? 1.5 : 1,
@@ -683,13 +746,15 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                 height: 34,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withValues(alpha: 0.06),
+                                  color: const Color(
+                                    0xFFFF9100,
+                                  ).withValues(alpha: 0.1),
                                 ),
                                 alignment: Alignment.center,
                                 child: const Icon(
-                                  Icons.history_rounded,
-                                  color: Colors.white70,
-                                  size: 18,
+                                  Icons.calendar_today_rounded,
+                                  color: Color(0xFFFF9100),
+                                  size: 16,
                                 ),
                               ),
                               title: Text(
@@ -711,7 +776,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                               trailing: isCurrentChannel
                                   ? const Icon(
                                       Icons.visibility_rounded,
-                                      color: Color(0xFF38B6FF),
+                                      color: Color(0xFFFF9100),
                                       size: 18,
                                     )
                                   : const Icon(
@@ -761,13 +826,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
   Color _getConfidenceColor(Confidence? confidence) {
     switch (confidence) {
       case Confidence.noidea:
-        return const Color(0xFFF50057); // Soft red
+        return const Color(0xFFF50057);
       case Confidence.notsure:
-        return const Color(0xFFFF9F43); // Orange
+        return const Color(0xFFFF9F43);
       case Confidence.mostlysure:
-        return const Color(0xFF38B6FF); // Light blue
+        return const Color(0xFF38B6FF);
       case Confidence.confident:
-        return const Color(0xFF38EF7D); // Vibrant green
+        return const Color(0xFF00E676);
       default:
         return Colors.white54;
     }
@@ -816,12 +881,11 @@ class _RehearseScreenState extends State<RehearseScreen> {
 
     try {
       if (ChatSocketService().isConnected) {
+        final selectedOptionText = _tempSelectedAnswerIndex!.toStr();
         ChatSocketService().sendMessage(
-          message:
-              "Answer: ${_tempSelectedAnswerIndex!.toStr()}, Confidence: ${_tempConfidenceLevel!.name}",
-          channel: _activeTutorChannel!.id,
+          message: selectedOptionText,
+          channel: _currentViewingChannel?.id ?? _activeTutorChannel?.id ?? '',
           functionName: 'chat_tutor_answer',
-          nextFunctionName: 'chat_tutor_progress',
           command: "messagereceived",
           messageType: 'system',
           extraData: {
@@ -830,9 +894,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
               'questionid': _lastMessage!.question!.id,
               'selectedoption': _tempSelectedAnswerIndex!.toStr(),
               'confidence': _tempConfidenceLevel!.name,
-              'tutorialid': widget.tutorial.id,
-              'sectionid': _messages.last.sectionId,
+              'tutorialid': _challengeDateStr,
+              'sectionid': _sectionId,
               'componentid': _messages.last.componentId,
+              'isdailychallenge': true,
             }),
           },
         );
@@ -842,16 +907,76 @@ class _RehearseScreenState extends State<RehearseScreen> {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _submitAnswer failed',
+        reason: 'DailyChallengeScreen _submitAnswer failed',
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(context, l10n.failedToSubmitAnswer);
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(context, l10n.failedToSubmitAnswer);
+        }
         setState(() {
           _updateStageFromLastMessage();
         });
       }
     }
+  }
+
+  void _finishChallenge() {
+    _markCompleted();
+    setState(() {
+      _isFinished = true;
+      _stage = MessageStage.finished;
+    });
+  }
+
+  Future<void> _challengeContinue() async {
+    // In Daily Challenge mode with 1 section, continuing after evaluation marks finish
+    if (_lastMessage?.messageRenderType.isAnswerEval == true ||
+        _stage.isExplainAndFollowup) {
+      _finishChallenge();
+      return;
+    }
+
+    setState(() {
+      _stage = MessageStage.loading;
+    });
+    _startResponseTimeoutTimer();
+    try {
+      if (ChatSocketService().isConnected) {
+        ChatSocketService().sendMessage(
+          message: "",
+          channel: _currentViewingChannel?.id ?? _activeTutorChannel?.id ?? '',
+          functionName: 'chat_tutor_continue',
+          command: "messagereceived",
+          messageType: 'system',
+          extraData: {
+            'agentcontext': jsonEncode({
+              'tutorialid': _challengeDateStr,
+              'sectionid': _sectionId,
+              'componentid': _messages.last.componentId,
+              'isdailychallenge': true,
+            }),
+          },
+        );
+      }
+    } catch (e, stack) {
+      _responseTimer?.cancel();
+      AppErrorHandler.recordNonFatal(
+        e,
+        stack,
+        reason: 'DailyChallengeScreen _challengeContinue failed',
+      );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(context, l10n.failedToContinueTutorial);
+        }
+        setState(() {
+          _updateStageFromLastMessage();
+        });
+      }
+    }
+    _scrollToBottom();
   }
 
   void _sendFollowUp() async {
@@ -869,8 +994,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
     }
     _followUpController.clear();
 
-    // final userMsgId = 'user_comment_${DateTime.now().millisecondsSinceEpoch}';
-
     try {
       setState(() {
         _stage = MessageStage.loading;
@@ -880,15 +1003,16 @@ class _RehearseScreenState extends State<RehearseScreen> {
       if (ChatSocketService().isConnected) {
         ChatSocketService().sendMessage(
           message: text,
-          channel: _activeTutorChannel!.id,
+          channel: _currentViewingChannel?.id ?? _activeTutorChannel?.id ?? '',
           functionName: 'chat_tutor_usercomment',
           command: "messagereceived",
           extraData: {
             'agentcontext': jsonEncode({
               'messagerendertype': 'usercomment',
-              'tutorialId': widget.tutorial.id,
-              'sectionId': _messages.last.sectionId,
+              'tutorialId': _challengeDateStr,
+              'sectionId': _sectionId,
               'componentId': _messages.last.componentId,
+              'isdailychallenge': true,
             }),
           },
         );
@@ -898,66 +1022,22 @@ class _RehearseScreenState extends State<RehearseScreen> {
       AppErrorHandler.recordNonFatal(
         e,
         stack,
-        reason: 'RehearseScreen _sendFollowUp failed',
+        reason: 'DailyChallengeScreen _sendFollowUp failed',
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(context, l10n.failedToSendFollowUp);
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppErrorHandler.showUserError(context, l10n.failedToSendFollowUp);
+        }
         setState(() {
           _updateStageFromLastMessage();
         });
       }
     }
-  }
-
-  Future<void> _tutorialContinue([bool? restart]) async {
-    restart = restart ?? false;
-    setState(() {
-      _stage = MessageStage.loading;
-    });
-    _startResponseTimeoutTimer();
-    logPrint(
-      "continue From SECTION: ${_lastMessage!.sectionId} and COMPONENT: ${_lastMessage!.componentId}",
-    );
-    try {
-      if (ChatSocketService().isConnected) {
-        ChatSocketService().sendMessage(
-          message: "",
-          channel: _activeTutorChannel!.id,
-          functionName: 'chat_tutor_continue',
-          command: "messagereceived",
-          messageType: 'system',
-          extraData: {
-            'agentcontext': jsonEncode({
-              'tutorialid': widget.tutorial.id,
-              'sectionid': _messages.last.sectionId,
-              'componentid': _messages.last.componentId,
-            }),
-          },
-        );
-      }
-    } catch (e, stack) {
-      _responseTimer?.cancel();
-      AppErrorHandler.recordNonFatal(
-        e,
-        stack,
-        reason: 'RehearseScreen _tutorialContinue failed',
-      );
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        AppErrorHandler.showUserError(context, l10n.failedToContinueTutorial);
-        setState(() {
-          _updateStageFromLastMessage();
-        });
-      }
-    }
-    _scrollToBottom();
   }
 
   Widget _buildRichText(String text, TextStyle baseStyle) {
     String processed = text;
-
-    // Convert common HTML block/line tags
     processed = processed
         .replaceAll(RegExp(r'</p\s*>', caseSensitive: false), '\n')
         .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
@@ -1146,13 +1226,13 @@ class _RehearseScreenState extends State<RehearseScreen> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? const Color(
-                                      0xFF38B6FF,
+                                      0xFFFF9100,
                                     ).withValues(alpha: 0.15)
                                   : Colors.white.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF38B6FF)
+                                    ? const Color(0xFFFF9100)
                                     : Colors.white.withValues(alpha: 0.05),
                               ),
                             ),
@@ -1164,7 +1244,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                       : Icons.radio_button_off,
                                   size: 16,
                                   color: isSelected
-                                      ? const Color(0xFF38B6FF)
+                                      ? const Color(0xFFFF9100)
                                       : Colors.white38,
                                 ),
                                 const SizedBox(width: 8),
@@ -1191,7 +1271,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
                     );
                   }),
                   const SizedBox(height: 8),
-
                   TextField(
                     controller: commentsController,
                     maxLines: 2,
@@ -1225,7 +1304,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF38B6FF),
+                  backgroundColor: const Color(0xFFFF9100),
                 ),
                 onPressed: () {
                   Navigator.pop(ctx);
@@ -1294,7 +1373,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             decoration: BoxDecoration(
               color: isAgent
                   ? const Color(0xFF161C24).withValues(alpha: 0.8)
-                  : const Color(0xFFF27121).withValues(alpha: 0.15),
+                  : const Color(0xFFFF9100).withValues(alpha: 0.15),
               borderRadius: isAgent
                   ? BorderRadius.only(
                       topLeft: Radius.circular(showAvatar ? 4 : 16),
@@ -1311,7 +1390,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
               border: Border.all(
                 color: isAgent
                     ? Colors.white.withValues(alpha: 0.06)
-                    : const Color(0xFFF27121).withValues(alpha: 0.4),
+                    : const Color(0xFFFF9100).withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),
@@ -1333,7 +1412,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                     const Icon(
                                       Icons.auto_awesome,
                                       size: 12,
-                                      color: Color(0xFF38B6FF),
+                                      color: Color(0xFFFF9100),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -1341,7 +1420,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF38B6FF),
+                                        color: Color(0xFFFF9100),
                                         letterSpacing: 0.5,
                                       ),
                                     ),
@@ -1519,6 +1598,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildEndMessage(ChatMessage message, {bool showAvatar = true}) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildMessageContainer(
       isAgent: true,
       isAiGenerated: true,
@@ -1527,19 +1607,19 @@ class _RehearseScreenState extends State<RehearseScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(
+            children: [
+              const Icon(
                 Icons.check_circle_outline_rounded,
-                color: Color(0xFF38EF7D),
+                color: Color(0xFF00E676),
                 size: 18,
               ),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
-                'COMPLETED',
-                style: TextStyle(
+                l10n.youFinishedTodaysChallenge.toUpperCase(),
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF38EF7D),
+                  color: Color(0xFF00E676),
                   letterSpacing: 0.8,
                 ),
               ),
@@ -1547,7 +1627,9 @@ class _RehearseScreenState extends State<RehearseScreen> {
           ),
           const SizedBox(height: 6),
           _buildRichText(
-            message.text,
+            message.text.isNotEmpty
+                ? message.text
+                : l10n.youFinishedTodaysChallenge,
             const TextStyle(fontSize: 14, color: Colors.white, height: 1.4),
           ),
         ],
@@ -1600,7 +1682,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF38EF7D),
+                  color: Color(0xFF00E676),
                 ),
               ),
             ] else ...[
@@ -1675,7 +1757,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question text (RichText)
           _buildRichText(
             question.question,
             const TextStyle(
@@ -1712,12 +1793,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFFF27121).withValues(alpha: 0.2)
+                            ? const Color(0xFFFF9100).withValues(alpha: 0.2)
                             : Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFFF27121)
+                              ? const Color(0xFFFF9100)
                               : Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
@@ -1730,7 +1811,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected
-                                  ? const Color(0xFFF27121)
+                                  ? const Color(0xFFFF9100)
                                   : Colors.white.withValues(alpha: 0.1),
                             ),
                             child: Text(
@@ -1773,7 +1854,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 children: [
                   Text(
                     "${l10n.confidence}:",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -1794,7 +1878,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
   }
 
   Widget _buildBottomPanel(ChatMessage? message) {
-    if (_isReadOnly || message == null) {
+    if (_isReadOnly || message == null || _isChallengeFinished) {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
@@ -1819,7 +1903,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
               const SizedBox(
                 height: 48,
                 child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFFF27121)),
+                  child: CircularProgressIndicator(color: Color(0xFFFF9100)),
                 ),
               ),
             ] else if (_stage.isError) ...[
@@ -1830,7 +1914,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 ),
               ),
               ElevatedButton(
-                onPressed: _loadTutorialDetail,
+                onPressed: _loadChallengeDetail,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -1860,17 +1944,19 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  color: const Color(0xFFF27121),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6F00), Color(0xFFFF9100)],
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF27121).withValues(alpha: 0.3),
+                      color: const Color(0xFFFF9100).withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: _tutorialContinue,
+                  onPressed: _challengeContinue,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
@@ -1955,7 +2041,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   final hasText = value.text.trim().isNotEmpty;
                   final buttonFill = hasText
                       ? const Color(0xFF357A38)
-                      : const Color(0xFFF27121);
+                      : const Color(0xFFFF9100);
                   return Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -1970,7 +2056,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: hasText ? _sendFollowUp : _tutorialContinue,
+                      onPressed: hasText ? _sendFollowUp : _finishChallenge,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -1983,18 +2069,20 @@ class _RehearseScreenState extends State<RehearseScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            hasText ? l10n.send : l10n.continueButton,
+                            hasText
+                                ? l10n.send
+                                : l10n.youFinishedTodaysChallenge,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: 14,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Icon(
                             hasText
                                 ? Icons.send_rounded
-                                : Icons.arrow_forward_rounded,
+                                : Icons.check_circle_rounded,
                             size: 16,
                             color: Colors.white,
                           ),
@@ -2066,7 +2154,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                   color:
                       (_tempSelectedAnswerIndex != null &&
                           _tempConfidenceLevel != null)
-                      ? const Color(0xFFF27121)
+                      ? const Color(0xFFFF9100)
                       : const Color(0xFF161C24).withValues(alpha: 0.4),
                   boxShadow:
                       (_tempSelectedAnswerIndex != null &&
@@ -2074,7 +2162,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       ? [
                           BoxShadow(
                             color: const Color(
-                              0xFFF27121,
+                              0xFFFF9100,
                             ).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
@@ -2144,7 +2232,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(color: Color(0xFFF27121)),
+            const CircularProgressIndicator(color: Color(0xFFFF9100)),
             const SizedBox(height: 16),
             Text(
               l10n.connectingToTutorSession,
@@ -2155,102 +2243,24 @@ class _RehearseScreenState extends State<RehearseScreen> {
       );
     }
 
+    final title = l10n.dailyChallenge;
+    final subtitle = DateFormat('EEEE, MMMM dd, yyyy').format(_challengeDate);
+
+    if (_currentViewingChannel == null) {
+      return Column(
+        children: [
+          _buildHeader(context, title, subtitle, l10n),
+          Expanded(child: _buildNoChallengeView(l10n)),
+        ],
+      );
+    }
+
     return Column(
       children: [
-        // Premium custom AppBar header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.04),
-                  padding: const EdgeInsets.all(12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.06),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.tutorial.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        CommonWidgets.buildProgressColumn(
-                          widget.tutorial.progress,
-                          Efficiency.beginner,
-                          l10n,
-                        ),
-                        const SizedBox(width: 24),
-                        CommonWidgets.buildProgressColumn(
-                          widget.tutorial.progress,
-                          Efficiency.competent,
-                          l10n,
-                        ),
-                        const SizedBox(width: 24),
-                        CommonWidgets.buildProgressColumn(
-                          widget.tutorial.progress,
-                          Efficiency.expert,
-                          l10n,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              IconButton(
-                onPressed: _showHistorySheet,
-                icon: Icon(
-                  Icons.history_rounded,
-                  color: _isReadOnly ? const Color(0xFF38B6FF) : Colors.white,
-                  size: 22,
-                ),
-                tooltip: l10n.sessionHistory,
-                style: IconButton.styleFrom(
-                  backgroundColor: _isReadOnly
-                      ? const Color(0xFF38B6FF).withValues(alpha: 0.15)
-                      : Colors.white.withValues(alpha: 0.04),
-                  padding: const EdgeInsets.all(12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: _isReadOnly
-                          ? const Color(0xFF38B6FF).withValues(alpha: 0.4)
-                          : Colors.white.withValues(alpha: 0.06),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Custom Header with Back button, Daily Challenge title, and Calendar Icon
+        _buildHeader(context, title, subtitle, l10n),
 
+        // Read-only notification banner when viewing past day's challenge
         if (_isReadOnly)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -2259,10 +2269,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
               vertical: 8.0,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF38B6FF).withValues(alpha: 0.12),
+              color: const Color(0xFFFF9100).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: const Color(0xFF38B6FF).withValues(alpha: 0.3),
+                color: const Color(0xFFFF9100).withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -2270,12 +2280,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
                 const Icon(
                   Icons.visibility_outlined,
                   size: 16,
-                  color: Color(0xFF38B6FF),
+                  color: Color(0xFFFF9100),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "${l10n.viewingPastSession}: ${_currentViewingChannel?.name.isNotEmpty == true ? _currentViewingChannel!.name : l10n.pastSession}",
+                    "${l10n.viewingPastChallenge}: ${_currentViewingChannel?.name.isNotEmpty == true ? _currentViewingChannel!.name : l10n.pastSession}",
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,
@@ -2296,10 +2306,10 @@ class _RehearseScreenState extends State<RehearseScreen> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: Text(
-                      l10n.resumeActive,
+                      l10n.resumeTodaysChallenge,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF38B6FF),
+                        color: Color(0xFFFF9100),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2308,7 +2318,7 @@ class _RehearseScreenState extends State<RehearseScreen> {
             ),
           ),
 
-        // Chat Conversation Log Area
+        // Chat conversation area
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
@@ -2351,6 +2361,218 @@ class _RehearseScreenState extends State<RehearseScreen> {
     );
   }
 
+  Widget _buildHeader(
+    BuildContext context,
+    String title,
+    String subtitle,
+    AppLocalizations l10n,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.04),
+              padding: const EdgeInsets.all(12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF9100).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: Color(0xFFFF9100),
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Calendar icon button to load previous day's challenges
+          IconButton(
+            onPressed: _showCalendarHistorySheet,
+            icon: Icon(
+              Icons.calendar_month_rounded,
+              color: _isReadOnly ? const Color(0xFFFF9100) : Colors.white,
+              size: 22,
+            ),
+            tooltip: l10n.dailyChallengeHistory,
+            style: IconButton.styleFrom(
+              backgroundColor: _isReadOnly
+                  ? const Color(0xFFFF9100).withValues(alpha: 0.15)
+                  : Colors.white.withValues(alpha: 0.04),
+              padding: const EdgeInsets.all(12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: _isReadOnly
+                      ? const Color(0xFFFF9100).withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoChallengeView(AppLocalizations l10n) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFF9100).withValues(alpha: 0.12),
+                border: Border.all(
+                  color: const Color(0xFFFF9100).withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: const Icon(
+                Icons.event_busy_rounded,
+                color: Color(0xFFFF9100),
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.noDailyChallengeForDate,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.noDailyChallengeForDateDesc,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.6),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 28),
+            if (_historyChannels.isNotEmpty) ...[
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6F00), Color(0xFFFF9100)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF9100).withValues(alpha: 0.25),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: _showCalendarHistorySheet,
+                  icon: const Icon(Icons.calendar_month_rounded, size: 18),
+                  label: Text(
+                    l10n.previousChallenges,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white60,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              icon: const Icon(Icons.arrow_back_rounded, size: 16),
+              label: Text(
+                l10n.goBack,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -2373,15 +2595,12 @@ class _RehearseScreenState extends State<RehearseScreen> {
               color: Colors.white.withValues(alpha: 0.02),
               child: Stack(
                 children: [
-                  // Main content layout
                   Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         maxWidth: isDesktop ? 680 : double.infinity,
                       ),
-                      child: _isFinished
-                          ? _buildResultsView()
-                          : _buildQuizView(),
+                      child: _buildQuizView(),
                     ),
                   ),
                 ],
@@ -2389,39 +2608,6 @@ class _RehearseScreenState extends State<RehearseScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildResultsView() {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            l10n.quizCompleted,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            style: ButtonStyle(
-              backgroundColor: const WidgetStatePropertyAll(Colors.orange),
-              foregroundColor: const WidgetStatePropertyAll(Colors.black),
-              shape: WidgetStatePropertyAll(
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(l10n.goBack),
-          ),
-        ],
       ),
     );
   }

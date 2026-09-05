@@ -159,6 +159,7 @@ class TopicCard extends ConsumerWidget {
                                 color: Color(0xFF00E676),
                                 backgroundColor: Colors.white24,
                               ),
+                              const SizedBox(height: 4),
                               Text(
                                 '${topic.completedSections} / ${topic.totalSections}',
                                 style: const TextStyle(

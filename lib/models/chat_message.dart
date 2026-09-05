@@ -5,7 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
 
-enum MessageType {
+enum MessageRenderType {
   welcome,
   text,
   question,
@@ -17,21 +17,27 @@ enum MessageType {
   agentcomment,
   progressupdate;
 
-  bool get isQuestion => this == MessageType.question;
-  bool get isWelcome => this == MessageType.welcome;
-  bool get isEnd => this == MessageType.end;
-  bool get isProgressUpdate => this == MessageType.progressupdate;
+  bool get isQuestion => this == MessageRenderType.question;
+  bool get isAsset => this == MessageRenderType.asset;
+  bool get isWelcome => this == MessageRenderType.welcome;
+  bool get isText => this == MessageRenderType.text;
+  bool get isAnswer => this == MessageRenderType.answer;
+  bool get isAnswerEval => this == MessageRenderType.answereval;
+  bool get isUserComment => this == MessageRenderType.usercomment;
+  bool get isEnd => this == MessageRenderType.end;
+  bool get isAgentComment => this == MessageRenderType.agentcomment;
+  bool get isProgressUpdate => this == MessageRenderType.progressupdate;
 
-  factory MessageType.fromName(String name) {
-    return MessageType.values.firstWhere(
+  factory MessageRenderType.fromName(String name) {
+    return MessageRenderType.values.firstWhere(
       (element) => element.name.toLowerCase() == name.toLowerCase(),
-      orElse: () => MessageType.text,
+      orElse: () => MessageRenderType.text,
     );
   }
 }
 
 class AgentContextValues {
-  final MessageType messageType;
+  final MessageRenderType messageRenderType;
   final String? tutorialId;
   final String? sectionId;
   final String? componentId;
@@ -44,7 +50,7 @@ class AgentContextValues {
   bool? interactive = false;
 
   AgentContextValues({
-    this.messageType = MessageType.text,
+    this.messageRenderType = MessageRenderType.text,
     this.tutorialId = "",
     this.sectionId = "",
     this.componentId = "",
@@ -58,15 +64,17 @@ class AgentContextValues {
   });
 
   factory AgentContextValues.fromJson(Map<String, dynamic> json) {
-    String? rawMessageType = json['messagetype']?.toString().toLowerCase();
+    String? rawMessageRenderType = json['messagerendertype']
+        ?.toString()
+        .toLowerCase();
 
-    final messageType = MessageType.values.firstWhere(
-      (element) => element.name.toLowerCase() == rawMessageType,
-      orElse: () => MessageType.text,
+    final messageRenderType = MessageRenderType.values.firstWhere(
+      (element) => element.name.toLowerCase() == rawMessageRenderType,
+      orElse: () => MessageRenderType.text,
     );
 
     return AgentContextValues(
-      messageType: messageType,
+      messageRenderType: messageRenderType,
       tutorialId: json['tutorialid']?.toString(),
       sectionId: json['sectionid']?.toString(),
       componentId: json['componentid']?.toString(),
@@ -78,8 +86,11 @@ class AgentContextValues {
           : null,
       asset: json['asset'] != null ? Asset.fromJson(json['asset']) : null,
       progressUpdate: json['progressupdate'] != null
+          // Upstream calls this ProgressUpdate; the fork keeps
+          // TutorialProgress, which falls back to the previous value
+          // instead of zeroing a partial payload.
           ? TutorialProgress.fromJson(json['progressupdate'], null)
-          : (messageType == MessageType.progressupdate
+          : (messageRenderType == MessageRenderType.progressupdate
                 ? TutorialProgress.fromJson(json, null)
                 : null),
       interactive: json['interactive'] == "yes" ? true : false,
@@ -88,7 +99,7 @@ class AgentContextValues {
 
   Map<String, dynamic> toJson() {
     return {
-      'messagetype': messageType.name,
+      'messagerendertype': messageRenderType.name,
       'tutorialid': tutorialId,
       'sectionid': sectionId,
       'componentid': componentId,
@@ -103,7 +114,7 @@ class AgentContextValues {
   }
 
   String? get text {
-    if (messageType.isQuestion) {
+    if (messageRenderType.isQuestion) {
       return question!.question;
     }
     return componentContent;
@@ -117,6 +128,7 @@ class ChatMessage {
   final String? message;
   final String? command;
   final String? replyToId;
+  final String? messageType;
   final DateTime createdAt;
   final AgentContextValues? agentContextValues;
 
@@ -127,6 +139,7 @@ class ChatMessage {
     this.message,
     this.command,
     this.replyToId,
+    this.messageType = 'message',
     required this.createdAt,
     this.agentContextValues,
   });
@@ -176,6 +189,7 @@ class ChatMessage {
       message: json['message']?.toString() ?? '',
       command: json['command']?.toString(),
       replyToId: (json['replytoid'] ?? json['replyToId'])?.toString(),
+      messageType: json['messagetype']?.toString() ?? 'message',
       createdAt: parsedCreatedAt,
       agentContextValues: agentContextValues,
     );
@@ -189,6 +203,7 @@ class ChatMessage {
       if (message != null) 'message': message,
       if (command != null) 'command': command,
       if (replyToId != null) 'replytoid': replyToId,
+      if (messageType != null) 'messagetype': messageType,
       'createdat': createdAt.toIso8601String(),
       'agentcontextvalues': agentContextValues?.toJson(),
     };
@@ -213,7 +228,7 @@ class ChatMessage {
   AgentContextValues get contextValues =>
       agentContextValues ?? AgentContextValues.fromJson({});
 
-  MessageType get messageType => contextValues.messageType;
+  MessageRenderType get messageRenderType => contextValues.messageRenderType;
   Question? get question => contextValues.question;
 
   Answer? get answer => question?.answer;
@@ -243,6 +258,7 @@ class ChatMessage {
     String? message,
     String? command,
     String? replyToId,
+    String? messageType,
     DateTime? createdAt,
     AgentContextValues? agentContextValues,
   }) {
@@ -253,6 +269,7 @@ class ChatMessage {
       message: message ?? this.message,
       command: command ?? this.command,
       replyToId: replyToId ?? this.replyToId,
+      messageType: messageType ?? this.messageType,
       createdAt: createdAt ?? this.createdAt,
       agentContextValues: agentContextValues ?? this.agentContextValues,
     );

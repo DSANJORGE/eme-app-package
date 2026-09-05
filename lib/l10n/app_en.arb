@@ -722,5 +722,41 @@
 	"resumeActive": "Resume Active",
 	"@resumeActive": {
 		"description": "Button to switch back to active chat session"
+	},
+	"youFinishedTodaysChallenge": "You finished today's challenge",
+	"@youFinishedTodaysChallenge": {
+		"description": "Message displayed when the user finishes today's daily challenge"
+	},
+	"dailyChallengeHistory": "Daily Challenge History",
+	"@dailyChallengeHistory": {
+		"description": "Title for the daily challenge history modal sheet"
+	},
+	"previousChallenges": "Previous Challenges",
+	"@previousChallenges": {
+		"description": "Section header for past daily challenges"
+	},
+	"viewingPastChallenge": "Viewing past challenge",
+	"@viewingPastChallenge": {
+		"description": "Banner message when viewing a past daily challenge in read-only mode"
+	},
+	"resumeTodaysChallenge": "Resume Today's Challenge",
+	"@resumeTodaysChallenge": {
+		"description": "Button to switch back to today's active challenge"
+	},
+	"noPreviousChallenges": "No previous challenges found",
+	"@noPreviousChallenges": {
+		"description": "Empty state message when no previous challenges are available"
+	},
+	"todaysChallengeActive": "Today's Challenge",
+	"@todaysChallengeActive": {
+		"description": "Label for today's active challenge item"
+	},
+	"noDailyChallengeForDate": "No Daily Challenge Available",
+	"@noDailyChallengeForDate": {
+		"description": "Title displayed when no daily challenge exists for the selected date"
+	},
+	"noDailyChallengeForDateDesc": "There is no challenge available for this date.",
+	"@noDailyChallengeForDateDesc": {
+		"description": "Explanation displayed when no daily challenge exists for the selected date"
 	}
 }

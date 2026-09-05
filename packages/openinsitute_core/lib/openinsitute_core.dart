@@ -2,13 +2,21 @@ library openinsitute_core;
 
 class AppSettings {
   String siteroot;
+  String catalogId;
   bool https;
 
-  AppSettings({required this.siteroot, required this.https});
+  // ponytail: no `mediadb` — upstream carries it, nothing in this fork reads
+  // it. The shim only holds what the chat socket URL needs.
+  AppSettings({
+    required this.siteroot,
+    required this.catalogId,
+    required this.https,
+  });
 
   factory AppSettings.fromJSON(Map<String, dynamic> json) {
     return AppSettings(
       siteroot: json['siteroot'] ?? '',
+      catalogId: json['catalogid'] ?? '',
       https: json['https'] ?? false,
     );
   }

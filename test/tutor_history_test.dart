@@ -47,9 +47,7 @@ void main() {
             'channel': 'ch_active_123',
             'user': 'system',
             'message': 'Welcome to the tutorial!',
-            'agentcontextvalues': jsonEncode({
-              'messagetype': 'welcome',
-            }),
+            'agentcontextvalues': jsonEncode({'messagerendertype': 'welcome'}),
             'date': '2026-08-31 10:00:01',
           },
           {
@@ -58,7 +56,7 @@ void main() {
             'user': 'system',
             'message': 'What is Flutter?',
             'agentcontextvalues': jsonEncode({
-              'messagetype': 'question',
+              'messagerendertype': 'question',
               'question': {
                 'id': 'q_1',
                 'question': 'What is Flutter?',
@@ -73,11 +71,7 @@ void main() {
           },
         ],
         'answers': [
-          {
-            'questionid': 'q_1',
-            'answer': 'A UI toolkit',
-            'correct': 'true',
-          },
+          {'questionid': 'q_1', 'answer': 'A UI toolkit', 'correct': 'true'},
         ],
       };
 
@@ -108,8 +102,8 @@ void main() {
           .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
           .toList();
       expect(messages.length, 2);
-      expect(messages[0].messageType.isWelcome, true);
-      expect(messages[1].messageType.isQuestion, true);
+      expect(messages[0].messageRenderType.isWelcome, true);
+      expect(messages[1].messageRenderType.isQuestion, true);
 
       // Verify TutorHistoryResult construction
       final result = TutorHistoryResult(
@@ -125,51 +119,48 @@ void main() {
       expect(result.messages.length, 2);
     });
 
-    test('parses history-selected response where currentchannel is history item', () {
-      final sampleJson = {
-        'response': {'status': 'ok'},
-        'activechannel': {
-          'id': 'ch_active_123',
-          'name': 'Active Tutorial Session',
-        },
-        'currentchannel': {
-          'id': 'ch_hist_1',
-          'name': 'Completed Session 1',
-        },
-        'channelhistory': [
-          {
-            'id': 'ch_hist_1',
-            'name': 'Completed Session 1',
+    test(
+      'parses history-selected response where currentchannel is history item',
+      () {
+        final sampleJson = {
+          'response': {'status': 'ok'},
+          'activechannel': {
+            'id': 'ch_active_123',
+            'name': 'Active Tutorial Session',
           },
-        ],
-        'messages': [
-          {
-            'id': 'msg_old',
-            'message': 'Past message',
-            'messagetype': 'welcome',
-          },
-        ],
-      };
+          'currentchannel': {'id': 'ch_hist_1', 'name': 'Completed Session 1'},
+          'channelhistory': [
+            {'id': 'ch_hist_1', 'name': 'Completed Session 1'},
+          ],
+          'messages': [
+            {
+              'id': 'msg_old',
+              'message': 'Past message',
+              'messagerendertype': 'welcome',
+            },
+          ],
+        };
 
-      final activeChannel = TutorChannel.fromJson(
-        sampleJson['activechannel'] as Map<String, dynamic>,
-      );
-      final currentChannel = TutorChannel.fromJson(
-        sampleJson['currentchannel'] as Map<String, dynamic>,
-      );
-      final historyList = (sampleJson['channelhistory'] as List)
-          .map((e) => TutorChannel.fromJson(e as Map<String, dynamic>))
-          .toList();
+        final activeChannel = TutorChannel.fromJson(
+          sampleJson['activechannel'] as Map<String, dynamic>,
+        );
+        final currentChannel = TutorChannel.fromJson(
+          sampleJson['currentchannel'] as Map<String, dynamic>,
+        );
+        final historyList = (sampleJson['channelhistory'] as List)
+            .map((e) => TutorChannel.fromJson(e as Map<String, dynamic>))
+            .toList();
 
-      final result = TutorHistoryResult(
-        activeChannel: activeChannel,
-        currentChannel: currentChannel,
-        history: historyList,
-      );
+        final result = TutorHistoryResult(
+          activeChannel: activeChannel,
+          currentChannel: currentChannel,
+          history: historyList,
+        );
 
-      expect(result.activeChannel?.id, 'ch_active_123');
-      expect(result.currentChannel?.id, 'ch_hist_1');
-      expect(result.activeChannel?.id != result.currentChannel?.id, true);
-    });
+        expect(result.activeChannel?.id, 'ch_active_123');
+        expect(result.currentChannel?.id, 'ch_hist_1');
+        expect(result.activeChannel?.id != result.currentChannel?.id, true);
+      },
+    );
   });
 }
