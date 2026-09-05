@@ -20,11 +20,17 @@ class TutorHistoryResult {
   final List<TutorChannel> history;
   final List<ChatMessage> messages;
 
+  /// The learner's recorded answers on the current channel, oldest first,
+  /// as the server sends them: questionid, section, tutorial, iscorrect
+  /// ("true"/"false"), selectedoption, confidence, date.
+  final List<Map<String, dynamic>> answers;
+
   TutorHistoryResult({
     this.currentChannel,
     this.activeChannel,
     this.history = const [],
     this.messages = const [],
+    this.answers = const [],
   });
 }
 
@@ -184,6 +190,10 @@ class TopicService {
         activeChannel: channelFrom('activechannel'),
         history: historyChannels,
         messages: messages,
+        answers: [
+          for (final a in data['answers'] as List<dynamic>? ?? [])
+            if (a is Map<String, dynamic>) a,
+        ],
       );
     } catch (e, stack) {
       if (e is! EmeHttpException) {
@@ -253,10 +263,13 @@ class TopicService {
     required String confidence,
     required String sectionId,
     required String componentId,
+    String? tutorialId,
   }) => _http.postForm(_continuePath, [
     const MapEntry('currentscenario', 'chat_tutor'),
     const MapEntry('functionname', 'chat_tutor_answer'),
     MapEntry('channel', channel),
+    // Stored on `tutoranswer` with the section: progress per topic/subtopic.
+    if (tutorialId != null) MapEntry('context_tutorialid', tutorialId),
     MapEntry('context_questionid', questionId),
     MapEntry('context_selectedoption', selectedOption),
     MapEntry('context_confidence', confidence),
@@ -272,6 +285,9 @@ class TopicService {
     required String sectionId,
     required String componentId,
     required String tutorialId,
+    String? questionId,
+    String? selectedOption,
+    String? confidence,
   }) => _http.postForm(_continuePath, [
     const MapEntry('currentscenario', 'chat_tutor'),
     const MapEntry('functionname', 'chat_tutor_usercomment'),
@@ -280,6 +296,12 @@ class TopicService {
     MapEntry('context_query', message),
     MapEntry('context_sectionid', sectionId),
     MapEntry('context_componentid', componentId),
+    // The question the chat is about, and the learner's answer on it when
+    // already submitted locally: `A`… and noidea|notsure|mostlysure|confident.
+    if (questionId != null) MapEntry('context_questionid', questionId),
+    if (selectedOption != null)
+      MapEntry('context_selectedoption', selectedOption),
+    if (confidence != null) MapEntry('context_confidence', confidence),
     const MapEntry('context_skiploader', 'true'),
   ]);
 }

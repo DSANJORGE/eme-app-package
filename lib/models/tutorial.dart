@@ -133,6 +133,12 @@ class McqQuestion {
   /// Why the correct option is correct; empty when the server omits it.
   final String rationale;
 
+  /// Pre-authored source reference (quote + document title + page); null
+  /// when the question has none.
+  final String? sourceQuote;
+  final String? sourceCite;
+  final int? sourcePage;
+
   McqQuestion({
     required this.id,
     required this.question,
@@ -140,6 +146,9 @@ class McqQuestion {
     required this.correctOption,
     required this.cognitiveLevel,
     this.rationale = '',
+    this.sourceQuote,
+    this.sourceCite,
+    this.sourcePage,
   });
 
   factory McqQuestion.fromJson(Map<String, dynamic> json) {
@@ -169,6 +178,9 @@ class McqQuestion {
           json['cognitive_level'] as String? ??
           'beginner',
       rationale: json['rationale'] as String? ?? '',
+      sourceQuote: json['sourcequote'] as String?,
+      sourceCite: json['sourcecite'] as String?,
+      sourcePage: int.tryParse('${json['sourcepage'] ?? ''}'),
     );
   }
 
