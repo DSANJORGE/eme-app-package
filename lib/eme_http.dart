@@ -34,9 +34,15 @@ import 'utils/log.dart';
 ///   boundary. files == null sends no body.
 /// - No init-order dependency: Dio is resolved lazily per call, so
 ///   constructing this before DioUtil.init() is safe.
-/// - 401/403 are NOT handled (decided 2026-08-30); a future refresh-retry
-///   lands inside [DioEmeHttp] without changing this interface.
+/// - 401/403 are NOT retried (decided 2026-08-30); a future refresh-retry
+///   lands inside [DioEmeHttp] without changing this interface. They do
+///   fire [onUnauthorized] (2026-09-04): eMe keeps one token per user, so a
+///   login elsewhere kills this session and every call 403s from then on.
 abstract class EmeHttp {
+  /// Called once per authenticated call that comes back 401/403, before
+  /// the exception is thrown. The app decides what to do (sign out).
+  static void Function(EmeHttpException e)? onUnauthorized;
+
   Future<Map<String, dynamic>> getJson(
     String path, {
     Map<String, String> query = const {},
@@ -220,6 +226,10 @@ class DioEmeHttp implements EmeHttp {
         reason: 'EmeHttp $method $path returned HTTP ${response.statusCode}',
         customKeys: {'url': uri.toString()},
       );
+      if (auth != EmeAuth.none &&
+          (response.statusCode == 401 || response.statusCode == 403)) {
+        EmeHttp.onUnauthorized?.call(e);
+      }
       throw e;
     }
 
