@@ -7,9 +7,15 @@ import '../eme_http.dart';
 ///
 /// Canned responses are keyed by path; unknown paths throw a 404
 /// [EmeHttpException]. Every call is recorded in [requests] as
-/// (path, query/fields).
+/// (path, query/fields); form posts additionally land in [posted] with
+/// their fields already collapsed to a map, which is what most assertions
+/// want.
 class FakeEmeHttp implements EmeHttp {
   final requests = <(String, Object?)>[];
+
+  /// Every [postForm] call, recorded before the canned lookup so failed
+  /// posts show up too.
+  final posted = <({String path, Map<String, String> fields})>[];
   final canned = <String, Map<String, dynamic>>{};
 
   Map<String, dynamic> _lookup(String path, Object? detail) {
@@ -33,7 +39,11 @@ class FakeEmeHttp implements EmeHttp {
     String path,
     Iterable<MapEntry<String, String>> fields, {
     EmeAuth auth = EmeAuth.token,
-  }) async => _lookup(path, fields.toList());
+  }) async {
+    final list = fields.toList();
+    posted.add((path: path, fields: Map.fromEntries(list)));
+    return _lookup(path, list);
+  }
 
   @override
   Future<Map<String, dynamic>> post(
