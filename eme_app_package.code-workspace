@@ -6,7 +6,7 @@
 		},
 		{
 			"name": "genai_labs",
-			"path": "../genai_labs",
+			"path": "../app-genailabs",
 		},
 	],
 	"settings": {},
