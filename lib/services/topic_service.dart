@@ -347,12 +347,19 @@ class TopicService {
     String? questionId,
     String? selectedOption,
     String? confidence,
+    String? mode,
+    String? docId,
+    int? page,
   }) => _http.postForm(_continuePath, [
     const MapEntry('currentscenario', 'chat_tutor'),
     const MapEntry('functionname', 'chat_tutor_usercomment'),
+    // learn | improve | dailychallenge | evaluation: the tutor's rules differ.
+    if (mode != null) MapEntry('context_mode', mode),
     MapEntry('context_tutorialid', tutorialId),
     MapEntry('channel', channel),
     MapEntry('context_query', message),
+    // Echoed back as the reply's replytoid.
+    MapEntry('context_requestid', messageId),
     MapEntry('context_sectionid', sectionId),
     MapEntry('context_componentid', componentId),
     // The question the chat is about, and the learner's answer on it when
@@ -361,6 +368,9 @@ class TopicService {
     if (selectedOption != null)
       MapEntry('context_selectedoption', selectedOption),
     if (confidence != null) MapEntry('context_confidence', confidence),
+    // The document page on screen (PDF viewer): the tutor always sees it.
+    if (docId != null) MapEntry('context_entityasset', docId),
+    if (page != null) MapEntry('context_pagenum', '$page'),
     const MapEntry('context_skiploader', 'true'),
   ]);
 }
