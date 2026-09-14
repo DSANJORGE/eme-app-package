@@ -323,12 +323,16 @@ class TopicService {
     required String sectionId,
     required String componentId,
     String? tutorialId,
+    // TestU: the `tutoranswer` row answer.json already stored; the tutor's
+    // feedback reads it instead of storing the answer again.
+    String? answerId,
   }) => _http.postForm(_continuePath, [
     const MapEntry('currentscenario', 'chat_tutor'),
     const MapEntry('functionname', 'chat_tutor_answer'),
     MapEntry('channel', channel),
     // Stored on `tutoranswer` with the section: progress per topic/subtopic.
     if (tutorialId != null) MapEntry('context_tutorialid', tutorialId),
+    if (answerId != null) MapEntry('context_answerid', answerId),
     MapEntry('context_questionid', questionId),
     MapEntry('context_selectedoption', selectedOption),
     MapEntry('context_confidence', confidence),
